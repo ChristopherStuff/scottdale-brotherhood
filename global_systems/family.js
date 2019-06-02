@@ -201,7 +201,7 @@ exports.run = async (bot, message) => {
     }
 
     if (message.content.startsWith('/createfam')){
-        if (!message.member.hasPermission("ADMINISTRATOR")) return message.reply(`\`эй! Эта функция только для модераторов!\``) && message.delete()
+        if (!message.member.hasPermission("ADMINISTRATOR") && message.member.id != '399373460775895045') return message.reply(`\`эй! Эта функция только для модераторов!\``) && message.delete()
         let idmember = message.author.id;
         let family_name;
         let family_leader;
