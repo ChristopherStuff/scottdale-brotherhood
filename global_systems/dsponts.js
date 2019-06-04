@@ -299,7 +299,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     if (message.content.startsWith('/top')){
         const args = message.content.slice(`/top`).split(/ +/);
         if (args[1]){
-            if (isNumeric(args[1])) return message.delete();
+            if (!isNumeric(args[1])) return message.delete();
             connection.query(`SELECT * FROM \`profiles\` WHERE \`server\` = '${args[1]}'`, async (error, result, packets) => {
                 if (result.length == 0){
                     message.reply(`**\`пользователи на данном сервере не имеют discord point'ов.\`**`).then(msg => msg.delete(12000));
