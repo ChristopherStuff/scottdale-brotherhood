@@ -183,9 +183,9 @@ exports.run = async (bot, message) => {
                 fbi_user.push(`\`[${`${+fbi_user.length + 1}`.padStart(2, '0')}]\` ${fbi_user_temp.join(', ')}`);
             }
         }
-        await message.reply(`**\`список пользователей имеющих доступ к каналу: ${federal_channels[args[1]].name}\`\n${fbi_user.join('\n')}**`);
+        if (fbi_user.length > 0) await message.reply(`**\`список пользователей имеющих доступ к каналу: ${federal_channels[args[1]].name}\`\n${fbi_user.join('\n')}**`);
         if (fbi_user_two.length > 0) await message.reply(`**\`список пользователей имеющих доступ к каналу: ${federal_channels[args[1]].name}\`\n${fbi_user_two.join('\n')}**`);
-        await message.reply(`**\`список модераторов канала: ${federal_channels[args[1]].name}\`\n${fbi_moderate.join('\n')}**`);
+        if (fbi_moderate.length > 0) await message.reply(`**\`список модераторов канала: ${federal_channels[args[1]].name}\`\n${fbi_moderate.join('\n')}**`);
         return message.delete();
     }
 }
