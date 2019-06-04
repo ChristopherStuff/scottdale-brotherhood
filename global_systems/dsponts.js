@@ -307,7 +307,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }else{
                     let top = result.sort((a, b) => b.money - a.money);
                     let topp = [];
-                    for (let i = 0; i <= 10; i++){
+                    for (let i = 0; i < 10; i++){
                         topp.push(`[TOP ${i + 1}] - <@${top[i].user}> имеет ${top[i].money} dp.`);
                     }
                     message.member.send(`${message.member}, **\`список самых богатых пользователей:\`\n${topp.join('\n')}**`).catch(() => {
@@ -324,7 +324,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }else{
                     let top = result.sort((a, b) => b.money - a.money);
                     let topp = [];
-                    for (let i = 0; i <= 10; i++){
+                    for (let i = 0; i < 10; i++){
                         topp.push(`[TOP ${i + 1}] - <@${top[i].user}> имеет ${top[i].money} dp.`);
                     }
                     message.member.send(`${message.member}, **\`список самых богатых пользователей:\`\n${topp.join('\n')}**`).catch(() => {
