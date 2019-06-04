@@ -154,6 +154,7 @@ exports.run = async (bot, message) => {
         let fbi_user_temp = [];
         let fbi_moderate = [];
         let fbi_user = [];
+        let fbi_user_two = [];
         await federal_channels[args[1]].permissionOverwrites.forEach(async perm => {
             if (perm.type == `member`){
                 let perms = new Discord.Permissions(perm.allow);
@@ -176,9 +177,14 @@ exports.run = async (bot, message) => {
             fbi_moderate.push(`\`[${`${+fbi_moderate.length + 1}`.padStart(2, '0')}]\` ${fbi_moderate_temp.join(', ')}`);
         }
         if (fbi_user_temp.length != 0){
-            fbi_user.push(`\`[${`${+fbi_user.length + 1}`.padStart(2, '0')}]\` ${fbi_user_temp.join(', ')}`);
+            if (fbi_user.length > 18){
+                fbi_user_two.push(`\`[${`${+fbi_user.length + 1}`.padStart(2, '0')}]\` ${fbi_user_temp.join(', ')}`)
+            }else{
+                fbi_user.push(`\`[${`${+fbi_user.length + 1}`.padStart(2, '0')}]\` ${fbi_user_temp.join(', ')}`);
+            }
         }
         await message.reply(`**\`список пользователей имеющих доступ к каналу: ${federal_channels[args[1]].name}\`\n${fbi_user.join('\n')}**`);
+        if (fbi_user_two.length > 0) await message.reply(`**\`список пользователей имеющих доступ к каналу: ${federal_channels[args[1]].name}\`\n${fbi_user_two.join('\n')}**`);
         await message.reply(`**\`список модераторов канала: ${federal_channels[args[1]].name}\`\n${fbi_moderate.join('\n')}**`);
         return message.delete();
     }
