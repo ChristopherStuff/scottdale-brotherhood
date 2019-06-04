@@ -1,6 +1,10 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
+function isInteger(n) {
+    return n === +n && n === (n|0);
+}
+
 exports.run = async (bot, message, setembed_general, setembed_fields, setembed_addline) => {
     let re = /(\d+(\.\d)*)/i;
     if (message.content.startsWith("/setup")){
@@ -29,7 +33,7 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
             message.reply(`\`укажи число! '/setup [user] [уровень]'\``)
             return message.delete();
         }
-        if (typeof +args[2] != "number") {
+        if (!isInteger(args[2])) {
             message.reply(`\`укажи число! '/setup [user] [уровень]'\``)
             return message.delete();
         }
@@ -43,10 +47,10 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
             message.reply(`\`укажи верный уровень доступа! '/setup [user] [уровень (0-3)]'\``)
             return message.delete();
         }
-	if (!message.member.hasPermission("ADMINISTRATOR") && +level_mod <= +args[2]){
-            message.reply(`\`ты не можешь выдавать уровень равный твоему или выше '/setup [user] [уровень (0-2)]'\``)
-            return message.delete();
-	}
+        if (!message.member.hasPermission("ADMINISTRATOR") && +level_mod <= +args[2]){
+                message.reply(`\`ты не можешь выдавать уровень равный твоему или выше '/setup [user] [уровень (0-2)]'\``)
+                return message.delete();
+        }
         let acc = db_server.channels.find(c => c.name == user.id);
         if (!acc){
             await db_server.createChannel(user.id).then(async chan => {
