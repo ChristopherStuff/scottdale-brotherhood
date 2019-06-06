@@ -1156,7 +1156,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                             connection.query(`UPDATE \`storage\` SET money = money + ${+args[1] * storage[0].cost} WHERE \`id\` = '${storage[0].id}'`);
                             connection.query(`UPDATE \`storage\` SET amount = amount - ${+args[1]} WHERE \`id\` = '${storage[0].id}'`);
                             for (let i = 0; i < args[1]; i++){
-                                connection.query(`INSERT INTO \`items\` (\`server\`, \`creator\`, \`storage\`, \`dashboard\`, \`date_end\`) VALUES ('${message.guild.id}', '${message.author.id}', '${storage[0].id}', '${shop[0].id}', '${new Date().valueOf() + +date}')`);
+                                connection.query(`INSERT INTO \`items\` (\`server\`, \`creator\`, \`storage\`, \`dashboard\`, \`date_end\`) VALUES ('${message.guild.id}', '${message.author.id}', '${storage[0].id}', '${shop[0].id}', '${new Date().valueOf() + +storage[0].date}')`);
                             }
                             message.reply(`**\`производство было запущено! Время производства: ${time(storage[0].date)}\`**`).then(msg => msg.delete(18000));
                             return message.delete();
