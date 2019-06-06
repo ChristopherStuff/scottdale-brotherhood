@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.1.1-hide';
+const version = '5.2.0';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Функции предприятий.";
+const update_information = "ГЛОБАЛЬНАЯ СИСТЕМА МАГАЗИНОВ В ДИСКОРДЕ!";
 
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -453,7 +453,7 @@ async function update_sellers(){
         if (!server) return
         let channel = server.channels.find(c => c.name == 'buy-dashboard');
         if (!channel) return
-        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = 'открыто'`, async (err, result, fields) => {
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > '0'`, async (err, result, fields) => {
             channel.fetchMessages({limit: 1}).then(async messages => {
                 let names = [];
                 let cost = [];
