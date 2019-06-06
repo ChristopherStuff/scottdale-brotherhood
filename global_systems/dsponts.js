@@ -1141,7 +1141,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 return message.delete();
                             }
                             if ((+items.length + +args[1]) >= storage[0].level){
-                                message.reply(`**\`предприятие не поддерживает такое кол-во производимых товаров одновременно. Осталось: ${+storage[0].level - items.length}\`**`).then(msg => msg.delete(18000));
+                                message.reply(`**\`предприятие не поддерживает такое кол-во производимых товаров одновременно. Осталось: ${+storage[0].level - +items.length}\`**`).then(msg => msg.delete(18000));
                                 return message.delete();
                             }
                             if ((+storage[0].amount - args[1]) <= 0){
