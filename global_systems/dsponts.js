@@ -362,7 +362,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                             message.reply(`**\`недостаточно средств для покупки!\`**`).then(msg => msg.delete(10000));
                             return message.delete();
                         }
-                        let state_code = eval(shop[0].code);
+                        let state_code = eval('(function() {' + shop[0].code + '}())');
                         if (state_code == 1){
                             connection.query(`UPDATE \`buy_dashboard\` SET money = money + ${shop[0].cost} WHERE \`id\` = '${shop[0].id}'`);
                             connection.query(`UPDATE \`profile\` SET money = money - ${shop[0].cost} WHERE \`id\` = '${profile[0].id}'`);
