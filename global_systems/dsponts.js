@@ -69,81 +69,81 @@ function time(s) {
 function uses(message, command, uses_args, settings_args){
     const args = message.content.slice(`${command}`).split(/ +/);
     if (+args.length - 1 != uses_args.length){
-        await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\`**`).then(msg => msg.delete(12000));
+        message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\`**`).then(msg => msg.delete(12000));
         message.delete();
         return true;
     }
     for (let i = 0; i <= settings_args.length; i++){
         if (settings_args[i] == 'number'){
             if (!isNumeric(args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'integer'){
             if (!isNumeric(args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
             if (!isInteger(+args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не целое.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не целое.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'mention'){
             let user = message.guild.member(message.mentions.users.first());
             if (!user){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: '${uses_args[i]}' не является упоминанием пользователя.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: '${uses_args[i]}' не является упоминанием пользователя.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'mention_user'){
             let user = message.guild.member(message.mentions.users.first());
             if (!user){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: '${uses_args[i]}' не является упоминанием пользователя.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: '${uses_args[i]}' не является упоминанием пользователя.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }else if (user.id == message.author.id){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: на себя нельзя!\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: на себя нельзя!\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'plus_number'){
             if (!isNumeric(args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
             if (args[+i + 1] <= 0){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть положительным.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть положительным.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'plus_number_integer'){
             if (!isNumeric(args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
             if (!isInteger(+args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не целое.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не целое.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
             if (args[+i + 1] <= 0){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть положительным.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть положительным.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
         }else if (settings_args[i] == 'status'){
             if (!isNumeric(args[+i + 1])){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' не является числом.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
             if (args[+i + 1] != 0 && args[+i + 1] != 1){
-                await message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть или '0', или '1'.\`**`).then(msg => msg.delete(12000));
+                message.reply(`**\`использование: ${command} [${uses_args.join('] [')}]\nError: значение '${uses_args[i]}' должно быть или '0', или '1'.\`**`).then(msg => msg.delete(12000));
                 message.delete();
                 return true;
             }
