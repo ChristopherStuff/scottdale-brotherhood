@@ -154,7 +154,7 @@ function uses(message, command, uses_args, settings_args){
 
 function mysql_load(message, mysql_cooldown){
     if (mysql_cooldown.has(message.author.id)){
-        await message.reply(`**\`повторите попытку через 4 секунды.\`**`).then(msg => msg.delete(3000));
+        message.reply(`**\`повторите попытку через 4 секунды.\`**`).then(msg => msg.delete(3000));
         message.delete();
         return false;
     }
