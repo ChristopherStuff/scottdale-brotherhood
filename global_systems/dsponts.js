@@ -732,7 +732,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
         message.member.send(embed).then(() => {
             message.reply(`**\`документация была отправлена вам в личные сообщения.\`**`).then(msg => msg.delete(12000));
         }).catch(() => {
-            await message.reply(`**\`ошибка отправки в личные сообщения. err: access denied for user\`**`).then(msg => msg.delete(12000));
+            message.reply(`**\`ошибка отправки в личные сообщения. err: access denied for user\`**`).then(msg => msg.delete(12000));
         });
         return message.delete();
     }
