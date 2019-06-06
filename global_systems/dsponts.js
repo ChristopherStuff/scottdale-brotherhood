@@ -314,25 +314,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
         }
     }
 
-    if (message.content.startsWith('/top')){
-        connection.query(`SELECT * FROM \`profiles\` WHERE \`server\` = '${message.guild.id}'`, async (error, result, packets) => {
-            if (result.length == 0){
-                await message.reply(`**\`пользователи на данном сервере не имеют discord point'ов.\`**`).then(msg => msg.delete(12000));
-                return message.delete();
-            }else{
-                let top = result.sort((a, b) => b.money - a.money);
-                let topp = [];
-                for (let i = 0; i < 10; i++){
-                    topp.push(`\`[TOP ${`${i + 1}`.padStart(2, '0')}] - [${top[i].money}] -\` <@${top[i].user}>`);
-                }
-                message.member.send(`${message.member}, **\`список самых богатых пользователей:\`\n${topp.join('\n')}**`).catch(() => {
-                    await message.reply(`**\`список самых богатых пользователей:\`\n${topp.join('\n')}**`);
-                });
-                return message.delete();
-            }
-        });
-    }
-
     if (message.content.startsWith('/buy')){
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/buy`).split(/ +/);
