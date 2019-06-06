@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.2-hide';
+const version = '5.2.3-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -537,7 +537,7 @@ async function update_items(){
                         if (storage.length < 1 || storage.length > 1){
                             connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
                         }else{
-                            connection.query(`SELECT * FROM \`buy_market\` WHERE \`id\` = '${item.dashboard}'`, async (error, shop) => {
+                            connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`id\` = '${item.dashboard}'`, async (error, shop) => {
                                 if (error) return console.error(error);
                                 if (shop.length < 1 || shop.length > 1){
                                     connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
