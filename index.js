@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.1-hide';
+const version = '5.2.2-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -512,13 +512,13 @@ async function nalog_biz(){
                         if (shop.status == true) {
                             connection.query(`UPDATE \`buy_dashboard\` SET status = '0' WHERE \`id\` = '${shop.id}'`);
                             let member = bot.guilds.get(shop.server).members.get(shop.owner);
-                            send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) предприятие было закрыто за неуплату налога (NEED: ${shop.nalog} - NOW: ${shop.money}). Предприятие - ${shop.name}`);
+                            send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) заведение было закрыто за неуплату налога (NEED: ${shop.nalog} - NOW: ${shop.money}). Заведение - ${shop.name}`);
                         }
                     }else{
                         connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${shop.nalog} WHERE \`id\` = '${shop.id}'`);
                         connection.query(`UPDATE \`buy_dashboard\` SET nalog_new = '${+date + 3600000}' WHERE \`id\` = '${shop.id}'`);
                         let member = bot.guilds.get(shop.server).members.get(shop.owner);
-                        send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) c предприятия списан налог (NEED: ${shop.nalog} - NOW: ${shop.money - shop.nalog}). Предприятие - ${shop.name}`);
+                        send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) c заведения списан налог (NEED: ${shop.nalog} - NOW: ${shop.money - shop.nalog}). Заведение - ${shop.name}`);
                     }
                 }
             });
