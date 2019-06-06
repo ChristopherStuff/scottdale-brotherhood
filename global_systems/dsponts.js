@@ -365,7 +365,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         let state_code = eval('(function() {' + shop[0].code + '}())');
                         if (state_code == 1){
                             connection.query(`UPDATE \`buy_dashboard\` SET money = money + ${shop[0].cost} WHERE \`id\` = '${shop[0].id}'`);
-                            connection.query(`UPDATE \`profile\` SET money = money - ${shop[0].cost} WHERE \`id\` = '${profile[0].id}'`);
+                            connection.query(`UPDATE \`profiles\` SET money = money - ${shop[0].cost} WHERE \`id\` = '${profile[0].id}'`);
                             connection.query(`UPDATE \`buy_dashboard\` SET amount = amount - 1 WHERE \`id\` = '${shop[0].id}'`);
                         }else{
                             message.reply(`**\`ошибка при покупке: ${state_code}\`**`).then(msg => msg.delete(20000));
