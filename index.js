@@ -453,7 +453,7 @@ async function update_sellers(){
         if (!server) return
         let channel = server.channels.find(c => c.name == 'buy-dashboard');
         if (!channel) return
-        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > '0'`, async (err, result, fields) => {
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > 0`, async (err, result, fields) => {
             channel.fetchMessages({limit: 1}).then(async messages => {
                 let names = [];
                 let cost = [];
