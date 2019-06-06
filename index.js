@@ -506,6 +506,35 @@ async function nalog_biz(){
     }, 27000);
 }
 
+async function update_items(){
+    setInterval(() => {
+        connection.query(`SELECT * FROM \`items\``, async (error, items) => {
+            items.forEach(item => {
+                let date = new Date().valueOf();
+                if (item.date_end < date){
+                    connection.query(`SELECT * FROM \`storage\` WHERE \`id\` = '${item.storage}'`, async (error, storage) => {
+                        if (error) return console.error(error);
+                        if (storage.length < 1 || storage.length > 1){
+                            connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                        }else{
+                            connection.query(`SELECT * FROM \`buy_market\` WHERE \`id\` = '${item.dashboard}'`, async (error, shop) => {
+                                if (error) return console.error(error);
+                                if (shop.length < 1 || shop.length > 1){
+                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                                }else{
+                                    connection.query(`UPDATE \`buy_market\` SET amount = amount + 1 WHERE \`id\` = '${shop[0].id}'`);
+                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                                    eval(storage[0].code);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }, 12000);
+}
+
 const warn_cooldown = new Set();
 const support_loop = new Set();
 const ds_cooldown = new Set();
@@ -559,6 +588,7 @@ bot.on('ready', async () => {
     check_unwanted_user();
     update_sellers();
     nalog_biz();
+    update_items();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
