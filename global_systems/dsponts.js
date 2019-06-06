@@ -730,7 +730,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
         `/storage_get - снять деньги с предприятия**`);
         embed.addField(`Краткое описание`, `**Ваше предприятие теряет в час определённую сумму, для поддержания работы предприятия требуется положить деньги на склад (/storage_add), после этого вы сможете восстановить работу предприятия командой (/storage_status).**`);
         message.member.send(embed).then(() => {
-            await message.reply(`**\`документация была отправлена вам в личные сообщения.\`**`).then(msg => msg.delete(12000));
+            message.reply(`**\`документация была отправлена вам в личные сообщения.\`**`).then(msg => msg.delete(12000));
         }).catch(() => {
             await message.reply(`**\`ошибка отправки в личные сообщения. err: access denied for user\`**`).then(msg => msg.delete(12000));
         });
