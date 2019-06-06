@@ -335,11 +335,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
 
     if (message.content.startsWith('/buy')){
         if (!mysql_load(message, mysql_cooldown)) return
+        const args = message.content.slice(`/buy`).split(/ +/);
         if (!args[1]){
             message.reply('введите хоть что-то').then(msg => msg.delete(12000));
             return message.delete();
         }
-        const args = message.content.slice(`/buy`).split(/ +/);
         connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`server\` = '${message.guild.id}' AND \`name\` = '${args.slice(1).join(' ')}'`, async (error, shop) => {
             if (error) return error_mysql(error, message);
             if (shop.length == 0){
