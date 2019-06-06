@@ -1140,7 +1140,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 message.reply(`**\`предприятие на данный момент производит ${items.length} товаров из ${storage[0].level}, попробуйте позже!\`**`).then(msg => msg.delete(18000));
                                 return message.delete();
                             }
-                            if ((+item.length + +args[1]) >= storage[0].level){
+                            if ((+items.length + +args[1]) >= storage[0].level){
                                 message.reply(`**\`предприятие не поддерживает такое кол-во производимых товаров одновременно. Осталось: ${+storage[0].level - items.length}\`**`).then(msg => msg.delete(18000));
                                 return message.delete();
                             }
