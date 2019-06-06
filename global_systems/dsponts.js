@@ -11,7 +11,7 @@ function isNumeric(n) {
 
 function error_mysql(error, message){
     console.error(error);
-    await message.reply(`**\`произошла критическая ошибка. Подробности отправлены в личные сообщения.\`**`).then(msg => msg.delete(20000));
+    message.reply(`**\`произошла критическая ошибка. Подробности отправлены в личные сообщения.\`**`).then(msg => msg.delete(20000));
     const embed = new Discord.RichEmbed();
     embed.setDescription(`**${message.member}, для устранения ошибки пожалуйста составьте жалобу в нашем [техническом разделе](https://robo-hamster.ru/index.php?forums/%D0%A2%D0%B5%D1%85%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9-%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB.5/). Код ошибки: #752**`);
     message.member.send(embed);
