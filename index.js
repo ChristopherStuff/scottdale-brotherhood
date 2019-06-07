@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.7-hide';
+const version = '5.2.8-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -499,6 +499,7 @@ async function nalog_biz(){
 async function update_items(){
     setInterval(() => {
         connection.query(`SELECT * FROM \`items\` WHERE \`server\` = '355656045600964609'`, async (error, items) => {
+	    if(items.lenght <= 0) return; 
             items.forEach(item => {
                 let date = new Date().valueOf();
                 if (item.date_end < date){
