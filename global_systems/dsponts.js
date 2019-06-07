@@ -716,27 +716,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
         return
     }
 
-    if (message.content == '/storage_help'){
-        if (!mysql_load(message, mysql_cooldown)) return
-        const embed = new Discord.RichEmbed();
-        embed.setTitle('Команды для взоимодействия с предприятием');
-        embed.addField(`Список команд`, `**/storage - получить информацию о текущем предприятии\n` +
-        `/storage_help - получить справку по командам\n` +
-        `/storage_description - поменять описание предприятия\n` +
-        `/storage_status - открыть или закрыть предприятие\n` +
-        `/storage_up - повысить уровень предприятия\n` +
-        `/storage_cost - поменять цену товара на предприятии\n` +
-        `/storage_add - положить деньги на предприятие\n` +
-        `/storage_get - снять деньги с предприятия**`);
-        embed.addField(`Краткое описание`, `**Ваше предприятие теряет в час определённую сумму, для поддержания работы предприятия требуется положить деньги на склад (/storage_add), после этого вы сможете восстановить работу предприятия командой (/storage_status).**`);
-        message.member.send(embed).then(() => {
-            message.reply(`**\`документация была отправлена вам в личные сообщения.\`**`).then(msg => msg.delete(12000));
-        }).catch(() => {
-            message.reply(`**\`ошибка отправки в личные сообщения. err: access denied for user\`**`).then(msg => msg.delete(12000));
-        });
-        return message.delete();
-    }
-
     if (message.content.startsWith('/storage')){
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/storage`).split(/ +/);

@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.5-hide';
+const version = '5.2.6-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -84,22 +84,6 @@ async function get_profile(gameserver, author_id){
     });
 }
 
-async function add_profile(gameserver, author_id){
-    return new Promise(async function(resolve, reject) {
-        doc.addRow(gameserver, {
-            idпользователя: `${author_id}`,
-            статусразработчика: '0',
-            мутдо: '0',
-        }, async function(err){
-            if (err){
-                console.error(`[DB] Ошибка добавления профиля на лист!`);
-                return reject(new Error(`При использовании 'addRow' произошла ошибка.`));
-            }
-            resolve(true);
-        });
-    });
-}
-
 async function change_profile(gameserver, author_id, table, value){
     return new Promise(async function(resolve, reject) {
         await doc.getRows(gameserver, { offset: 1, limit: 5000000, orderby: 'col2' }, (err, rows) => {
@@ -119,20 +103,6 @@ async function change_profile(gameserver, author_id, table, value){
     });
 }
 
-async function delete_profile(gameserver, author_id){
-    return new Promise(async function(resolve, reject) {
-        await doc.getRows(gameserver, { offset: 1, limit: 5000000, orderby: 'col2' }, (err, rows) => {
-            if (err){
-                console.error(`[DB] При получении данных с листа произошла ошибка!`);
-                return reject(new Error(`При использовании 'getrows' произошла ошибка при получении данных.`));
-            }
-            let db_account = rows.find(row => row.idпользователя == author_id); // Поиск аккаунта в базе данных.
-            if (!db_account) return resolve(false);
-            db_account.del();
-            resolve(true);
-        });
-    });
-}
 function now_date(){
     let date = new Date(+new Date().valueOf() + 10800000);
     return `${date.getDate().toString().padStart(2, '0')}.` +

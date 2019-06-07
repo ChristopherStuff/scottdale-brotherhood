@@ -61,7 +61,7 @@ exports.run = async (bot, message, tags, rolesgg, canremoverole, manytags, nrpna
 
     if (message.content.toLowerCase().includes("роль") && !message.content.toLowerCase().includes(`сними`) && !message.content.toLowerCase().includes(`снять`)){
         // Проверить невалидный ли ник.
-        if (nrpnames.has(message.member.displayName)){
+        if (nrpnames.has(message.member.displayName || message.member.user.tag)){
             if(message.member.roles.some(r=>rolesgg.includes(r.name)) ) {
                 for (var i in rolesgg){
                     let rolerem = bot.guilds.find(g => g.id == message.guild.id).roles.find(r => r.name == rolesgg[i]);
