@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.6-hide';
+const version = '5.2.7-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -423,7 +423,7 @@ async function update_sellers(){
         if (!server) return
         let channel = server.channels.find(c => c.name == 'buy-dashboard');
         if (!channel) return
-        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > 0`, async (err, result, fields) => {
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > 0 AND \`server\` = '355656045600964609'`, async (err, result, fields) => {
             channel.fetchMessages({limit: 1}).then(async messages => {
                 let names = [];
                 let cost = [];
@@ -454,7 +454,7 @@ async function update_sellers(){
 
 async function nalog_biz(){
     setInterval(() => {
-        connection.query(`SELECT * FROM \`storage\``, async (error, storages) => {
+        connection.query(`SELECT * FROM \`storage\` WHERE \`server\` = '355656045600964609'`, async (error, storages) => {
             storages.forEach(storage => {
                 let date = new Date().valueOf();
                 if (storage.nalog_new < date){
@@ -474,7 +474,7 @@ async function nalog_biz(){
             });
         });
 
-        connection.query(`SELECT * FROM \`buy_dashboard\``, async (error, shops) => {
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`server\` = '355656045600964609'`, async (error, shops) => {
             shops.forEach(shop => {
                 let date = new Date().valueOf();
                 if (shop.nalog_new < date){
@@ -498,7 +498,7 @@ async function nalog_biz(){
 
 async function update_items(){
     setInterval(() => {
-        connection.query(`SELECT * FROM \`items\``, async (error, items) => {
+        connection.query(`SELECT * FROM \`items\` WHERE \`server\` = '355656045600964609'`, async (error, items) => {
             items.forEach(item => {
                 let date = new Date().valueOf();
                 if (item.date_end < date){
