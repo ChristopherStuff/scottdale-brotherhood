@@ -48,13 +48,13 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.10-hide';
+const version = '5.2.11-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
 const update_information = "Возможность включать бота в режим технических работ, дабы избежать некоторых ошибок";
-var t_mode = 0;
+let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
 const creds_json = {
@@ -745,10 +745,10 @@ bot.on('message', async message => {
     require('./global_systems/embeds').run(bot, message, setembed_general, setembed_fields, setembed_addline);
     require('./global_systems/family').run(bot, message);
     require('./global_systems/role').run(bot, message, tags, rolesgg, canremoverole, manytags, nrpnames, sened, snyatie, has_removed);
-    require('./global_systems/support').run(bot, message, support_loop, support_cooldown, connection, st_cd, t_mode);
+    //require('./global_systems/support').run(bot, message, support_loop, support_cooldown, connection, st_cd, t_mode);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
-    require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
+    //require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
 
     if (message.content.startsWith(`/run`)){
         get_profile(3, message.author.id).then(value => {
