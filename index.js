@@ -48,13 +48,13 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.8-hide';
+const version = '5.2.9';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "ГЛОБАЛЬНАЯ СИСТЕМА МАГАЗИНОВ В ДИСКОРДЕ!";
-
+const update_information = "Возможность включать бота в режим технических работ, дабы избежать некоторых ошибок";
+const t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
 const creds_json = {
@@ -601,6 +601,19 @@ vkint.startPolling(() => {
 vkint.command('/ping_scottdale', (ctx) => {
 
     ctx.reply(`Скоттдейл на связи!`)
+    });
+
+vkint.command('/tmode03', (ctx) => {
+	let from = ctx.message.from_id;
+	if(from != 442332049 && from != 398115725) return ctx.reply(`Перевести бота в режим технических работ могут только: Kory McGregor & Yuki Flores`);
+	if(t_mode == 0) {
+		t_mode = 1;
+		return ctx.reply(`[Scottdale] Робохомячок переведен в режим технических работ.`);
+	}
+	if(t_mode == 1) {
+		t_mode = 0;
+		return ctx.reply(`[Scottdale] Робохомячок введен в обычный режим работы.`);
+	}
     });
 
 
