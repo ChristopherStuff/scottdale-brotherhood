@@ -54,7 +54,7 @@ const version = '5.2.9';
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
 const update_information = "Возможность включать бота в режим технических работ, дабы избежать некоторых ошибок";
-const t_mode = 0;
+var t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
 const creds_json = {
