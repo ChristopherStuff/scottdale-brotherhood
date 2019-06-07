@@ -165,7 +165,7 @@ function mysql_load(message, mysql_cooldown){
     return true;
 }
 
-exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send_action) => {
+exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode) => {
     
     if (!message) return
     if (!message.member) return
@@ -192,6 +192,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     // Profile actions
     if (message.content.startsWith('/setstat')){
         if (!message.member.hasPermission("ADMINISTRATOR")) return
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/setstat', ['serverid', 'userid', 'money'], ['number', 'number', 'number'])) return
         const args = message.content.slice(`/setstat`).split(/ +/);
@@ -212,6 +213,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/pay')){
+         if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/pay', ['user', 'сумма'], ['mention_user', 'plus_number'])) return
         const args = message.content.slice(`/pay`).split(/ +/);
@@ -265,6 +267,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/balance')){
+         if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         let user = message.guild.member(message.mentions.users.first());
         if (!user){
@@ -315,6 +318,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/buy')){
+         if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/buy`).split(/ +/);
         if (!args[1]){
@@ -367,6 +371,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     // Работа с предприятиями
 
     if (message.content.startsWith('/storage_status')){
+         if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/storage_status', ['состояние (1/0)'], ['none'])) return
         const args = message.content.slice(`/storage_status`).split(/ +/);
@@ -411,6 +416,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage_description')){
+         if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/storage_description`).split(/ +/);
         if (!args[1]){
@@ -470,6 +476,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage_up')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/storage_up`).split(/ +/);
         connection.query(`SELECT * FROM \`storage\` WHERE \`server\` = '${message.guild.id}' AND \`owner\` = '${message.author.id}'`, async (error, storage) => {
@@ -525,6 +532,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage_cost')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/storage_cost', ['сумма'], ['none'])) return
         const args = message.content.slice(`/storage_cost`).split(/ +/);
@@ -579,6 +587,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage_add')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/storage_add', ['сумма'], ['none'])) return
         const args = message.content.slice(`/storage_add`).split(/ +/);
@@ -645,6 +654,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage_get')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/storage_get', ['сумма'], ['none'])) return
         const args = message.content.slice(`/storage_get`).split(/ +/);
@@ -717,6 +727,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/storage')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/storage`).split(/ +/);
         connection.query(`SELECT * FROM \`storage\` WHERE \`server\` = '${message.guild.id}' AND \`owner\` = '${message.author.id}'`, async (error, storage) => {
@@ -789,6 +800,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     // Работа с магазином
 
     if (message.content.startsWith('/shop_status')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/shop_status', ['состояние (1/0)'], ['none'])) return
         const args = message.content.slice(`/shop_status`).split(/ +/);
@@ -833,6 +845,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop_description')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/shop_description`).split(/ +/);
         if (!args[1]){
@@ -892,6 +905,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop_cost')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/shop_cost', ['сумма'], ['none'])) return
         const args = message.content.slice(`/shop_cost`).split(/ +/);
@@ -938,6 +952,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop_add')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/shop_add', ['сумма'], ['none'])) return
         const args = message.content.slice(`/storage_add`).split(/ +/);
@@ -1004,6 +1019,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop_get')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/shop_get', ['сумма'], ['none'])) return
         const args = message.content.slice(`/shop_get`).split(/ +/);
@@ -1076,6 +1092,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop_buy')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         if (uses(message, '/shop_buy', ['кол-во'], ['plus_number_integer'])) return
         const args = message.content.slice(`/shop_buy`).split(/ +/);
@@ -1175,6 +1192,7 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
     }
 
     if (message.content.startsWith('/shop')){
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Просим извинения за доставленные неудобства.\`**`)
         if (!mysql_load(message, mysql_cooldown)) return
         const args = message.content.slice(`/shop`).split(/ +/);
         connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`server\` = '${message.guild.id}' AND \`owner\` = '${message.author.id}'`, async (error, storage) => {
