@@ -5,7 +5,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
     let re = /(\d+(\.\d)*)/i;
 
     if (message.channel.name == "support"){
-        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000);
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000));
         if (message.member.bot) return message.delete();
         if (support_cooldown.has(message.author.id)) {
             return message.delete();
@@ -108,7 +108,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
     }
 
     if (message.content == '/hold'){
-        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000);
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000));
         if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
         if (st_cd.has(message.guild.id)){
@@ -170,7 +170,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
     }
 
     if (message.content == '/toadmin'){
-        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000);
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000));
         if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
         if (st_cd.has(message.guild.id)){
@@ -255,7 +255,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
     }
 
     if (message.content == '/close'){
-        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000);
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000));
         if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
         if (st_cd.has(message.guild.id)){
@@ -362,7 +362,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
     }
 
     if (message.content == '/active'){
-        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000);
+        if(t_mode == 1) return message.reply(`**\`Проводятся технические работы на стороне бота \ хостинга. Повторите попытку позже. Просим извинения за доставленные неудобства.\`**`).then(msg => msg.delete(12000));
         if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
         if (st_cd.has(message.guild.id)){
