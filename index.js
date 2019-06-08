@@ -515,7 +515,6 @@ async function update_items(){
                                 }else{
                                     connection.query(`UPDATE \`buy_dashboard\` SET amount = amount + 1 WHERE \`id\` = '${shop[0].id}'`);
                                     connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
-                                    eval(storage[0].code);
                                 }
                             });
                         }
