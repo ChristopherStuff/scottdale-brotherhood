@@ -33,7 +33,7 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
             message.reply(`\`укажи число! '/setup [user] [уровень]'\``)
             return message.delete();
         }
-        if (!isInteger(args[2])) {
+        if (!isInteger(+args[2])) {
             message.reply(`\`укажи число! '/setup [user] [уровень]'\``)
             return message.delete();
         }
