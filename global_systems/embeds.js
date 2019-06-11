@@ -345,7 +345,7 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
 	const embed = new Discord.RichEmbed();
 	let i = 0;
 	for (i = 0; i < 10; i++) { 
-		setembed_general[i] = 'нет';
+		setembed_general[i] = 'не указано';
 		setembed_addline[i] = 'нет';
 		setembed_fields[i] = 'нет';
 	}
