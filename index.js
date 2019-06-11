@@ -1676,7 +1676,7 @@ bot.on('guildMemberUpdate', async (old_member, new_member) => {
         const entry = await new_member.guild.fetchAuditLogs({type: 'MEMBER_ROLE_UPDATE'}).then(audit => audit.entries.first())
         let member = await new_member.guild.members.get(entry.executor.id);
         if (member.user.bot) return
-        if (member.hasPermission("ADMINISTRATOR")){
+        if (member.hasPermission("ADMINISTRATOR") || member.roles.some(r => r.name == 'Support Team')){
             await new_member.guild.channels.find(c => c.name == 'spectator-chat').send(`${member} **\`снял пользователю\` ${new_member} \`отметку нежелательного.\`**`).catch(() => {
                 new_member.guild.channels.find(c => c.name == 'spectator-chat').send(`${member} **\`снял пользователю\` ${new_member} \`отметку нежелательного.\`**`);
             });
