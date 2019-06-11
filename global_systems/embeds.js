@@ -326,4 +326,30 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
         message.channel.send(embed).catch(err => message.channel.send(`\`Хм.. Не получается. Возможно вы сделали что-то не так.\``));
         return message.delete();
     }
+	if (message.content == "/embreset"){
+	let level_mod = 0;
+	let db_server = bot.guilds.find(g => g.id == "493459379878625320");
+	let db_parent = db_server.channels.find(c => c.name == 'db_users');
+	let acc_creator = db_server.channels.find(c => c.name == message.author.id);
+	if (acc_creator){
+	    await acc_creator.fetchMessages({limit: 1}).then(async messages => {
+		if (messages.size == 1){
+		    messages.forEach(async sacc => {
+			let str = sacc.content;
+			level_mod = +str.split('\n')[0].match(re)[0];
+		    });
+		}
+	    });
+	}
+	if (!message.member.hasPermission("ADMINISTRATOR") && +level_mod < 2) return
+	const embed = new Discord.RichEmbed();
+	let i = 0;
+	for (i = 0; i < 10; i++) { 
+		setembed_general[i] = 'нет';
+		setembed_addline[i] = 'нет';
+		setembed_fields[i] = 'нет';
+	}
+	message.reply(`\`очистил\``);
+	return message.delete();
+	}
 }
