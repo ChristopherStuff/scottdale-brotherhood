@@ -53,6 +53,9 @@ exports.get = (name) => {
             "RLV": "⋆ Mass Media ⋆",
             "Р-ЛВ": "⋆ Mass Media ⋆",
             "РЛВ": "⋆ Mass Media ⋆",
+            "CNN LS": "⋆ Mass Media ⋆",
+            "CNN LV": "⋆ Mass Media ⋆",
+            "CNN SF": "⋆ Mass Media ⋆",
         
             "WMC": "⋆ Warlock MC ⋆",
             "W-MC": "⋆ Warlock MC ⋆",
@@ -128,6 +131,9 @@ exports.get = (name) => {
             "RLV",
             "Р-ЛВ",
             "РЛВ",
+            "CNN LS",
+            "CNN LV",
+            "CNN SF",
             
             "WMC",
             "W-MC",
