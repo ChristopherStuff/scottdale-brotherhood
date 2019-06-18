@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.9-hide';
+const version = '5.2.10-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -276,9 +276,9 @@ async function special_discord_update(){
                 
                 if (redrock.members.get(member.id)){
                     let g_member = redrock.members.get(member.id);
-                    if (g_member.roles.some(r => ['IV ⚡ Администратор', 'III ⚡ Старший модератор'].includes(r.name))){
+                    if (g_member.roles.some(r => ['IV ⚡️ Администратор', 'III ⚡️ Старший модератор'].includes(r.name))){
                         server_were_admin.push('Red-Rock');
-                    }else if (g_member.roles.some(r => ['II ⚡ Модератор', 'I ⚡ Младший модератор'].includes(r.name))){
+                    }else if (g_member.roles.some(r => ['II ⚡️ Модератор', 'I ⚡️ Младший модератор'].includes(r.name))){
                         server_were_helper.push('Red-Rock');
                     }
                 }
