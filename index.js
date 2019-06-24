@@ -1,3 +1,4 @@
+//r
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 const tbot = new Discord.Client();
