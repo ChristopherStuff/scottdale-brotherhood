@@ -1,16 +1,19 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
-async function parentadd(channel, category, number){
-    if (!channel || !category || !number) return
-    console.log('Вызов ' + channel.name + ' - ' + category.name + ' - ' + number);
-    number--;
-    if (number <= 0) return
+async function parentadd(channel, category){
+    if (!channel || !category) return
+    console.log('Вызов ' + channel.name + ' - ' + category.name);
     await channel.setParent(category.id).catch(err => {
         setTimeout(() => {
-            parentadd(channel, category, number);
+            console.log('time')
+            parentadd(channel, category);
         }, 2000);
     });
+    if (channel.parentID != category.id){
+        console.log('несоответвие')
+        parentadd(channel, category);
+    }
 };
 
 exports.run = async (bot, message, support_loop, support_cooldown, connection, st_cd, t_mode) => {
