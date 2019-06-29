@@ -245,5 +245,68 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             });
         });
     }
+
+    if (message.content == '/add'){
+        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
+        if (!message.channel.name.startsWith('ticket-')) return message.delete();
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply(`\`пользователь не указан! используйте: '/add @user'\``).then(msg => msg.delete(7000));
+            return message.delete();
+        }
+        if (st_cd.has(message.guild.id)){
+            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
+            return message.delete();
+        }
+        st_cd.add(message.guild.id);
+        setTimeout(() => {
+            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
+        }, 7000);
+
+        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
+            if (err){
+                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+                return message.delete();
+            }
+            if (user.id == message.author.id){
+                if (tickets[0].additional_user != null){
+                    let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
+                    if (permission) permission.delete();
+                    await connection.query(`UPDATE \`tickets\` SET additional_user = NULL WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
+                    message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
+                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
+                }
+                return message.delete();
+            }
+            if (tickets[0].additional_user != null){
+                let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
+                if (permission) permission.delete();
+            }
+            await connection.query(`UPDATE \`tickets\` SET additional_user = '${user.id}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
+            await message.channel.overwritePermissions(user, {
+                // GENERAL PERMISSIONS
+                CREATE_INSTANT_INVITE: false,
+                MANAGE_CHANNELS: false,
+                MANAGE_ROLES: false,
+                MANAGE_WEBHOOKS: false,
+                // TEXT PERMISSIONS
+                VIEW_CHANNEL: true,
+                SEND_MESSAGES: true,
+                SEND_TTS_MESSAGES: false,
+                MANAGE_MESSAGES: false,
+                EMBED_LINKS: true,
+                ATTACH_FILES: true,
+                READ_MESSAGE_HISTORY: true,
+                MENTION_EVERYONE: false,
+                USE_EXTERNAL_EMOJIS: false,
+                ADD_REACTIONS: false,
+            })
+            message.channel.send(`\`Модератор\` ${message.member} \`добавил к данной жалобе пользователя:\` ${user}`);
+            let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+            if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}]\``);
+            return message.delete();
+        });
+    }
     return
 };

@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.3';
+const version = '5.3.4';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Новый Support, добавлена команда /active";
+const update_information = "Новый Support, добавлена команда /add\nДобавляет пользователя к жалобе (как дополнительного)\nЕсли пользователь был, то заменяет другим\nЕсли использовать /add на себя, очищает список доп.пользователей.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
