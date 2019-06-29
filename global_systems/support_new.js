@@ -48,6 +48,8 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     message.reply(`\`обращения в поддержку временно недоступны. Повторите попытку позднее.\``).then(msg => msg.delete(12000));
                     return message.delete();
                 }
+                connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
+                connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
                 message.guild.createChannel(`ticket-${+result[0].tickets + 1}`, 'text', [
                     {
                         id: moderator.id,
@@ -64,8 +66,6 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS']
                     }
                 ]).then(async channel => {
-                    connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
                     await channel.setParent(category.id).catch(() => {
                         setTimeout(() => {
                             channel.setParent(category.id);
