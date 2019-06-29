@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.1';
+const version = '5.3.2';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Новый Support, создание тикетов";
+const update_information = "Новый Support, добавлена команда /hold";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -2017,10 +2017,10 @@ bot.on('message', async (message) => {
                 const embed = new Discord.RichEmbed();
                 embed.setDescription(`**${message.member}, для авторизации нажмите на [выделенный текст](https://discordapp.com/oauth2/authorize?response_type=code&client_id=488717818829996034&scope=identify+guilds+email&state=scottdale_${password}).**`);
                 message.member.send(embed).then(() => {
-                    send_action(message.guild.id, `${member.displayName || member.user.tag} (${member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
+                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
 		            message.reply(`**\`код авторизации был отправлен в личные сообщения!\`**`).then(msg => msg.delete(12000));
 		        }).catch(err => {
-                    send_action(message.guild.id, `${member.displayName || member.user.tag} (${member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
+                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
                     message.reply(`**\`ошибка при отправке в личные сообщения, оставлю код тут!\`**`, embed);
                 });
                 return message.delete();
@@ -2028,10 +2028,10 @@ bot.on('message', async (message) => {
                 const embed = new Discord.RichEmbed();
                 embed.setDescription(`**${message.member}, для авторизации нажмите на [выделенный текст](https://discordapp.com/oauth2/authorize?response_type=code&client_id=488717818829996034&scope=identify+guilds+email&state=scottdale_${result[0].state}).**`);
                 message.member.send(embed).then(() => {
-                    send_action(message.guild.id, `${member.displayName || member.user.tag} (${member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
+                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
 		            message.reply(`**\`код авторизации был отправлен в личные сообщения!\`**`).then(msg => msg.delete(12000));
 		        }).catch(err => {
-                    send_action(message.guild.id, `${member.displayName || member.user.tag} (${member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
+                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
                     message.reply(`**\`ошибка при отправке в личные сообщения, оставлю код тут!\`**`, embed);
                 });
                 return message.delete();
