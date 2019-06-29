@@ -269,17 +269,17 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 return message.delete();
             }
             if (user.id == message.author.id){
-                if (tickets[0].additional_user != null){
+                if (+tickets[0].additional_user != 0){
                     let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
                     if (permission) permission.delete();
-                    await connection.query(`UPDATE \`tickets\` SET additional_user = NULL WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
+                    await connection.query(`UPDATE \`tickets\` SET additional_user = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
                     message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                     if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
                 }
                 return message.delete();
             }
-            if (tickets[0].additional_user != null){
+            if (+tickets[0].additional_user != 0){
                 let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
                 if (permission) permission.delete();
             }
