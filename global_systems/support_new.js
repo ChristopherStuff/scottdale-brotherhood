@@ -81,7 +81,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 ]).then(async channel => {
                     await connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
                     await connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    await parentadd(channel, category, 50);
+                    await parentadd(channel, category);
                     message.delete();
                     channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
                         color: 3447003,
