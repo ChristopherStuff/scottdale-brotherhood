@@ -1,6 +1,17 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
+async function parentadd(channel, category, number){
+    if (!channel || !category || !number) return
+    number--;
+    if (number <= 0) return
+    await channel.setParent(category.id).catch(err => {
+        setTimeout(() => {
+            parentadd(channel, category, number);
+        }, 2000);
+    });
+};
+
 exports.run = async (bot, message, support_loop, support_cooldown, connection, st_cd, t_mode) => {
     const image = new Discord.RichEmbed();
     image.setImage("https://imgur.com/LKDbJeM.gif");
@@ -66,15 +77,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 ]).then(async channel => {
                     await connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
                     await connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    await channel.setParent(category.id).catch(() => {
-                        setTimeout(() => {
-                            channel.setParent(category.id).catch(() => {
-                                setTimeout(() => {
-                                    channel.setParent(category.id);
-                                }, 4000);
-                            });
-                        }, 4000);
-                    });
+                    await parentadd(channel, category, 50);
                     message.delete();
                     channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
                         color: 3447003,
