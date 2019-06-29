@@ -38,6 +38,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     `**Необработанных модераторами: ${result[0].open}**\n` +
                     `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
                     `**Закрытых: ${result[0].close}**`, image).then(msg => {
+                        rep_message = msg;
                         connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
                     });
                 });
