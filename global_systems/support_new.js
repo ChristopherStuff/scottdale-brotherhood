@@ -77,7 +77,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
                     message.delete();
                     await channel.setParent(category.id);
-                    channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator_role.id}>`, {embed: {
+                    channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
                         color: 3447003,
                         title: "Обращение к поддержке Discord",
                         fields: [{
