@@ -10,10 +10,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         if (support_cooldown.has(message.author.id)) {
             return message.delete();
         }
-        if (!message.member.hasPermission("ADMINISTRATOR")) support_cooldown.add(message.author.id);
+        support_cooldown.add(message.author.id);
         setTimeout(() => {
             if (support_cooldown.has(message.author.id)) support_cooldown.delete(message.author.id);
-        }, 300000);
+        }, 30000);
         let id_mm;
         let rep_message;
         let db_server = bot.guilds.find(g => g.id == "493459379878625320");
