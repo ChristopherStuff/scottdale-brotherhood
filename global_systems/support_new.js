@@ -116,15 +116,16 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             }
             if (+tickets[0].status != 1) return message.delete();
             let category = message.guild.channels.find(c => c.name == "Жалобы на рассмотрении");
+            let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
-            if (!category) return message.delete();
+            if (!category || !ticket_channel) return message.delete();
             await message.channel.setParent(category.id).catch(() => {
                 message.channel.setParent(category.id);
             });
             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
                 if (error) return message.delete();
                 if (result.length == 0){
-                    message.channel.send(`` +
+                    ticket_channel.send(`` +
                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
                     `**Количество вопросов за все время: 0**\n` +
@@ -135,8 +136,8 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     });
                     return message.delete();
                 }else{
-                    let rep_message = await message.channel.fetchMessage(result[0].message).catch(async (err) => {
-                        await message.channel.send(`` +
+                    let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
+                        await ticket_channel.send(`` +
                         `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                         `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
                         `**Количество вопросов за все время: ${result[0].tickets}**\n` +
