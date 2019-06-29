@@ -10,10 +10,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         if (support_cooldown.has(message.author.id)){
             return message.delete();
         }
-        if (!message.member.hasPermission("ADMINISTRATOR")) support_cooldown.add(message.author.id);
+        support_cooldown.add(message.author.id);
         setTimeout(() => {
             if (support_cooldown.has(message.author.id)) support_cooldown.delete(message.author.id);
-        }, 300000);
+        }, 30000);
 
         connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
             if (error) return message.delete();
