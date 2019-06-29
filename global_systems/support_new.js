@@ -68,7 +68,11 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 ]).then(async channel => {
                     await channel.setParent(category.id).catch(() => {
                         setTimeout(() => {
-                            channel.setParent(category.id);
+                            channel.setParent(category.id).catch(() => {
+                                setTimeout(() => {
+                                    channel.setParent(category.id);
+                                }, 4000);
+                            });
                         }, 4000);
                     });
                     message.delete();
