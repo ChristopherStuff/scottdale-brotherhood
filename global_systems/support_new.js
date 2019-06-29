@@ -100,4 +100,5 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             }
         });
     }
+    return
 };
