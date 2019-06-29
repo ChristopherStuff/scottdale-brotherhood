@@ -3,6 +3,7 @@ const fs = require("fs");
 
 async function parentadd(channel, category, number){
     if (!channel || !category || !number) return
+    console.log('Вызов ' + channel.name + ' - ' + category.name + ' - ' + number);
     number--;
     if (number <= 0) return
     await channel.setParent(category.id).catch(err => {
