@@ -30,9 +30,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 });
                 return message.delete();
             }else{
-                console.log('1')
                 let rep_message = await message.channel.fetchMessage(result[0].message).catch(async err => {
-                    console.log('3')
                     await message.channel.send(`` +
                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -40,13 +38,9 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     `**Необработанных модераторами: ${result[0].open}**\n` +
                     `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
                     `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                        console.log('5')
                         connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
                     });
-                    console.log('4')
-                    return message.delete();
                 });
-                console.log('6')
                 let category = message.guild.channels.find(c => c.name == "Активные жалобы");
                 let moderator = await message.guild.roles.find(r => r.name == 'Support Team');
                 if (!category || !moderator) return message.delete();
