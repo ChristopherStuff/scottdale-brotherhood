@@ -254,6 +254,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             message.reply(`\`пользователь не указан! используйте: '/add @user'\``).then(msg => msg.delete(7000));
             return message.delete();
         }
+        console.log(8)
         if (st_cd.has(message.guild.id)){
             message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
             return message.delete();
