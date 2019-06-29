@@ -21,9 +21,7 @@ const connection = mysql.createConnection({
 });
 
 const VkBot = require(`./modules/node-vk-bot-api`);
-const vkint = new VkBot({
-    token: process.env.tokenvk
-  })
+const vkint = new VkBot({ token: process.env.tokenvk })
 
 connection.connect(function(err){
     if (err){
@@ -49,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.2.11-hide';
+const version = '5.3.1';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Возможность включать бота в режим технических работ, дабы избежать некоторых ошибок";
+const update_information = "Новый Support, создание тикетов";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -745,7 +743,7 @@ bot.on('message', async message => {
     require('./global_systems/embeds').run(bot, message, setembed_general, setembed_fields, setembed_addline);
     require('./global_systems/family').run(bot, message);
     require('./global_systems/role').run(bot, message, tags, rolesgg, canremoverole, manytags, nrpnames, sened, snyatie, has_removed);
-    require('./global_systems/support').run(bot, message, support_loop, support_cooldown, connection, st_cd, t_mode);
+    require('./global_systems/support_new').run(bot, message, support_loop, support_cooldown, connection, st_cd, t_mode);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
