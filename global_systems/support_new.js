@@ -164,7 +164,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
                     }
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[HOLD]\` \`Модератор ${message.member.displayName || message.member.user.tag} установил жалобе\` <#${channel.id}> \`[${channel.name}] статус 'На рассмотрении'\``);
+                    if (ticket_log) ticket_log.send(`\`[HOLD]\` \`Модератор ${message.member.displayName || message.member.user.tag} установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'На рассмотрении'\``);
                     return message.delete();
                 }
             });
