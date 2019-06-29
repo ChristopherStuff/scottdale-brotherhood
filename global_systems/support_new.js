@@ -31,7 +31,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 return message.delete();
             }else{
                 console.log('1')
-                let rep_message = await message.channel.fetchMessage(result[0].message).catch(err => {
+                let rep_message = await message.channel.fetchMessage(result[0].message).catch(async err => {
                     console.log('3')
                     await message.channel.send(`` +
                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
