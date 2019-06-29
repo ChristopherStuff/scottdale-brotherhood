@@ -66,7 +66,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 ]).then(async channel => {
                     await connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
                     await connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    await channel.setParent(category.id);
+                    await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
                     message.delete();
                     channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
                         color: 3447003,
@@ -117,11 +117,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
             if (!category || !ticket_channel) return message.delete();
-            await message.channel.setParent(category.id).catch(() => {
-                setTimeout(() => {
-                    message.channel.setParent(category.id);
-                }, 4000);
-            });
+            await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
                 if (error) return message.delete();
                 if (result.length == 0){
