@@ -262,14 +262,18 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         setTimeout(() => {
             if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
         }, 7000);
-
+        console.log(1)
         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
+            console.log(2)
             if (err){
                 message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
                 return message.delete();
             }
+            console.log(3)
             if (user.id == message.author.id){
+                console.log(4)
                 if (+tickets[0].additional_user != 0){
+                    console.log(5)
                     let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
                     if (permission) permission.delete();
                     await connection.query(`UPDATE \`tickets\` SET additional_user = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
@@ -277,8 +281,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                     if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
                 }
+                console.log(6)
                 return message.delete();
             }
+            console.log(7)
             if (+tickets[0].additional_user != 0){
                 let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
                 if (permission) permission.delete();
