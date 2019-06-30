@@ -13,8 +13,10 @@ function time(s) {
     let secs = s % 60;
     s = (s - secs) / 60;
     let mins = s % 60;
-    let hrs = (s - mins) / 60;
-    let days = (s - hrs) / 24;
+    s = (s - mins) / 60;
+    let hrs = s % 60;
+    s = (s - hrs) / 60;
+    let days = s % 24;
     let status = true;
     let output = '';
 
