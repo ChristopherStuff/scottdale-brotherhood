@@ -1,6 +1,12 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
+function endsWithAny(suffixes, string) {
+    return suffixes.some(function (suffix) {
+        return string.endsWith(suffix);
+    });
+}
+
 function time(s) {
     let ms = s % 1000;
     s = (s - ms) / 1000;
