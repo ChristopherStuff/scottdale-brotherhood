@@ -262,6 +262,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         setTimeout(() => {
             if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
         }, 7000);
+        let author = message.guild.members.get(tickets[0].author);
         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
             if (err){
                 message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
@@ -310,6 +311,113 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             message.channel.send(`\`Модератор\` ${message.member} \`добавил к данной жалобе пользователя:\` ${user}`);
             let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
             if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}]\``);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/set')){
+        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
+        if (!message.channel.name.startsWith('ticket-')) return message.delete();
+        const args = message.content.slice(`/run`).split(/ +/);
+        if (args[1] != '1' && args[1] != '0'){
+            message.reply(`\`используйте: '/set [0 или 1]'\n0 - модераторы, 1 - админы\``).then(msg => msg.delete(7000));
+            return message.delete();
+        }
+        if (st_cd.has(message.guild.id)){
+            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
+            return message.delete();
+        }
+        st_cd.add(message.guild.id);
+        setTimeout(() => {
+            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
+        }, 7000);
+        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
+            if (err){
+                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+                return message.delete();
+            }
+            if (tickets[0].department == args[1]) return message.delete();
+            let moderator = message.guild.roles.find(r => r.name == 'Support Team');
+            let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
+            let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
+            if (tickets[0].department == '0'){
+                let permission = message.channel.permissionOverwrites.find(p => p.id == `${moderator.id}`);
+                if (permission) permission.delete();
+                await message.channel.overwritePermissions(jr_administrator, {
+                    // GENERAL PERMISSIONS
+                    CREATE_INSTANT_INVITE: false,
+                    MANAGE_CHANNELS: false,
+                    MANAGE_ROLES: false,
+                    MANAGE_WEBHOOKS: false,
+                    // TEXT PERMISSIONS
+                    VIEW_CHANNEL: true,
+                    SEND_MESSAGES: true,
+                    SEND_TTS_MESSAGES: false,
+                    MANAGE_MESSAGES: false,
+                    EMBED_LINKS: true,
+                    ATTACH_FILES: true,
+                    READ_MESSAGE_HISTORY: true,
+                    MENTION_EVERYONE: false,
+                    USE_EXTERNAL_EMOJIS: false,
+                    ADD_REACTIONS: false,
+                });
+                await message.channel.overwritePermissions(administrator, {
+                    // GENERAL PERMISSIONS
+                    CREATE_INSTANT_INVITE: false,
+                    MANAGE_CHANNELS: false,
+                    MANAGE_ROLES: false,
+                    MANAGE_WEBHOOKS: false,
+                    // TEXT PERMISSIONS
+                    VIEW_CHANNEL: true,
+                    SEND_MESSAGES: true,
+                    SEND_TTS_MESSAGES: false,
+                    MANAGE_MESSAGES: false,
+                    EMBED_LINKS: true,
+                    ATTACH_FILES: true,
+                    READ_MESSAGE_HISTORY: true,
+                    MENTION_EVERYONE: false,
+                    USE_EXTERNAL_EMOJIS: false,
+                    ADD_REACTIONS: false,
+                });
+                if (author){
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена администрации сервера. Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера. Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}] администрации сервера.\``);
+            }else if (tickets[0].department == '1'){
+                let permission = message.channel.permissionOverwrites.find(p => p.id == `${jr_administrator.id}`);
+                if (permission) permission.delete();
+                let permission_two = message.channel.permissionOverwrites.find(p => p.id == `${administrator.id}`);
+                if (permission_two) permission_two.delete();
+                await message.channel.overwritePermissions(moderator, {
+                    // GENERAL PERMISSIONS
+                    CREATE_INSTANT_INVITE: false,
+                    MANAGE_CHANNELS: false,
+                    MANAGE_ROLES: false,
+                    MANAGE_WEBHOOKS: false,
+                    // TEXT PERMISSIONS
+                    VIEW_CHANNEL: true,
+                    SEND_MESSAGES: true,
+                    SEND_TTS_MESSAGES: false,
+                    MANAGE_MESSAGES: false,
+                    EMBED_LINKS: true,
+                    ATTACH_FILES: true,
+                    READ_MESSAGE_HISTORY: true,
+                    MENTION_EVERYONE: false,
+                    USE_EXTERNAL_EMOJIS: false,
+                    ADD_REACTIONS: false,
+                });
+                if (author){
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена модераторам сервера. Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данная жалоба была перенаправлена модераторам сервера. Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}] модераторам сервера.\``);
+            }
+            await connection.query(`UPDATE \`tickets\` SET department = '${args[1]}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
             return message.delete();
         });
     }
