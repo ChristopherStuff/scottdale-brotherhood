@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.6';
+const version = '5.3.7';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Новый Support, добавлена команда /close";
+const update_information = "Новая система поддержки успешно переписана!";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -524,6 +524,36 @@ async function update_items(){
     }, 12000);
 }
 
+async function newsupport_table(){
+    setInterval(() => {
+        connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
+            if (result.length != 0){
+                let server = bot.guilds.get(serverid);
+                let ticket_channel = server.channels.find(c => c.name == 'support');
+                let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async err => {
+                    await ticket_channel.send(`` +
+                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
+                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
+                    `**Необработанных модераторами: ${result[0].open}**\n` +
+                    `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
+                    `**Закрытых: ${result[0].close}**`, image).then(msg => {
+                        rep_message = msg;
+                        connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
+                    });
+                });
+                rep_message.edit(`` +
+                `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
+                `**Количество вопросов за все время: ${result[0].tickets}**\n` +
+                `**Необработанных модераторами: ${result[0].open}**\n` +
+                `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
+                `**Закрытых: ${result[0].close}**`, image);
+            }
+        });
+    }, 17000);
+}
+
 const warn_cooldown = new Set();
 const support_loop = new Set();
 const ds_cooldown = new Set();
@@ -578,6 +608,7 @@ bot.on('ready', async () => {
     update_sellers();
     nalog_biz();
     update_items();
+    newsupport_table();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
@@ -1554,7 +1585,7 @@ async function check_unwanted_user(){
                                 let s_now = new Date().valueOf() - 18000000;
                                 if (msg.createdAt.valueOf() < s_now){
                                     log_channel.send(`\`[SYSTEM]\` \`Жалоба\` <#${channel.id}> \`уже более 5-ти часов ожидает проверки!\``);
-                                    channel.send(`\`[SYSTEM]\` \`Привет! Я напомнил модераторам про твое обращение!\``)
+                                    channel.send(`\`[SYSTEM]\` \`Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.\``)
                                 }
                             });
                         }
