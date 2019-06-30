@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.4.5';
+const version = '5.4.6';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "request-for-roles [1.5]\n- При отказе о выдаче роли значения будут отправлены в базу данных.\n- При снятии роли значения будут отправлены в базу данных.\n- При запросе роли, если невалидный никнейм запрос будет заблокирован, роли будут сняты, а в sp-chat отправится уведомление.\n- При запросе роли, если человек с ID был пойман на отказе, вылезет красное предупреждение.\n- При запросе роли, если у пользователя снималась роль будет предупреждение с тем, кто снимал роль.";
+const update_information = "request-for-roles [1.6]\nКоманда /remove_blacklist [никнейм] - убрать ник с чс\nКоманда /remove_accepted [user] - убрать пользователя из уведомлений о снятии роли\nПользователи у которых недавно пометили невалидный никнейм отображаются неделю.\nПользователи у которых недавно сняли роль отображаются 3-ое суток.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1193,7 +1193,7 @@ bot.on('raw', async event => {
                 field_channel.send(`<@${field_user.id}>**,** \`модератор\` <@${member.id}> \`отклонил ваш запрос на выдачу роли.\nВаш ник при отправке: ${field_nickname}\nУстановите ник на: [Фракция] Имя_Фамилия [Ранг]\``)
                 let date = require('./objects/functions').getDateMySQL();
                 connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${field_nickname.toLowerCase()}' AND \`server\` = '${server.id}'`, async (err, names) => {
-                    if (names.length == 0) await connection.query(`INSERT INTO \`blacklist_names\` (\`server\`, \`name\`, \`blacklisted\`, \`moderator\`, \`time_add\`) VALUES ('${server.id}', '${field_nickname.toLowerCase()}', '1', '${member.id}', '${date}')`);
+                    if (names.length == 0) await connection.query(`INSERT INTO \`blacklist_names\` (\`server\`, \`name\`, \`blacklisted\`, \`moderator\`, \`time_add\`, \`user\`) VALUES ('${server.id}', '${field_nickname.toLowerCase()}', '1', '${member.id}', '${date}', '${field_user.id}')`);
                     if (names.length == 1){
                         connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '1', \`moderator\` = '${member.id}', \`time_add\` = '${date}' WHERE \`server\` = '${server.id}' AND \`name\` = '${field_nickname.toLowerCase()}'`);
                     }

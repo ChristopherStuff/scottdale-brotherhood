@@ -70,6 +70,65 @@ function time(s) {
 
 exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, manytags, sened, snyatie) => {
 
+    if (message.content.startsWith('/remove_blacklist')){
+        if (!message.member.hasPermission("MANAGE_ROLES")){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(7000));
+            return message.delete();
+        }
+        const args = message.content.slice('/remove_blacklist').split(/ +/);
+        if (!args[1]){
+            message.reply(`\`укажите никнейм! '/remove_blacklist [name]'\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        let name = message.content.split('/remove_blacklist ')[1];
+        connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${name}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
+            if (names.length == 0){
+                message.reply(`\`данный никнейм не был найден в чс!\``).then(msg => msg.delete(7000));
+                return message.delete();
+            }else{
+                connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`name\` = '${name}'`);
+                message.reply(`\`запрос на удаление с blacklist был успешно выполнен! [${name}]\``);
+                message.delete();
+                connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${names[0].user}'`, async (err, users) => {
+                    if (users.length > 0){
+                        if (new Date(`${users[0].remove_role}`).valueOf() != '-30610224000000'){
+                            connection.query(`UPDATE \`requests-for-roles\` SET \`blacklisted\` = '1000-01-01 00:00:00' WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${names[0].user}'`);
+                            message.reply(`\`Пользователю\` <@${names[0].user}> \`был снят статус чёрного списка.\``);
+                        }else{
+                            connection.query(`DELETE FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${names[0].user}'`);
+                            message.reply(`\`Пользователю\` <@${names[0].user}> \`был удален статус чёрного списка.\``);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    if (message.content.startsWith('/remove_accepted')){
+        if (!message.member.hasPermission("MANAGE_ROLES")){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(7000));
+            return message.delete();
+        }
+        let user = message.guild.member(message.mentions.members.first());
+        if (!user){
+            message.reply(`\`укажите пользователя! '/remove_accepted [user]'\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${user.id}'`, async (err, users) => {
+            if (users.length > 0){
+                if (new Date(`${users[0].blacklisted}`).valueOf() != '-30610224000000'){
+                    connection.query(`UPDATE \`requests-for-roles\` SET \`remove_role\` = '1000-01-01 00:00:00', \`staff\` = '' WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${user.id}'`);
+                    message.reply(`\`Пользователю\` ${user} \`был снят статус снятие роли.\``);
+                    return message.delete();
+                }else{
+                    connection.query(`DELETE FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${user.id}'`);
+                    message.reply(`\`Пользователю\` ${user} \`был удален статус снятие роли.\``);
+                    return message.delete();
+                }
+            }
+        });
+    }
+
     if (message.content.toLowerCase().includes("сними") || message.content.toLowerCase().includes("снять")){
         if (!message.member.roles.some(r => canremoverole.includes(r.name)) && !message.member.hasPermission("MANAGE_ROLES")) return
         const args = message.content.split(/ +/)
@@ -182,13 +241,13 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                         if (users.length == 1){
                             if (new Date(`${users[0].blacklisted}`).valueOf() != '-30610224000000'){
                                 let date = new Date().valueOf() - new Date(`${users[0].blacklisted}`).valueOf();
-                                embed.addField(`Внимание! Чёрный список!`, `\`\`\`diff\n- ${time(date)} назад у данного пользователя был отмечен никнейм как невалидный.\n- Будьте внимательны перед проверкой его на роль!\`\`\``);
+                                if (+date < 604800000) embed.addField(`Внимание! Чёрный список!`, `\`\`\`diff\n- ${time(date)} назад у данного пользователя был отмечен никнейм как невалидный.\n- Будьте внимательны перед проверкой его на роль! Данное уведомление действует 7 дней.\`\`\``);
                             }
                             if (new Date(`${users[0].remove_role}`).valueOf() != '-30610224000000'){
                                 let date = new Date().valueOf() - new Date(`${users[0].remove_role}`).valueOf();
                                 let member = message.guild.members.get(users[0].staff);
                                 let staff = ' от ' + member.displayName || ' от ' + member.user.tag || '';
-                                embed.addField(`Снятие роли!`, `\`\`\`diff\n+ ${time(date)} назад у данного пользователя была снята роль по запросу${staff}.\n+ Будьте внимательны перед проверкой его на роль!\`\`\``);
+                                if (+date < 259200000) embed.addField(`Снятие роли!`, `\`\`\`diff\n+ ${time(date)} назад у данного пользователя была снята роль по запросу${staff}.\n+ Будьте внимательны перед проверкой его на роль! Данное уведомление действует 3-ое суток.\`\`\``);
                             }
                         }
                         reqchat.send(embed).then(async msgsen => {
