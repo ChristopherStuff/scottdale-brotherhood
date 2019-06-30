@@ -259,7 +259,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
         let user = message.guild.member(message.mentions.users.first());
         if (!user){
-            message.reply(`\`пользователь не указан! используйте: '/add @user'\``).then(msg => msg.delete(7000));
+            message.reply(`\`пользователь не указан! используйте: '/add @user', если на себя, то очистит доп.пользователей в жалобе.\``).then(msg => msg.delete(7000));
             return message.delete();
         }
         if (st_cd.has(message.guild.id)){
