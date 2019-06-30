@@ -439,7 +439,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
                 return message.delete();
             }
-            if (+tickets[0].status != 0) return message.delete();
+            if (+tickets[0].status == 0) return message.delete();
             let category = message.guild.channels.find(c => c.name == "Корзина");
             let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
