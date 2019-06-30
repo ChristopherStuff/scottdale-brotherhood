@@ -492,6 +492,107 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
                         connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
                     }
+                    await message.channel.overwritePermissions(author, {
+                        // GENERAL PERMISSIONS
+                        CREATE_INSTANT_INVITE: false,
+                        MANAGE_CHANNELS: false,
+                        MANAGE_ROLES: false,
+                        MANAGE_WEBHOOKS: false,
+                        // TEXT PERMISSIONS
+                        VIEW_CHANNEL: true,
+                        SEND_MESSAGES: false,
+                        SEND_TTS_MESSAGES: false,
+                        MANAGE_MESSAGES: false,
+                        EMBED_LINKS: true,
+                        ATTACH_FILES: true,
+                        READ_MESSAGE_HISTORY: true,
+                        MENTION_EVERYONE: false,
+                        USE_EXTERNAL_EMOJIS: false,
+                        ADD_REACTIONS: false,
+                    });
+                    if (+tickets[0].additional_user != 0){
+                        let user = message.guild.members.get(tickets[0].additional_user);
+                        if (user){
+                            await message.channel.overwritePermissions(user, {
+                                // GENERAL PERMISSIONS
+                                CREATE_INSTANT_INVITE: false,
+                                MANAGE_CHANNELS: false,
+                                MANAGE_ROLES: false,
+                                MANAGE_WEBHOOKS: false,
+                                // TEXT PERMISSIONS
+                                VIEW_CHANNEL: true,
+                                SEND_MESSAGES: false,
+                                SEND_TTS_MESSAGES: false,
+                                MANAGE_MESSAGES: false,
+                                EMBED_LINKS: true,
+                                ATTACH_FILES: true,
+                                READ_MESSAGE_HISTORY: true,
+                                MENTION_EVERYONE: false,
+                                USE_EXTERNAL_EMOJIS: false,
+                                ADD_REACTIONS: false,
+                            });
+                        }
+                    }
+                    let moderator = message.guild.roles.find(r => r.name == 'Support Team');
+                    let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
+                    let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
+                    if (tickets[0].department == '0'){
+                        await message.channel.overwritePermissions(moderator, {
+                            // GENERAL PERMISSIONS
+                            CREATE_INSTANT_INVITE: false,
+                            MANAGE_CHANNELS: false,
+                            MANAGE_ROLES: false,
+                            MANAGE_WEBHOOKS: false,
+                            // TEXT PERMISSIONS
+                            VIEW_CHANNEL: true,
+                            SEND_MESSAGES: false,
+                            SEND_TTS_MESSAGES: false,
+                            MANAGE_MESSAGES: false,
+                            EMBED_LINKS: true,
+                            ATTACH_FILES: true,
+                            READ_MESSAGE_HISTORY: true,
+                            MENTION_EVERYONE: false,
+                            USE_EXTERNAL_EMOJIS: false,
+                            ADD_REACTIONS: false,
+                        });
+                    }else if (tickets[0].department == '1'){
+                        await message.channel.overwritePermissions(jr_administrator, {
+                            // GENERAL PERMISSIONS
+                            CREATE_INSTANT_INVITE: false,
+                            MANAGE_CHANNELS: false,
+                            MANAGE_ROLES: false,
+                            MANAGE_WEBHOOKS: false,
+                            // TEXT PERMISSIONS
+                            VIEW_CHANNEL: true,
+                            SEND_MESSAGES: false,
+                            SEND_TTS_MESSAGES: false,
+                            MANAGE_MESSAGES: false,
+                            EMBED_LINKS: true,
+                            ATTACH_FILES: true,
+                            READ_MESSAGE_HISTORY: true,
+                            MENTION_EVERYONE: false,
+                            USE_EXTERNAL_EMOJIS: false,
+                            ADD_REACTIONS: false,
+                        });
+                        await message.channel.overwritePermissions(administrator, {
+                            // GENERAL PERMISSIONS
+                            CREATE_INSTANT_INVITE: false,
+                            MANAGE_CHANNELS: false,
+                            MANAGE_ROLES: false,
+                            MANAGE_WEBHOOKS: false,
+                            // TEXT PERMISSIONS
+                            VIEW_CHANNEL: true,
+                            SEND_MESSAGES: false,
+                            SEND_TTS_MESSAGES: false,
+                            MANAGE_MESSAGES: false,
+                            EMBED_LINKS: true,
+                            ATTACH_FILES: true,
+                            READ_MESSAGE_HISTORY: true,
+                            MENTION_EVERYONE: false,
+                            USE_EXTERNAL_EMOJIS: false,
+                            ADD_REACTIONS: false,
+                        });
+                    }
                     connection.query(`UPDATE \`tickets-global\` SET close = close + 1 WHERE \`server\` = '${message.guild.id}'`);
                     if (author){
                         message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
