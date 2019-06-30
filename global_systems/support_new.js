@@ -390,7 +390,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                 if (author){
                     message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}> \`. Источник:\` ${message.member}`);
                 }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера.\` <@&${administrator.id}>, <@&${jr_administrator.id}> \`Источник:\` ${message.member}`);
+                    message.channel.send(`\`Данная жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}> \`Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                 if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] администрации сервера.\``);
@@ -418,9 +418,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                     ADD_REACTIONS: false,
                 });
                 if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена модераторам сервера.\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
                 }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена модераторам сервера.\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
+                    message.channel.send(`\`Данная жалоба была перенаправлена\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                 if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] модераторам сервера.\``);
