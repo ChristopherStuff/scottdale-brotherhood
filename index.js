@@ -526,9 +526,9 @@ async function update_items(){
 
 async function newsupport_table(){
     setInterval(() => {
-        connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
+        let server = bot.guilds.get(serverid);
+        connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${server.id}'`, async (error, result) => {
             if (result.length != 0){
-                let server = bot.guilds.get(serverid);
                 let ticket_channel = server.channels.find(c => c.name == 'support');
                 let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async err => {
                     await ticket_channel.send(`` +
