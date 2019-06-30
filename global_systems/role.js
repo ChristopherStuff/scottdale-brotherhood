@@ -80,7 +80,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
             message.reply(`\`укажите никнейм! '/remove_blacklist [name]'\``).then(msg => msg.delete(12000));
             return message.delete();
         }
-        let name = message.content.split('/remove_blacklist ')[1];
+        let name = message.content.split('/remove_blacklist ')[1].toString();
         connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${name.toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
             if (names.length == 0){
                 message.reply(`\`данный никнейм не был найден в чс!\``).then(msg => msg.delete(7000));
