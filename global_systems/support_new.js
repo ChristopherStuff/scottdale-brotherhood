@@ -388,7 +388,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                     ADD_REACTIONS: false,
                 });
                 if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}\`. Источник:\` ${message.member}`);
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}> \`. Источник:\` ${message.member}`);
                 }else{
                     message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера.\` <@&${administrator.id}>, <@&${jr_administrator.id}> \`Источник:\` ${message.member}`);
                 }
