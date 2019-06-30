@@ -67,6 +67,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
                     await connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
                     await connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
+                    await connection.query(`INSERT INTO \`tickets\` (\`server\`, \`ticket_id\`, \`question\`, \`author\`) VALUES ('${message.guild.id}', '${+result[0].tickets + 1}', '${message.content}', '${message.author.id}')`);
                     await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
                     message.delete();
                     channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
@@ -93,7 +94,6 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     `**Необработанных модераторами: ${+result[0].open + 1}**\n` +
                     `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
                     `**Закрытых: ${result[0].close}**`, image);
-                    connection.query(`INSERT INTO \`tickets\` (\`server\`, \`ticket_id\`, \`question\`, \`author\`) VALUES ('${message.guild.id}', '${+result[0].tickets + 1}', '${message.content}', '${message.author.id}')`);
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                     if (ticket_log) ticket_log.send(`\`[CREATE]\` <@${message.author.id}> \`создал обращение к поддержке:\` <#${channel.id}> \`[${channel.name}]\``);
                     message.channel.send(`<@${message.author.id}>, \`обращение составлено. Нажмите на\` <#${channel.id}>`).then(msg => msg.delete(15000));
