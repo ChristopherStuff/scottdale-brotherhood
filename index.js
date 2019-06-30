@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.8-hide';
+const version = '5.3.9';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Новая система поддержки успешно переписана!";
+const update_information = "Support New [1.9]\nКоманды hold, active, add, set, close в reports-log теперь с ID модератора.\nПри передачи жалобы через /set упоминаются администраторы или модераторы.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -557,7 +557,6 @@ async function newsupport_table(){
 }
 
 const warn_cooldown = new Set();
-const support_loop = new Set();
 const ds_cooldown = new Set();
 const mysql_cooldown = new Set();
 
@@ -776,7 +775,7 @@ bot.on('message', async message => {
     require('./global_systems/embeds').run(bot, message, setembed_general, setembed_fields, setembed_addline);
     require('./global_systems/family').run(bot, message);
     require('./global_systems/role').run(bot, message, tags, rolesgg, canremoverole, manytags, nrpnames, sened, snyatie, has_removed);
-    require('./global_systems/support_new').run(bot, message, support_loop, support_cooldown, connection, st_cd, t_mode);
+    require('./global_systems/support_new').run(bot, message, support_cooldown, connection, st_cd);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);

@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
-exports.run = async (bot, message, support_loop, support_cooldown, connection, st_cd, t_mode) => {
+exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
     const image = new Discord.RichEmbed();
     image.setImage("https://imgur.com/LKDbJeM.gif");
 
@@ -171,7 +171,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
                     }
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'На рассмотрении'\``);
+                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'На рассмотрении'\``);
                     return message.delete();
                 }
             });
@@ -247,7 +247,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
                     }
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'В обработке'\``);
+                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'В обработке'\``);
                     return message.delete();
                 }
             });
@@ -282,7 +282,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     await connection.query(`UPDATE \`tickets\` SET additional_user = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
                     message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
+                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
                 }else{
                     message.reply(`\`дополнительных пользователей нет. их не нужно очищать.\``).then(msg => msg.delete(12000));
                 }
@@ -317,7 +317,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             })
             message.channel.send(`\`Модератор\` ${message.member} \`добавил к данной жалобе пользователя:\` ${user}`);
             let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-            if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}]\``);
+            if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}]\``);
             return message.delete();
         });
     }
@@ -388,12 +388,12 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     ADD_REACTIONS: false,
                 });
                 if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена администрации сервера. Источник:\` ${message.member}`);
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}\`. Источник:\` ${message.member}`);
                 }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера. Источник:\` ${message.member}`);
+                    message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера.\` <@&${administrator.id}>, <@&${jr_administrator.id}> \`Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] администрации сервера.\``);
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] администрации сервера.\``);
             }else if (tickets[0].department == '1'){
                 let permission = message.channel.permissionOverwrites.find(p => p.id == `${jr_administrator.id}`);
                 if (permission) permission.delete();
@@ -418,12 +418,12 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     ADD_REACTIONS: false,
                 });
                 if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена модераторам сервера. Источник:\` ${message.member}`);
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена модераторам сервера.\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
                 }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена модераторам сервера. Источник:\` ${message.member}`);
+                    message.channel.send(`\`Данная жалоба была перенаправлена модераторам сервера.\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] модераторам сервера.\``);
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] модераторам сервера.\``);
             }
             await connection.query(`UPDATE \`tickets\` SET department = '${args[1]}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
             return message.delete();
@@ -614,7 +614,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                         message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
                     }
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'Закрыта'\``);
+                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'Закрыта'\``);
                     return message.delete();
                 }
             });
