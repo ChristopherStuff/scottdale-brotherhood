@@ -124,6 +124,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
             if (!category || !ticket_channel) return message.delete();
+            if (category.children.size >= 45){
+                message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
             await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
                 if (error) return message.delete();
@@ -196,6 +200,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
             if (!category || !ticket_channel) return message.delete();
+            if (category.children.size >= 45){
+                message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
             await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
                 if (error) return message.delete();
@@ -444,6 +452,10 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
             let ticket_channel = message.guild.channels.find(c => c.name == 'support');
             let author = message.guild.members.get(tickets[0].author);
             if (!category || !ticket_channel) return message.delete();
+            if (category.children.size >= 45){
+                message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
             await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
                 if (error) return message.delete();
