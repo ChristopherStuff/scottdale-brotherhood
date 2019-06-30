@@ -262,7 +262,6 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         setTimeout(() => {
             if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
         }, 7000);
-        let author = message.guild.members.get(tickets[0].author);
         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
             if (err){
                 message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
@@ -331,6 +330,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
         setTimeout(() => {
             if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
         }, 7000);
+        let author = message.guild.members.get(tickets[0].author);
         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
             if (err){
                 message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
