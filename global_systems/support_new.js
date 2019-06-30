@@ -282,7 +282,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                 let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
                 if (permission) permission.delete();
             }
-            await connection.query(`UPDATE \`tickets\` SET additional_user = '${user.id}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}`);
+            await connection.query(`UPDATE \`tickets\` SET additional_user = '${user.id}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
             await message.channel.overwritePermissions(user, {
                 // GENERAL PERMISSIONS
                 CREATE_INSTANT_INVITE: false,
