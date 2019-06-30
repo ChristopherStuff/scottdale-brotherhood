@@ -385,7 +385,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     message.channel.send(`\`Данная жалоба была перенаправлена администрации сервера. Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}] администрации сервера.\``);
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] администрации сервера.\``);
             }else if (tickets[0].department == '1'){
                 let permission = message.channel.permissionOverwrites.find(p => p.id == `${jr_administrator.id}`);
                 if (permission) permission.delete();
@@ -415,7 +415,7 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     message.channel.send(`\`Данная жалоба была перенаправлена модераторам сервера. Источник:\` ${message.member}`);
                 }
                 let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}] модераторам сервера.\``);
+                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] модераторам сервера.\``);
             }
             await connection.query(`UPDATE \`tickets\` SET department = '${args[1]}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
             return message.delete();
