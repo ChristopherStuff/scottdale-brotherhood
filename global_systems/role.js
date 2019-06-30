@@ -178,11 +178,11 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                             embed.addField(`ВНИМАНИЕ!!!`, `\`\`\`diff\n- ОБРАТИТЕ ВНИМАНИЕ, ЧТО ДАННЫЙ ПОЛЬЗОВАТЕЛЬ ЯВЛЯЕТСЯ НЕЖЕЛАТЕЛЬНЫМ, ЭТО ОЗНАЧАЕТ ЧТО ОН МОЖЕТ ВАС ОБМАНУТЬ!!!\`\`\``);	
                         }
                         if (users.length == 1){
-                            if (users[0].blacklisted != '1000-01-01 00:00:00'){
+                            if (new Date(`${users[0].blacklisted}`).valueOf() != '-30610224000000'){
                                 let date = new Date().valueOf() - new Date(`${users[0].blacklisted}`).valueOf();
                                 embed.addField(`Внимание! Чёрный список!`, `\`\`\`diff\n- ${time(date)} назад у данного пользователя был отмечен никнейм как невалидный.\n- Будьте внимательны перед проверкой его на роль!\`\`\``);
                             }
-                            if (users[0].remove_role != '1000-01-01 00:00:00'){
+                            if (new Date(`${users[0].remove_role}`).valueOf() != '-30610224000000'){
                                 let date = new Date().valueOf() - new Date(`${users[0].remove_role}`).valueOf();
                                 let member = message.guild.members.get(users[0].staff);
                                 let staff = ' от ' + member.displayName || ' от ' + member.user.tag || '';
