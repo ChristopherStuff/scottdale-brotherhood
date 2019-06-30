@@ -184,7 +184,8 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                             }
                             if (users[0].remove_role != '1000-01-01 00:00:00'){
                                 let date = new Date().valueOf() - new Date(`${users[0].remove_role}`).valueOf();
-                                let staff = ' от ' + message.guild.members.get(users[0].staff).displayName || ' от ' + message.guild.members.get(users[0].staff).user.tag || '';
+                                let member = message.guild.members.get(users[0].staff);
+                                let staff = ' от ' + member.displayName || ' от ' + member.user.tag || '';
                                 embed.addField(`Снятие роли!`, `\`\`\`diff\n+ ${time(date)} назад у данного пользователя была снята роль по запросу${staff}.\n+ Будьте внимательны перед проверкой его на роль!\`\`\``);
                             }
                         }
