@@ -202,7 +202,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                         }
                     }
                     let moderator_chat = message.guild.channels.find(c => c.name == 'spectator-chat');
-                    if (moderator_chat) moderator_chat.send(`${message.member} \`попытался запросить роль. Ответ от системы: BLACKLISTED\`\n\`[DEBUG]\` \`${names[0].name} - ${names[0].blacklisted} -\` <@${names[0].moderator}> \`- ${names[0].time_add}\``);
+                    if (moderator_chat) moderator_chat.send(`${message.member} \`попытался запросить роль. Ответ от системы: BLACKLISTED\`\n\`[DEBUG]\` \`${names[0].name} - ${names[0].blacklisted} - ${names[0].moderator} - ${names[0].time_add}\``);
                     return message.react(`📛`);
                 }
             }

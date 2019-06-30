@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.4.6';
+const version = '5.4.7';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "request-for-roles [1.6]\nКоманда /remove_blacklist [никнейм] - убрать ник с чс\nКоманда /remove_accepted [user] - убрать пользователя из уведомлений о снятии роли\nПользователи у которых недавно пометили невалидный никнейм отображаются неделю.\nПользователи у которых недавно сняли роль отображаются 3-ое суток.";
+const update_information = "request-for-roles [1.7]\nФикс одного бага";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1283,9 +1283,9 @@ bot.on('raw', async event => {
                 if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
                 let date = require('./objects/functions').getDateMySQL();
                 connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`, async (err, users) => {
-                    if (users.length == 0) await connection.query(`INSERT INTO \`requests-for-roles\` (\`server\`, \`user\`, \`remove_role\`, \`staff\`) VALUES ('${server.id}', '${field_user.id}', '${date}', '${member.id}')`);
+                    if (users.length == 0) await connection.query(`INSERT INTO \`requests-for-roles\` (\`server\`, \`user\`, \`remove_role\`, \`staff\`) VALUES ('${server.id}', '${field_user.id}', '${date}', '${field_author.id}')`);
                     if (users.length == 1){
-                        connection.query(`UPDATE \`requests-for-roles\` SET \`remove_role\` = '${date}', \`staff\` = '${member.id}' WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`);
+                        connection.query(`UPDATE \`requests-for-roles\` SET \`remove_role\` = '${date}', \`staff\` = '${field_author.id}' WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`);
                     }
                 });
                 return message.delete()
