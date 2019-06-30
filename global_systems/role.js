@@ -80,14 +80,14 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
             message.reply(`\`укажите никнейм! '/remove_blacklist [name]'\``).then(msg => msg.delete(12000));
             return message.delete();
         }
-        let name = message.content.split('/remove_blacklist ')[1].toString();
-        connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${name.toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
+        let name = message.content.split('/remove_blacklist ')[1];
+        connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${name.toString().toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
             if (names.length == 0){
                 message.reply(`\`данный никнейм не был найден в чс!\``).then(msg => msg.delete(7000));
                 return message.delete();
             }else{
-                connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`name\` = '${name.toLowerCase()}'`);
-                message.reply(`\`запрос на удаление с blacklist был успешно выполнен! [${name.toLowerCase()}]\``);
+                connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`name\` = '${name.toString().toLowerCase()}'`);
+                message.reply(`\`запрос на удаление с blacklist был успешно выполнен! [${name.toString().toLowerCase()}]\``);
                 message.delete();
                 connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${names[0].user}'`, async (err, users) => {
                     if (users.length > 0){
