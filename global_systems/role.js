@@ -45,7 +45,7 @@ function time(s) {
     if (mins != 0){
         if (status){
             if (mins.toString().endsWith('1') && !mins.toString().endsWith('11')){
-                output += mins + ' минута';
+                output += mins + ' минуту';
             }else if (endsWithAny(['2', '3', '4'], mins.toString()) && !endsWithAny(['12', '13', '14'], mins.toString())){
                 output += mins + ' минуты';
             }else{
@@ -57,7 +57,7 @@ function time(s) {
     if (secs != 0){
         if (status){
             if (secs.toString().endsWith('1') && !secs.toString().endsWith('11')){
-                output += secs + ' секунда';
+                output += secs + ' секунду';
             }else if (endsWithAny(['2', '3', '4'], secs.toString()) && !endsWithAny(['12', '13', '14'], secs.toString())){
                 output += secs + ' секунды';
             }else{
