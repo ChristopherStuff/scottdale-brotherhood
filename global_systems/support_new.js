@@ -275,7 +275,13 @@ exports.run = async (bot, message, support_loop, support_cooldown, connection, s
                     message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
                     let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
                     if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
+                }else{
+                    message.reply(`\`дополнительных пользователей нет. их не нужно очищать.\``).then(msg => msg.delete(12000));
                 }
+                return message.delete();
+            }
+            if (tickets[0].additional_user == user.id){
+                message.reply(`\`данный пользователь уже добавлен!\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
             if (+tickets[0].additional_user != 0){
