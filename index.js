@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.7';
+const version = '5.3.8-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -529,6 +529,8 @@ async function newsupport_table(){
         let server = bot.guilds.get(serverid);
         connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${server.id}'`, async (error, result) => {
             if (result.length != 0){
+                const image = new Discord.RichEmbed();
+                image.setImage("https://imgur.com/LKDbJeM.gif");
                 let ticket_channel = server.channels.find(c => c.name == 'support');
                 let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async err => {
                     await ticket_channel.send(`` +
