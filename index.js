@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.3.9';
+const version = '5.4.5';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Support New [1.9]\nКоманды hold, active, add, set, close в reports-log теперь с ID модератора.\nПри передачи жалобы через /set упоминаются администраторы или модераторы.";
+const update_information = "request-for-roles [1.5]\n- При отказе о выдаче роли значения будут отправлены в базу данных.\n- При снятии роли значения будут отправлены в базу данных.\n- При запросе роли, если невалидный никнейм запрос будет заблокирован, роли будут сняты, а в sp-chat отправится уведомление.\n- При запросе роли, если человек с ID был пойман на отказе, вылезет красное предупреждение.\n- При запросе роли, если у пользователя снималась роль будет предупреждение с тем, кто снимал роль.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -774,7 +774,7 @@ bot.on('message', async message => {
     // Системы
     require('./global_systems/embeds').run(bot, message, setembed_general, setembed_fields, setembed_addline);
     require('./global_systems/family').run(bot, message);
-    require('./global_systems/role').run(bot, message, tags, rolesgg, canremoverole, manytags, nrpnames, sened, snyatie, has_removed);
+    require('./global_systems/role').run(bot, connection, message, tags, rolesgg, canremoverole, manytags, sened, snyatie);
     require('./global_systems/support_new').run(bot, message, support_cooldown, connection, st_cd);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
@@ -1191,7 +1191,19 @@ bot.on('raw', async event => {
                 let field_channel = server.channels.find(c => "<#" + c.id + ">" == message.embeds[0].fields[3].value.split(/ +/)[0]);
                 channel.send(`\`[DENY]\` <@${member.id}> \`отклонил запрос от ${field_nickname}, с ID: \`||${field_user.id}||`);
                 field_channel.send(`<@${field_user.id}>**,** \`модератор\` <@${member.id}> \`отклонил ваш запрос на выдачу роли.\nВаш ник при отправке: ${field_nickname}\nУстановите ник на: [Фракция] Имя_Фамилия [Ранг]\``)
-                nrpnames.add(field_nickname); // Добавить данный никнейм в список невалидных
+                let date = require('./objects/functions').getDateMySQL();
+                connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${field_nickname.toLowerCase()}' AND \`server\` = '${server.id}'`, async (err, names) => {
+                    if (names.length == 0) await connection.query(`INSERT INTO \`blacklist_names\` (\`server\`, \`name\`, \`blacklisted\`, \`moderator\`, \`time_add\`) VALUES ('${server.id}', '${field_nickname.toLowerCase()}', '1', '${member.id}', '${date}')`);
+                    if (names.length == 1){
+                        connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '1', \`moderator\` = '${member.id}', \`time_add\` = '${date}' WHERE \`server\` = '${server.id}' AND \`name\` = '${field_nickname.toLowerCase()}'`);
+                    }
+                });
+                connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`, async (err, users) => {
+                    if (users.length == 0) await connection.query(`INSERT INTO \`requests-for-roles\` (\`server\`, \`user\`, \`blacklisted\`) VALUES ('${server.id}', '${field_user.id}', '${date}')`);
+                    if (users.length == 1){
+                        connection.query(`UPDATE \`requests-for-roles\` SET \`blacklisted\` = '${date}' WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`);
+                    }
+                });
                 if (sened.has(field_nickname)) sened.delete(field_nickname); // Отметить ник, что он не отправлял запрос
                 return message.delete();
             }else if (message.embeds[0].title == '`Discord » Запрос о снятии роли.`'){
@@ -1269,7 +1281,13 @@ bot.on('raw', async event => {
                 channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил снятие роли (${field_role.name}) от\` <@${field_author.id}>, \`пользователю\` <@${field_user.id}>, \`с ID: \`||${field_user.id}||`);
                 field_channel.send(`**<@${field_user.id}>, с вас сняли роль**  <@&${field_role.id}>  **по запросу от <@${field_author.id}>.**`)
                 if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
-                if (!has_removed.has(field_user.id)) has_removed.add(field_user.id);
+                let date = require('./objects/functions').getDateMySQL();
+                connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`, async (err, users) => {
+                    if (users.length == 0) await connection.query(`INSERT INTO \`requests-for-roles\` (\`server\`, \`user\`, \`remove_role\`, \`staff\`) VALUES ('${server.id}', '${field_user.id}', '${date}', '${member.id}')`);
+                    if (users.length == 1){
+                        connection.query(`UPDATE \`requests-for-roles\` SET \`remove_role\` = '${date}', \`staff\` = '${member.id}' WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`);
+                    }
+                });
                 return message.delete()
             }
         }
