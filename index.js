@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.4.10';
+const version = '5.4.11';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "request-for-roles [1.10]\nСообщение 'дай мне пароль' теперь разбивается по словам и каждое слово идет в соответвии на слово роль";
+const update_information = "request-for-roles [1.11]\nУказвается [Legendary, BlackList, Lifting the Role]";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1234,7 +1234,7 @@ bot.on('raw', async event => {
                 if (!field_user || !field_nickname || !field_role || !field_channel){
                     channel.send(`\`[DELETED]\` ${member} \`удалил багнутый запрос.\``);
                 }else{
-                    channel.send(`\`[DELETED]\` ${member} \`удалил запрос от ${field_nickname}, с ID: \`||${field_user.id}||`);
+                    channel.send(`\`[DELETED]\` ${member} \`удалил запрос от ${field_nickname}, с ID:\` ||**\` [${field_user.id}] \`**||`);
                 }
                 if (sened.has(field_nickname)) sened.delete(field_nickname); // Отметить ник, что он не отправлял запрос
                 return message.delete();
@@ -1246,7 +1246,7 @@ bot.on('raw', async event => {
                 if (!field_author || !field_user || !field_role || !field_channel){
                     channel.send(`\`[DELETED]\` ${member} \`удалил багнутый запрос на снятие роли.\``);
                 }else{
-                    channel.send(`\`[DELETED]\` ${member} \`удалил запрос на снятие роли от ${field_author.displayName}, с ID: \`||${field_author.id}||`);
+                    channel.send(`\`[DELETED]\` ${member} \`удалил запрос на снятие роли от ${field_author.displayName}, с ID:\` ||**\` [${field_author.id}] \`**||`);
                 }
                 if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
                 return message.delete();
@@ -1300,7 +1300,7 @@ bot.on('raw', async event => {
         }else if (event_emoji_name == "✔"){
             if (message.embeds[0].title == '`Discord » Проверка на валидность ник нейма.`'){
                 if (message.reactions.size != 3){
-                    // return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
+                    return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
                 let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_user = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
@@ -1324,7 +1324,15 @@ bot.on('raw', async event => {
                     }
                 }
                 await field_user.addRole(field_role); // Выдать роль по соответствию с тэгом
-                channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил запрос от ${field_nickname}, с ID:\` ||**\` [${field_user.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и одобрен за ${time(date_debug)}\``);
+                let effects = [];
+                if (field_user.roles.some(r => r.name == '🏆 Legendary 🏆')) effects.push('Legendary');
+                connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${server.id}' AND \`user\` = '${field_user.id}'`, async (err, users) => {
+                    if (users.length == 1){
+                        if (new Date(`${users[0].blacklisted}`).valueOf() != '-30610224000000') effects.push('BlackListed');
+                        if (new Date(`${users[0].remove_role}`).valueOf() != '-30610224000000') effects.push('Lifting the Role');
+                    }
+                    channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил запрос от ${field_nickname}, с ID:\` ||**\` [${field_user.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и одобрен за ${time(date_debug)}. [${effects.join(', ') || 'None'}]\``);
+                });
                 if (rolesremoved){
                     if (rolesremovedcount == 1){
                         field_channel.send(`<@${field_user.id}>**,** \`модератор\` <@${member.id}> \`одобрил ваш запрос на выдачу роли.\`\n\`Роль\`  <@&${field_role.id}>  \`была выдана! ${rolesremovedcount} роль другой фракции была убрана.\``)
@@ -1340,7 +1348,7 @@ bot.on('raw', async event => {
                 return message.delete();
             }else if (message.embeds[0].title == '`Discord » Запрос о снятии роли.`'){
                 if (message.reactions.size != 3){
-                    // return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
+                    return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
                 let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_author = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
