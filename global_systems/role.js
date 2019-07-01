@@ -193,7 +193,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
         });
     }
 
-    if (message.content.toLowerCase().split(/ +/).some(word => word == "роль") && !message.content.toLowerCase().includes(`сними`) && !message.content.toLowerCase().includes(`снять`)){
+    if (message.content.toLowerCase().split(/ +/).some(word => word.startsWith("роль")) && !message.content.toLowerCase().includes(`сними`) && !message.content.toLowerCase().includes(`снять`)){
         // Проверить невалидный ли ник.
         connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${message.member.displayName.toLowerCase() || message.member.user.tag.toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
             if (names.length > 1){
