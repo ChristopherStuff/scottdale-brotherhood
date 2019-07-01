@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.4.7';
+const version = '5.4.8';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "request-for-roles [1.7]\nФикс одного бага";
+const update_information = "request-for-roles [1.8]\nПишет время отказа/одобрения запроса от милисекунд до дней.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -63,6 +63,79 @@ const creds_json = {
 doc.useServiceAccountAuth(creds_json, function (err) {
     if (err) console.log(err);
 });
+
+function endsWithAny(suffixes, string) {
+    return suffixes.some(function (suffix) {
+        return string.endsWith(suffix);
+    });
+}
+
+function time(s) {
+    let ms = s % 1000;
+    s = (s - ms) / 1000;
+    let secs = s % 60;
+    s = (s - secs) / 60;
+    let mins = s % 60;
+    s = (s - mins) / 60;
+    let hrs = s % 24;
+    s = (s - hrs) / 24;
+    let days = s;
+    let status = true;
+    let output = '';
+
+    if (days != 0){
+        if (days.toString().endsWith('1') && !days.toString().endsWith('11')){
+            output += days + ' день';
+        }else if (endsWithAny(['2', '3', '4'], days.toString()) && !endsWithAny(['12', '13', '14'], days.toString())){
+            output += days + ' дня';
+        }else{
+            output += days + ' дней';
+        }
+        status = false;
+    }
+    if (hrs != 0){
+        if (status){
+            if (hrs.toString().endsWith('1') && !hrs.toString().endsWith('11')){
+                output += hrs + ' час';
+            }else if (endsWithAny(['2', '3', '4'], hrs.toString()) && !endsWithAny(['12', '13', '14'], hrs.toString())){
+                output += hrs + ' часа';
+            }else{
+                output += hrs + ' часов';
+            }
+            status = false;
+        }
+    }
+    if (mins != 0){
+        if (status){
+            if (mins.toString().endsWith('1') && !mins.toString().endsWith('11')){
+                output += mins + ' минуту';
+            }else if (endsWithAny(['2', '3', '4'], mins.toString()) && !endsWithAny(['12', '13', '14'], mins.toString())){
+                output += mins + ' минуты';
+            }else{
+                output += mins + ' минут';
+            }
+            status = false;
+        }
+    }
+    if (secs != 0){
+        if (status){
+            if (secs.toString().endsWith('1') && !secs.toString().endsWith('11')){
+                output += secs + ' секунду';
+            }else if (endsWithAny(['2', '3', '4'], secs.toString()) && !endsWithAny(['12', '13', '14'], secs.toString())){
+                output += secs + ' секунды';
+            }else{
+                output += secs + ' секунд';
+            }
+            status = false;
+        }
+    }
+    if (ms != 0){
+        if (status){
+            output += ms + ' ms';
+        }
+    }
+    return output;
+}
 
 async function get_profile(gameserver, author_id){
     return new Promise(async function(resolve, reject) {
@@ -1132,8 +1205,6 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
 
 bot.on('raw', async event => {
     if (!events.hasOwnProperty(event.t)) return; // Если не будет добавление или удаление смайлика, то выход
-    const authorrisbot = new Discord.RichEmbed()
-    .setAuthor(`© 2018 Risbot Company™`, `https://pp.userapi.com/c849132/v849132806/b35ca/2RD_7K2ysns.jpg?ava=1`, "https://vk.com/risbot")
     if (event.t == "MESSAGE_REACTION_ADD"){
         let event_guildid = event.d.guild_id // ID discord сервера
         let event_channelid = event.d.channel_id // ID канала
@@ -1148,7 +1219,7 @@ bot.on('raw', async event => {
         let channel = server.channels.find(c => c.id == event_channelid); // Получить канал на сервере по списку каналов
         let message = await channel.fetchMessage(event_messageid); // Получить сообщение из канала
         let member = server.members.find(m => m.id == event_userid); // Получить пользователя с сервера
-
+        
         if (channel.name != `requests-for-roles`) return // Если название канала не будет 'requests-for-roles', то выйти
 
         if (event_emoji_name == "🇩"){
@@ -1185,11 +1256,12 @@ bot.on('raw', async event => {
                 if (message.reactions.size != 3){
                     return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
+                let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_user = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
                 let field_nickname = message.embeds[0].fields[1].value.split(`\`Ник:\` `)[1];
                 let field_role = server.roles.find(r => "<@&" + r.id + ">" == message.embeds[0].fields[2].value.split(/ +/)[3]);
                 let field_channel = server.channels.find(c => "<#" + c.id + ">" == message.embeds[0].fields[3].value.split(/ +/)[0]);
-                channel.send(`\`[DENY]\` <@${member.id}> \`отклонил запрос от ${field_nickname}, с ID: \`||${field_user.id}||`);
+                channel.send(`\`[DENY]\` <@${member.id}> \`отклонил запрос от ${field_nickname}, с ID:\` ||**\` [${field_user.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и отказан за ${time(date_debug)}\``);
                 field_channel.send(`<@${field_user.id}>**,** \`модератор\` <@${member.id}> \`отклонил ваш запрос на выдачу роли.\nВаш ник при отправке: ${field_nickname}\nУстановите ник на: [Фракция] Имя_Фамилия [Ранг]\``)
                 let date = require('./objects/functions').getDateMySQL();
                 connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${field_nickname.toLowerCase()}' AND \`server\` = '${server.id}'`, async (err, names) => {
@@ -1210,6 +1282,7 @@ bot.on('raw', async event => {
                 if (message.reactions.size != 3){
                     return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
+                let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_author = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
                 let field_user = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[1].value.split(/ +/)[1]);
                 let field_role = server.roles.find(r => "<@&" + r.id + ">" == message.embeds[0].fields[2].value.split(/ +/)[3]);
@@ -1219,7 +1292,7 @@ bot.on('raw', async event => {
                     if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
                     return message.delete();
                 }
-                channel.send(`\`[DENY]\` <@${member.id}> \`отклонил запрос на снятие роли от\` <@${field_author.id}>\`, с ID: \`||${field_author.id}||`);
+                channel.send(`\`[DENY]\` <@${member.id}> \`отклонил запрос на снятие роли от\` <@${field_author.id}>\`, с ID:\` ||**\` [${field_author.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и отказан за ${time(date_debug)}\``);
                 field_channel.send(`<@${field_author.id}>**,** \`модератор\` <@${member.id}> \`отклонил ваш запрос на снятие роли пользователю:\` <@${field_user.id}>`)
                 if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
                 return message.delete();
@@ -1229,6 +1302,7 @@ bot.on('raw', async event => {
                 if (message.reactions.size != 3){
                     // return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
+                let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_user = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
                 let field_nickname = message.embeds[0].fields[1].value.split(`\`Ник:\` `)[1];
                 let field_role = server.roles.find(r => "<@&" + r.id + ">" == message.embeds[0].fields[2].value.split(/ +/)[3]);
@@ -1250,7 +1324,7 @@ bot.on('raw', async event => {
                     }
                 }
                 await field_user.addRole(field_role); // Выдать роль по соответствию с тэгом
-                channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил запрос от ${field_nickname}, с ID: \`||${field_user.id}||`);
+                channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил запрос от ${field_nickname}, с ID:\` ||**\` [${field_author.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и одобрен за ${time(date_debug)}\``);
                 if (rolesremoved){
                     if (rolesremovedcount == 1){
                         field_channel.send(`<@${field_user.id}>**,** \`модератор\` <@${member.id}> \`одобрил ваш запрос на выдачу роли.\`\n\`Роль\`  <@&${field_role.id}>  \`была выдана! ${rolesremovedcount} роль другой фракции была убрана.\``)
@@ -1268,6 +1342,7 @@ bot.on('raw', async event => {
                 if (message.reactions.size != 3){
                     // return channel.send(`\`[ERROR]\` \`Не торопись! Сообщение еще загружается!\``)
                 }
+                let date_debug = new Date().valueOf() - message.createdTimestamp;
                 let field_author = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[0].value.split(/ +/)[1]);
                 let field_user = server.members.find(m => "<@" + m.id + ">" == message.embeds[0].fields[1].value.split(/ +/)[1]);
                 let field_role = server.roles.find(r => "<@&" + r.id + ">" == message.embeds[0].fields[2].value.split(/ +/)[3]);
@@ -1278,7 +1353,7 @@ bot.on('raw', async event => {
                     return message.delete();
                 }
                 field_user.removeRole(field_role);
-                channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил снятие роли (${field_role.name}) от\` <@${field_author.id}>, \`пользователю\` <@${field_user.id}>, \`с ID: \`||${field_user.id}||`);
+                channel.send(`\`[ACCEPT]\` <@${member.id}> \`одобрил снятие роли (${field_role.name}) от\` <@${field_author.id}>, \`пользователю\` <@${field_user.id}>, \`с ID:\` ||**\` [${field_author.id}] \`**||\n\`[DEBUG]\` \`Запрос был рассмотрен и одобрен за ${time(date_debug)}\``);
                 field_channel.send(`**<@${field_user.id}>, с вас сняли роль**  <@&${field_role.id}>  **по запросу от <@${field_author.id}>.**`)
                 if (snyatie.has(field_author.id + `=>` + field_user.id)) snyatie.delete(field_author.id + `=>` + field_user.id)
                 let date = require('./objects/functions').getDateMySQL();
@@ -2089,6 +2164,7 @@ bot.on('message', async (message) => {
                 message.reply(`\`ошибка mysql запроса, код 994\``);
                 return message.delete();
             }
+            
         });
     }
 });

@@ -14,9 +14,9 @@ function time(s) {
     s = (s - secs) / 60;
     let mins = s % 60;
     s = (s - mins) / 60;
-    let hrs = s % 60;
-    s = (s - hrs) / 60;
-    let days = s % 24;
+    let hrs = s % 24;
+    s = (s - hrs) / 24;
+    let days = s;
     let status = true;
     let output = '';
 
@@ -63,6 +63,12 @@ function time(s) {
             }else{
                 output += secs + ' секунд';
             }
+            status = false;
+        }
+    }
+    if (ms != 0){
+        if (status){
+            output += ms + ' ms';
         }
     }
     return output;
