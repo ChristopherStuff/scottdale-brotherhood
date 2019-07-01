@@ -83,7 +83,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
         let name = args.slice(1).join(" ").toLowerCase();
         connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${name}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
             if (names.length == 0){
-                message.reply(`\`данный никнейм не был найден в чс!\n${name}\``).then(msg => msg.delete(7000));
+                message.reply(`\`данный никнейм не был найден в чс!\``).then(msg => msg.delete(7000));
                 return message.delete();
             }else{
                 connection.query(`UPDATE \`blacklist_names\` SET \`blacklisted\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`name\` = '${name}'`);
@@ -125,6 +125,9 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                     message.reply(`\`Пользователю\` ${user} \`был удален статус снятие роли.\``);
                     return message.delete();
                 }
+            }else{
+                message.reply(`\`данный никнейм не найден в списке предупреждений!\``).then(msg => msg.delete(7000));
+                return message.delete();
             }
         });
     }
