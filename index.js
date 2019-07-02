@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.2';
+const version = '5.5.4';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Лишнее накрутил, откат.";
+const update_information = "Все мы знаем проблему. Потоянный флуд в тикете от бота: ВНИМАНИЕ ЖАЛОБА ВИСИТ БОЛЕЕ 5 ЧАСОВ, но теперь я переделал эту систему. Теперь если в жалобе было предупреждение подобного типа и оно является последним (то есть нет еще побочных и последующих сообщений после данного уведомления), то жалоба автоматически закрепляется.\n\nУведомления для Admin состава переделаны в admins чат.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1717,13 +1717,83 @@ async function check_unwanted_user(){
                     });
                 }else if(gserver.channels.find(c => c.id == channel.parentID).name == 'Активные жалобы'){
                     let log_channel = gserver.channels.find(c => c.name == "spectator-chat");
+                    let log_channel_two = gserver.channels.find(c => c.name == "admins-chat");
+                    let moderator = message.guild.roles.find(r => r.name == 'Support Team');
+                    let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
+                    let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
                     channel.fetchMessages({limit: 1}).then(messages => {
                         if (messages.size == 1){
                             messages.forEach(msg => {
                                 let s_now = new Date().valueOf() - 18000000;
                                 if (msg.createdAt.valueOf() < s_now){
-                                    log_channel.send(`\`[SYSTEM]\` \`Жалоба\` <#${channel.id}> \`уже более 5-ти часов ожидает проверки!\``);
-                                    channel.send(`\`[SYSTEM]\` \`Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.\``)
+                                    if (msg.content.includes('Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.') && msg.author.bot){
+                                        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
+                                            if (err) return
+                                            if (+tickets[0].status != 1) return
+                                            let category = gserver.channels.find(c => c.name == "Жалобы на рассмотрении");
+                                            let ticket_channel = gserver.channels.find(c => c.name == 'support');
+                                            let author = gserver.members.get(tickets[0].author);
+                                            if (!category || !ticket_channel) return
+                                            if (category.children.size >= 45) return
+                                            await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
+                                            connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${gserver.id}'`, async (error, result) => {
+                                                if (error) return message.delete();
+                                                if (result.length == 0){
+                                                    ticket_channel.send(`` +
+                                                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                                                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
+                                                    `**Количество вопросов за все время: 0**\n` +
+                                                    `**Необработанных модераторами: 0**\n` +
+                                                    `**Вопросы на рассмотрении: 0**\n` +
+                                                    `**Закрытых: 0**`, image).then(msg => {
+                                                        connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${gserver.id}', '${msg.id}', '0', '0', '0', '0')`);
+                                                    });
+                                                    return message.delete();
+                                                }else{
+                                                    let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
+                                                        await ticket_channel.send(`` +
+                                                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                                                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
+                                                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
+                                                        `**Необработанных модераторами: ${result[0].open}**\n` +
+                                                        `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
+                                                        `**Закрытых: ${result[0].close}**`, image).then(msg => {
+                                                            rep_message = msg;
+                                                            connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${gserver.id}'`);
+                                                        });
+                                                    });
+                                                    rep_message.edit(`` +
+                                                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                                                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
+                                                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
+                                                    `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
+                                                    `**Вопросы на рассмотрении: ${+result[0].hold + 1}**\n` +
+                                                    `**Закрытых: ${result[0].close}**`, image);
+                                                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`);
+                                                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${gserver.id}'`);
+                                                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${gserver.id}'`);
+                                                    if (author){
+                                                        channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник: Система.\``);
+                                                    }else{
+                                                        channel.send(`\`Жалобе <#${channel.id}> был установлен статус: 'На рассмотрении'. Источник: Система.\``);
+                                                    }
+                                                    let ticket_log = gserver.channels.find(c => c.name == "reports-log");
+                                                    if (ticket_log) ticket_log.send(`\`[NOTIFICATION]\` \`Система. Жалобе\` <#${channel.id}> \`[${channel.name}] присвоен статус 'На рассмотрении'\``);
+                                                }
+                                            });
+                                        });
+                                    }else{
+                                        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
+                                            if (err) return
+                                            if (tickets[0].department == 0){
+                                                log_channel.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа! ${moderator}\``);
+                                                channel.send(`\`[NOTIFICATION]\` \`Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.\``);
+                                            }else if (tickets[0].department == 1){
+                                                log_channel_two.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа! ${jr_administrator}, ${administrator}\``);
+                                                channel.send(`\`[NOTIFICATION]\` \`Ваше обращение всё еще в обработке! На данный момент все администраторы заняты.\``);
+                                            }
+                                        });
+                                    }
                                 }
                             });
                         }
