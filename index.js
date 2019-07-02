@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.11';
+const version = '5.5.12';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Фикс уведомлений о жалобе.";
+const update_information = "Команда /gift, команда /night_gift";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -191,6 +191,7 @@ function date_now(){
         `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
         `${date.getFullYear()} `;
 }
+
 let started_at;
 
 
@@ -238,7 +239,7 @@ async function remove_verify(){
         if (server){
             let role = server.roles.find(r => r.name == 'Проверенный 🔐');
             if (role){
-                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` LIKE '355656045600964609'`, async (err, profiles) => {
+                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '355656045600964609'`, async (err, profiles) => {
                     // let date = require('./objects/functions').getDateMySQL();
                     server.roles.find(r => r.name == 'Проверенный 🔐').members.forEach(member => {
                         if (!profiles.some(p => p.userid == member.id)){
@@ -250,7 +251,44 @@ async function remove_verify(){
                 });
             }
         }
-    }, 25000);
+    }, 85000);
+}
+
+async function check_gifts(){
+    setInterval(() => {
+        let server = bot.guilds.get(serverid);
+        if (server){
+            let general = server.channels.find(c => c.name == 'general');
+            let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
+            let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
+            if (titan && warrior){
+                connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
+                    if (gifts.length != 0){
+                        gifts.forEach(gift => {
+                            let user = server.members.get(gift.user);
+                            if (user){
+                                let date = new Date().valueOf() - new Date(gift.date).valueOf();
+                                if (+gift.type == 0){
+                                    if (date > 60000){
+                                        user.addRole(titan);
+                                        await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
+                                        if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                    }
+                                }
+                                if (+gift.type == 1){
+                                    if (date > 60000){
+                                        user.addRole(warrior);
+                                        await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
+                                        if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                    } 
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    }, 60000);
 }
 
 async function special_discord_update(){
@@ -706,6 +744,7 @@ bot.on('ready', async () => {
     update_items();
     newsupport_table();
     remove_verify();
+    check_gifts();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
@@ -881,6 +920,77 @@ bot.on('message', async message => {
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
+
+    if (message.content.startsWith('/gift')){
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply(`\`укажите пользователя, которому нужно отправить подарок!\` :gift: `);
+            return message.delete();
+        }
+        if (!message.member.roles.some(r => r.name == '⚡ TITAN ⚡')){
+            message.reply(`\`у вас нет подарков. недоступно.\``);
+            return message.delete();
+        }
+        if (user.roles.some(r => r.name == '⚡ TITAN ⚡')){
+            message.reply(`\`у пользователя уже есть этот подарок!\``);
+            return message.delete();
+        }
+        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`) VALUES ('${message.guild.id}', '${message.author.id}')`);
+        let general = message.guild.channels.find(c => c.name == 'general');
+        let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
+        user.addRole(role);
+        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
+        return message.delete();
+    }
+
+    if (message.content.startsWith('/gift')){
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply(`\`укажите пользователя, которому нужно отправить подарок!\` :gift: `);
+            return message.delete();
+        }
+        if (!message.member.roles.some(r => r.name == '⚡ TITAN ⚡')){
+            message.reply(`\`у вас нет подарков. недоступно.\``);
+            return message.delete();
+        }
+        if (user.roles.some(r => r.name == '⚡ TITAN ⚡')){
+            message.reply(`\`у пользователя уже есть этот подарок!\``);
+            return message.delete();
+        }
+        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '0')`);
+        let general = message.guild.channels.find(c => c.name == 'general');
+        let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
+        user.addRole(role);
+        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
+        return message.delete();
+    }
+
+    if (message.content.startsWith('/night_gift')){
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply(`\`укажите пользователя, которому нужно отправить подарок!\` :gift: `);
+            return message.delete();
+        }
+        if (!message.member.roles.some(r => r.name == '✮ Night Warrior ✮')){
+            message.reply(`\`у вас нет подарков. недоступно.\``);
+            return message.delete();
+        }
+        if (user.roles.some(r => r.name == '✮ Night Warrior ✮')){
+            message.reply(`\`у пользователя уже есть этот подарок!\``);
+            return message.delete();
+        }
+        let date = new Date(+new Date().valueOf() + 10800000);
+        if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 && date.getHours() != 4){
+            message.reply(`\`данный подарок нужно дарить в ночное время суток.\``);
+            return message.delete();
+        }
+        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '1')`);
+        let general = message.guild.channels.find(c => c.name == 'general');
+        let role = message.guild.roles.find(r => r.name == '✮ Night Warrior ✮');
+        user.addRole(role);
+        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
+        return message.delete();
+    }
 
     if (message.content.startsWith('/get_log_data')){
         if (message.author.id != '336207279412215809'){
