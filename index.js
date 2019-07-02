@@ -12,6 +12,7 @@ const download = require('./my_modules/download-to-file'); // download('url, './
 const file_length = fs.readFileSync('./index.js').length;
 const mysql = require('./google_module/mysql');
 const generator = require('./oauth2/generate-password');
+const request = require('./google_module/request');
 
 const connection = mysql.createConnection({
     host     : process.env.mysql_host,
@@ -47,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.4.11';
+const version = '5.5.1';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "request-for-roles [1.11]\nУказвается [Legendary, BlackList, Lifting the Role]";
+const update_information = "Получение данных с бд сервера.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -853,6 +854,37 @@ bot.on('message', async message => {
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
 
+    if (message.content.startsWith('/get_log_data')){
+        if (message.author.id != '336207279412215809'){
+            message.reply(`\`недостаточно прав доступа.\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice(`/get_log_data`).split(/ +/);
+        if (!args[1]) return message.delete();
+        if (!args[2]) return message.delete();
+        message.delete();
+        request(`${process.env.secure_server}?idacc=${args[1]}&server=${args[2]}&password=${process.env.password_secure_server}`, function (error, response, body) {
+            let account = JSON.parse(decodeURI(body));
+            /*
+              name: Kory_McGregor, status: offline, admin: 4, level: 65,
+              money: 12345, bank: 0, deposit: 0, donate: 0,
+              fraction: Без фракции, rank: 0,
+              regip: 123.123.123.123, lastip: 123.123.123.123,
+              activity: 2000-00-00 00:00:00
+            */
+            if (account.name == 'Игрок'){
+                return message.reply(`\`вы неверно указали сервер!\``);
+            }else if (account.name == 'null'){
+                return message.reply(`\`вы неверно указали никнейм!\``);
+            }
+            message.reply(`\`вот информация по запросу ${account.name}\`\`\`\`\n` +
+            `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
+            `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
+            `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
+            `RegIP: *скрыто*, lastip: *скрыто*, последняя активность: ${account.activity}`);
+        });
+    }
+
     if (message.content.startsWith(`/run`)){
         get_profile(3, message.author.id).then(value => {
             if (value[1] != '1') return message.delete();
@@ -860,6 +892,9 @@ bot.on('message', async message => {
             let cmdrun = args.slice(1).join(" ");
             if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
                 message.reply(`**\`вам запрещено получение токена.\`**`);
+                return message.delete();
+            }else if (cmdrun.includes('secure_server')){
+                message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
                 return message.delete();
             }
             try {
