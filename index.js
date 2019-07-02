@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.1';
+const version = '5.5.2';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Получение данных с бд сервера.";
+const update_information = "Исправление таблички";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -877,7 +877,7 @@ bot.on('message', async message => {
             }else if (account.name == null){
                 return message.reply(`\`вы неверно указали никнейм!\``);
             }
-            message.reply(`\`вот информация по запросу ${account.name}\`\`\`\`\n` +
+            message.reply(`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` +
             `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
             `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
             `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
