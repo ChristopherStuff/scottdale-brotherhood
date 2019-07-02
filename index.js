@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.9';
+const version = '5.5.10';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Обзвон.";
+const update_information = "Снять роль и выдать роль Проверенного теперь будет проблематично.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -231,6 +231,27 @@ const events = {
     MESSAGE_REACTION_ADD: 'messageReactionAdd',
     MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
 };
+
+async function remove_verify(){
+    setInterval(() => {
+        let server = bot.guilds.get(serverid);
+        if (server){
+            let role = server.roles.find(r => r.name == 'Проверенный 🔐');
+            if (role){
+                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` LIKE '355656045600964609'`, async (err, profiles) => {
+                    // let date = require('./objects/functions').getDateMySQL();
+                    server.roles.find(r => r.name == 'Проверенный 🔐').members.forEach(member => {
+                        if (!profiles.some(p => p.userid == member.id)){
+                            let moderator = server.channels.find(c => c.name == 'spectator-chat');
+                            if (moderator) moderator.send(`\`[СИНХРОНИЗАЦИЯ]\` ${member} \`был лишен роли ${role.name}. Причина: Не авторизован через /authme.\``);
+                            member.removeRole(role);
+                        }
+                    });
+                });
+            }
+        }
+    }, 25000);
+}
 
 async function special_discord_update(){
     setInterval(async () => {
@@ -684,6 +705,7 @@ bot.on('ready', async () => {
     nalog_biz();
     update_items();
     newsupport_table();
+    remove_verify();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
@@ -1171,15 +1193,20 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             if (!oldRolesID.some(elemet => elemet == role.id)) newRoleID = role.id;
         })
         let role = newMember.guild.roles.get(newRoleID);
-        if (role.name != "Spectator™" && role.name != "Support Team") return
+        if (role.name != "Spectator™" && role.name != "Support Team" && role.name != 'Проверенный 🔐') return
         const entry = await newMember.guild.fetchAuditLogs({type: 'MEMBER_ROLE_UPDATE'}).then(audit => audit.entries.first());
         let member = await newMember.guild.members.get(entry.executor.id);
         if (member.user.bot) return // Бот не принимается!
         if (!member.hasPermission("ADMINISTRATOR")){
+            if (role.name == 'Проверенный 🔐'){
+                newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[VERIFY]\` <@${member.id}> \`был ликвидирован. Выдал роль верефицированного пользователя юзеру:\` <@${newMember.id}>`);
+                newMember.removeRole(role);
+                return member.removeRoles(member.roles);
+            }
             if (antislivsp1.has(member.id)){
                 if (antislivsp2.has(member.id)){
                     member.removeRoles(member.roles);
-                    return newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[ANTISLIV SYSTEM]\` <@${member.id}> \`подозревался в попытке слива. [3/3] Я снял с него роли. Пострадал:\` <@${newMember.id}>, \`выдали роль\` <@&${role.id}>`);
+                    return newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[VERIFY]\` <@${member.id}> \`подозревался в попытке слива. [3/3] Я снял с него роли. Пострадал:\` <@${newMember.id}>, \`выдали роль\` <@&${role.id}>`);
                 }else{
                     newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[WARNING]\` <@${member.id}> \`подозревается в попытке слива!!! [2/3] Выдача роли\` <@&${role.id}> \`пользователю\` <@${newMember.id}>`)
                     return antislivsp2.add(member.id);
@@ -1187,6 +1214,10 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             }
             newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[WARNING]\` <@${member.id}> \`подозревается в попытке слива!!! [1/3] Выдача роли\` <@&${role.id}> \`пользователю\` <@${newMember.id}>`)
             return antislivsp1.add(member.id);
+        }else{
+            if (role.name == 'Проверенный 🔐'){
+                return newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[VERIFY]\` <@${member.id}> \`взоимодействует с ролью верефицированного пользователя! Выдал ему:\` <@${newMember.id}>`);
+            }
         }
         let spec_chat = await newMember.guild.channels.find(c => c.name == "spectator-chat");
         let question = await spec_chat.send(`<@${member.id}>, \`вы выдали роль\` <@&${role.id}> \`пользователю\` <@${newMember.id}>\n\`Укажите причину выдачи роли в новом сообщении!\``);
@@ -1211,11 +1242,16 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             if (!newRolesID.some(elemet => elemet == role.id)) oldRoleID = role.id;
         })
         let role = newMember.guild.roles.get(oldRoleID);
-        if (role.name != "Spectator™" && role.name != "Support Team") return
+        if (role.name != "Spectator™" && role.name != "Support Team" && role.name != 'Проверенный 🔐') return
         const entry = await newMember.guild.fetchAuditLogs({type: 'MEMBER_ROLE_UPDATE'}).then(audit => audit.entries.first())
         let member = await newMember.guild.members.get(entry.executor.id);
         if (member.user.bot) return // Бот не принимается!
         if (!member.hasPermission("ADMINISTRATOR")){
+            if (role.name == 'Проверенный 🔐'){
+                newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[VERIFY]\` <@${member.id}> \`был ликвидирован. Снял роль верефицированного пользователя юзеру:\` <@${newMember.id}>`);
+                newMember.addRole(role);
+                return member.removeRoles(member.roles);
+            }
             if (antislivsp1.has(member.id)){
                 if (antislivsp2.has(member.id)){
                     member.removeRoles(member.roles);
@@ -1227,6 +1263,10 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             }
             newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[WARNING]\` <@${member.id}> \`подозревается в попытке слива!!! [1/3] Снятие роли\` <@&${role.id}> \`пользователю\` <@${newMember.id}>`)
             return antislivsp1.add(member.id);
+        }else{
+            if (role.name == 'Проверенный 🔐'){
+                return newMember.guild.channels.find(c => c.name == "spectator-chat").send(`\`[VERIFY]\` <@${member.id}> \`взоимодействует с ролью верефицированного пользователя! Снял ему:\` <@${newMember.id}>`);
+            }
         }
         let spec_chat = await newMember.guild.channels.find(c => c.name == "spectator-chat");
         let question = await spec_chat.send(`<@${member.id}>, \`вы сняли роль\` <@&${role.id}> \`модератору\` <@${newMember.id}>\n\`Укажите причину снятия роли в новом сообщении!\``);
@@ -1724,9 +1764,9 @@ async function check_unwanted_user(){
                 }else if(gserver.channels.find(c => c.id == channel.parentID).name == 'Активные жалобы'){
                     let log_channel = gserver.channels.find(c => c.name == "spectator-chat");
                     let log_channel_two = gserver.channels.find(c => c.name == "admins-chat");
-                    let moderator = message.guild.roles.find(r => r.name == 'Support Team');
-                    let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
-                    let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
+                    let moderator = gserver.roles.find(r => r.name == 'Support Team');
+                    let jr_administrator = gserver.roles.find(r => r.name == '✔Jr.Administrator✔');
+                    let administrator = gserver.roles.find(r => r.name == '✔ Administrator ✔');
                     channel.fetchMessages({limit: 1}).then(messages => {
                         if (messages.size == 1){
                             messages.forEach(msg => {
@@ -1743,7 +1783,7 @@ async function check_unwanted_user(){
                                             if (category.children.size >= 45) return
                                             await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
                                             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${gserver.id}'`, async (error, result) => {
-                                                if (error) return message.delete();
+                                                if (error) return
                                                 if (result.length == 0){
                                                     ticket_channel.send(`` +
                                                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
@@ -1754,7 +1794,7 @@ async function check_unwanted_user(){
                                                     `**Закрытых: 0**`, image).then(msg => {
                                                         connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${gserver.id}', '${msg.id}', '0', '0', '0', '0')`);
                                                     });
-                                                    return message.delete();
+                                                    return
                                                 }else{
                                                     let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
                                                         await ticket_channel.send(`` +
