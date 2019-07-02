@@ -874,14 +874,14 @@ bot.on('message', async message => {
             */
             if (account.name == 'Игрок'){
                 return message.reply(`\`вы неверно указали сервер!\``);
-            }else if (account.name == 'null'){
+            }else if (account.name == null){
                 return message.reply(`\`вы неверно указали никнейм!\``);
             }
             message.reply(`\`вот информация по запросу ${account.name}\`\`\`\`\n` +
             `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
             `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
             `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
-            `RegIP: *скрыто*, lastip: *скрыто*, последняя активность: ${account.activity}`);
+            `RegIP: *скрыто*, lastip: *скрыто*, последняя активность: ${account.activity}\`\`\``);
         });
     }
 
