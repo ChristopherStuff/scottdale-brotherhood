@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.13';
+const version = '5.5.14';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -257,29 +257,41 @@ async function remove_verify(){
 async function check_gifts(){
     setInterval(() => {
         let server = bot.guilds.get(serverid);
+        console.log(1)
         if (server){
             let general = server.channels.find(c => c.name == 'general');
             let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
             let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
+            console.log(2)
             if (titan && warrior){
+                console.log(3)
                 connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
                     if (gifts.length != 0){
+                        console.log(4)
                         gifts.forEach(async gift => {
+                            console.log(5)
                             let user = server.members.get(gift.user);
                             if (user){
+                                console.log(6)
                                 let date = new Date().valueOf() - new Date(gift.date).valueOf();
                                 if (+gift.type == 0){
+                                    console.log(7)
                                     if (date > 60000){
-                                        if (user.roles.some(r => r.id != titan.id)) user.addRole(titan);
-                                        await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
-                                        if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                        console.log(8)
+                                        if (user.roles.some(r => r.id != titan.id)){
+                                            user.addRole(titan);
+                                            await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
+                                            if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                        }
                                     }
                                 }
                                 if (+gift.type == 1){
                                     if (date > 60000){
-                                        if (user.roles.some(r => r.id != warrior.id)) user.addRole(warrior);
-                                        await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
-                                        if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                        if (user.roles.some(r => r.id != warrior.id)){
+                                            user.addRole(warrior);
+                                            await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
+                                            if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                        }
                                     } 
                                 }
                             }
