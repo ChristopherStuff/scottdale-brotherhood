@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.12';
+const version = '5.5.13';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Команда /gift, команда /night_gift";
+const update_information = "Небольшие фиксы";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -270,14 +270,14 @@ async function check_gifts(){
                                 let date = new Date().valueOf() - new Date(gift.date).valueOf();
                                 if (+gift.type == 0){
                                     if (date > 60000){
-                                        user.addRole(titan);
+                                        if (user.roles.some(r => r.id != titan.id)) user.addRole(titan);
                                         await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
                                         if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
                                     }
                                 }
                                 if (+gift.type == 1){
                                     if (date > 60000){
-                                        user.addRole(warrior);
+                                        if (user.roles.some(r => r.id != warrior.id)) user.addRole(warrior);
                                         await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
                                         if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
                                     } 
@@ -935,32 +935,11 @@ bot.on('message', async message => {
             message.reply(`\`у пользователя уже есть этот подарок!\``);
             return message.delete();
         }
-        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`) VALUES ('${message.guild.id}', '${message.author.id}')`);
-        let general = message.guild.channels.find(c => c.name == 'general');
-        let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
-        user.addRole(role);
-        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
-        return message.delete();
-    }
-
-    if (message.content.startsWith('/gift')){
-        let user = message.guild.member(message.mentions.users.first());
-        if (!user){
-            message.reply(`\`укажите пользователя, которому нужно отправить подарок!\` :gift: `);
-            return message.delete();
-        }
-        if (!message.member.roles.some(r => r.name == '⚡ TITAN ⚡')){
-            message.reply(`\`у вас нет подарков. недоступно.\``);
-            return message.delete();
-        }
-        if (user.roles.some(r => r.name == '⚡ TITAN ⚡')){
-            message.reply(`\`у пользователя уже есть этот подарок!\``);
-            return message.delete();
-        }
         await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '0')`);
         let general = message.guild.channels.find(c => c.name == 'general');
         let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
         user.addRole(role);
+        message.member.removeRole(role);
         if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
         return message.delete();
     }
@@ -988,6 +967,7 @@ bot.on('message', async message => {
         let general = message.guild.channels.find(c => c.name == 'general');
         let role = message.guild.roles.find(r => r.name == '✮ Night Warrior ✮');
         user.addRole(role);
+        message.member.removeRole(role);
         if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
         return message.delete();
     }
