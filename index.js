@@ -264,7 +264,7 @@ async function check_gifts(){
             if (titan && warrior){
                 connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
                     if (gifts.length != 0){
-                        gifts.forEach(gift => {
+                        gifts.forEach(async gift => {
                             let user = server.members.get(gift.user);
                             if (user){
                                 let date = new Date().valueOf() - new Date(gift.date).valueOf();
