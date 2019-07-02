@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.16';
+const version = '5.5.17';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -281,7 +281,9 @@ async function check_gifts(){
                                         if (user.roles.some(r => r.id != titan.id)){
                                             user.addRole(titan);
                                             await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                            if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                            user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``).catch(err => {
+                                                if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                            });
                                         }
                                     }
                                 }else if (+gift.type == 1){
@@ -289,7 +291,9 @@ async function check_gifts(){
                                         if (user.roles.some(r => r.id != warrior.id)){
                                             user.addRole(warrior);
                                             await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                            if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                            user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``).catch(err => {
+                                                if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                            });
                                         }
                                     } 
                                 }
