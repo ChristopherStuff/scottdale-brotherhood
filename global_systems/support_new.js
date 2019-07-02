@@ -155,6 +155,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                             connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
                         });
                     });
+                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
+                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
+                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${message.guild.id}'`);
                     rep_message.edit(`` +
                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -162,9 +165,6 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                     `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
                     `**Вопросы на рассмотрении: ${+result[0].hold + 1}**\n` +
                     `**Закрытых: ${result[0].close}**`, image);
-                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${message.guild.id}'`);
                     if (author){
                         message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
                     }else{
@@ -231,6 +231,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                             connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
                         });
                     });
+                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
+                    connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
+                    connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
                     rep_message.edit(`` +
                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -238,9 +241,6 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                     `**Необработанных модераторами: ${+result[0].open + 1}**\n` +
                     `**Вопросы на рассмотрении: ${+result[0].hold - 1}**\n` +
                     `**Закрытых: ${result[0].close}**`, image);
-                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
                     if (author){
                         message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
                     }else{
@@ -483,7 +483,10 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                             connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
                         });
                     });
+                    connection.query(`UPDATE \`tickets-global\` SET close = close + 1 WHERE \`server\` = '${message.guild.id}'`);
                     if (+tickets[0].status == 1){
+                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
+                        connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
                         rep_message.edit(`` +
                         `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                         `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -491,9 +494,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                         `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
                         `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
                         `**Закрытых: ${+result[0].close + 1}**`, image);
-                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                        connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
                     }else{
+                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
+                        connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
                         rep_message.edit(`` +
                         `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                         `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -501,8 +504,6 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                         `**Необработанных модераторами: ${result[0].open}**\n` +
                         `**Вопросы на рассмотрении: ${+result[0].hold - 1}**\n` +
                         `**Закрытых: ${+result[0].close + 1}**`, image);
-                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                        connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
                     }
                     if (author){
                         await message.channel.overwritePermissions(author, {
@@ -607,7 +608,6 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                             ADD_REACTIONS: false,
                         });
                     }
-                    connection.query(`UPDATE \`tickets-global\` SET close = close + 1 WHERE \`server\` = '${message.guild.id}'`);
                     if (author){
                         message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
                     }else{
