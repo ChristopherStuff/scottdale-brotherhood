@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.14';
+const version = '5.5.15';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -273,10 +273,10 @@ async function check_gifts(){
                             let user = server.members.get(gift.user);
                             if (user){
                                 console.log(6)
-                                let date = new Date().valueOf() - new Date(gift.date).valueOf();
+                                let date = new Date().valueOf() - new Date(`${gift.date}`).valueOf();
                                 if (+gift.type == 0){
-                                    console.log(7)
-                                    if (date > 60000){
+                                    console.log(date)
+                                    if (date >= 60000){
                                         console.log(8)
                                         if (user.roles.some(r => r.id != titan.id)){
                                             user.addRole(titan);
@@ -286,7 +286,7 @@ async function check_gifts(){
                                     }
                                 }
                                 if (+gift.type == 1){
-                                    if (date > 60000){
+                                    if (date >= 60000){
                                         if (user.roles.some(r => r.id != warrior.id)){
                                             user.addRole(warrior);
                                             await connection.query(`DELETE FROM \`web_server\` WHERE \`web_server\`.\`id\` = ${gift.id}`);
