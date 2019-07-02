@@ -273,7 +273,7 @@ async function check_gifts(){
                             let user = server.members.get(gift.user);
                             if (user){
                                 console.log(6)
-                                let date = new Date().valueOf() - new Date(`${gift.date}`).valueOf();
+                                let date = (new Date().valueOf() + 10800000) - new Date(`${gift.date}`).valueOf();
                                 if (+gift.type == 0){
                                     console.log(date)
                                     if (date >= 60000){
