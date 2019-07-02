@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.10';
+const version = '5.5.11';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Снять роль и выдать роль Проверенного теперь будет проблематично.";
+const update_information = "Фикс уведомлений о жалобе.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1832,10 +1832,10 @@ async function check_unwanted_user(){
                                         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
                                             if (err) return
                                             if (tickets[0].department == 0){
-                                                log_channel.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа! ${moderator}\``);
+                                                log_channel.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа!\` ${moderator}`);
                                                 channel.send(`\`[NOTIFICATION]\` \`Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.\``);
                                             }else if (tickets[0].department == 1){
-                                                log_channel_two.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа! ${jr_administrator}, ${administrator}\``);
+                                                log_channel_two.send(`\`[NOTIFICATION]\` \`Жалоба\` <#${channel.id}> \`активна. Пользователь ждет вашего ответа!\` ${jr_administrator}, ${administrator}`);
                                                 channel.send(`\`[NOTIFICATION]\` \`Ваше обращение всё еще в обработке! На данный момент все администраторы заняты.\``);
                                             }
                                         });
