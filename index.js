@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.17';
+const version = '5.5.18';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -294,6 +294,58 @@ async function check_gifts(){
                                 }
                             }
                         });
+                    }
+                });
+                let data = new Date(+new Date().valueOf() + 10800000);
+                let night_warrior = server.channels.find(c => c.name == 'night-warrior');
+                night_warrior.permissionOverwrites.forEach(perm => {
+                    if (perm.id == warrior.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3 && data.getHours() != 4){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
+                                night_warrior.overwritePermissions(warrior, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: false,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                                night_warrior.send(`<@&${warrior.id}>, \`чат открыт только ночью! Сейчас он закрывается!\``);
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
+                                night_warrior.overwritePermissions(warrior, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                                night_warrior.send(`<@&${warrior.id}>, \`чат открыт!\``);
+                            }
+                        }
                     }
                 });
             }
