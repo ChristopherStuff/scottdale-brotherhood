@@ -269,7 +269,7 @@ async function check_gifts(){
                             if (user){
                                 let date = (new Date().valueOf() + 10800000) - new Date(`${gift.date}`).valueOf();
                                 if (+gift.type == 0){
-                                    if (date >= 60000){
+                                    if (date >= 86400000){
                                         if (user.roles.some(r => r.id != titan.id)){
                                             user.addRole(titan);
                                             await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
@@ -279,13 +279,16 @@ async function check_gifts(){
                                         }
                                     }
                                 }else if (+gift.type == 1){
-                                    if (date >= 60000){
+                                    if (date >= 172800000){
                                         if (user.roles.some(r => r.id != warrior.id)){
-                                            user.addRole(warrior);
-                                            await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                            user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``).catch(err => {
-                                                if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
-                                            });
+                                            let data = new Date(+new Date().valueOf() + 10800000);
+                                            if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                                                user.addRole(warrior);
+                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
+                                                user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``).catch(err => {
+                                                    if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                                });
+                                            }
                                         }
                                     } 
                                 }
@@ -966,7 +969,7 @@ bot.on('message', async message => {
             return message.delete();
         }
         let date = new Date(+new Date().valueOf() + 10800000);
-        if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 && date.getHours() != 3 && date.getHours() != 4){
+        if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 && date.getHours() != 3){
             message.reply(`\`данный подарок нужно дарить в ночное время суток.\``);
             return message.delete();
         }
