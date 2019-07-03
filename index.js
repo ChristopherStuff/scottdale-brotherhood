@@ -974,6 +974,8 @@ bot.on('message', async message => {
             return message.delete();
         }
         let date = new Date(+new Date().valueOf() + 10800000);
+        console.log(date);
+        console.log(date.getHours());
         if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 && date.getHours() != 4){
             message.reply(`\`данный подарок нужно дарить в ночное время суток.\``);
             return message.delete();
