@@ -276,9 +276,7 @@ async function check_gifts(){
                                             if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
                                                 user.addRole(titan);
                                                 await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                                user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``).catch(err => {
-                                                    if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
-                                                });
+                                                user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
                                             }
                                         }
                                     }
@@ -289,9 +287,7 @@ async function check_gifts(){
                                             if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
                                                 user.addRole(warrior);
                                                 await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                                user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``).catch(err => {
-                                                    if (general) general.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
-                                                });
+                                                user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
                                             }
                                         }
                                     } 
