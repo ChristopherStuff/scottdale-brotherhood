@@ -102,6 +102,52 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
         });
     }
 
+    if (message.content.startsWith('/technical_set')){
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        const args = message.content.slice(`/technical_set`).split(/ +/);
+        if (!args[1] || !args[2] || !args[3] || !args[4]){
+            message.reply(`\`использование: /technical_set [all] [open] [hold] [close]\``);
+            return message.delete();
+        }
+        connection.query(`UPDATE \`tickets-global\` SET all = '${args[1]}', open = '${args[2]}', hold = '${args[3]}', close = '${args[4]}' WHERE \`server\` = '${message.guild.id}'`);
+        message.reply(`\`значения установлены!\`\n\`[SUPPORT]\` \`all: ${args[1]}\`, \`open: ${args[2]}\`, \`hold: ${args[3]}\`, \`close: ${args[4]}\``);
+        return message.delete();
+    }
+
+    if (message.content.startsWith('/technical_get')){
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        const args = message.content.slice(`/technical_get`).split(/ +/);
+        if (!args[1]){
+            message.reply(`\`использование: /technical_get [ticket-id]\``);
+            return message.delete();
+        }
+        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${args[1]}'`, async (err, tickets) => {
+            if (tickets.length == 0){
+                message.reply(`\`не найдено!\``);
+                return message.delete();
+            }else if (tickets.length > 1){
+                message.reply(`\`найдено большое количество тикетов, требуется удаление с базы данных [#${args[1]}-${tickets.length}]\``);
+                return message.delete();
+            }
+            message.reply(`\`вот информация по поводу вашего запроса:\`\nserver: \`${tickets[0].server}\`\nticket_id: \`${tickets[0].ticket_id}\`\n` +
+            `status: \`${tickets[0].status}\`\ndepartment: \`${tickets[0].department}\`\nquestion: \`${tickets[0].question}\`\nauthor: \`${tickets[0].author}\`\n` +
+            `additional_user: \`${tickets[0].additional_user}\``);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/technical_fix')){
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        const args = message.content.slice(`/technical_fix`).split(/ +/);
+        if (!args[1] || !args[2] || !args[3]){
+            message.reply(`\`использование: /technical_fix [ticket-id] [название] [значение]\``);
+            return message.delete();
+        }
+        connection.query(`UPDATE \`tickets\` SET ${args[2]} = '${args[3]}' WHERE \`server\` = '${message.guild.id}' AND \`ticket_id\` = '${args[1]}'`);
+        message.reply(`\`значения установлены!\`\n\`[DEBUG]\` \`ticket: ${args[1]}, установлено ${args[2]} значение ${args[3]}\``);
+        return message.delete();
+    }
+
     if (message.content == '/hold'){
         if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
