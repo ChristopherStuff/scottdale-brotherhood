@@ -257,27 +257,19 @@ async function remove_verify(){
 async function check_gifts(){
     setInterval(() => {
         let server = bot.guilds.get(serverid);
-        console.log(1)
         if (server){
             let general = server.channels.find(c => c.name == 'general');
             let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
             let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
-            console.log(2)
             if (titan && warrior){
-                console.log(3)
                 connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
                     if (gifts.length != 0){
-                        console.log(4)
                         gifts.forEach(async gift => {
-                            console.log(5)
                             let user = server.members.get(gift.user);
                             if (user){
-                                console.log(6)
                                 let date = (new Date().valueOf() + 10800000) - new Date(`${gift.date}`).valueOf();
                                 if (+gift.type == 0){
-                                    console.log(date)
                                     if (date >= 60000){
-                                        console.log(8)
                                         if (user.roles.some(r => r.id != titan.id)){
                                             user.addRole(titan);
                                             await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
@@ -974,9 +966,7 @@ bot.on('message', async message => {
             return message.delete();
         }
         let date = new Date(+new Date().valueOf() + 10800000);
-        console.log(date);
-        console.log(date.getHours());
-        if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 && date.getHours() != 4){
+        if (date.getHours() != 0 && date.getHours() != 1 && date.getHours() != 2 date.getHours() != 3 && date.getHours() != 4){
             message.reply(`\`данный подарок нужно дарить в ночное время суток.\``);
             return message.delete();
         }
