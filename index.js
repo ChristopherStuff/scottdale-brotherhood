@@ -1,4 +1,3 @@
-
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 const tbot = new Discord.Client();
@@ -48,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.25-hide';
+const version = '5.5.26-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
