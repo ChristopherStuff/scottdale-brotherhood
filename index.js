@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.18';
+const version = '5.5.19';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Небольшие фиксы";
+const update_information = "Ночная роль работает только с 00:00 до 04:00";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -301,7 +301,7 @@ async function check_gifts(){
                 night_warrior.permissionOverwrites.forEach(perm => {
                     if (perm.id == warrior.id){
                         let permissions = new Discord.Permissions(perm.allow);
-                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3 && data.getHours() != 4){
+                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
                             if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
                                 night_warrior.overwritePermissions(warrior, {
                                     // GENERAL PERMISSIONS
@@ -321,7 +321,7 @@ async function check_gifts(){
                                     USE_EXTERNAL_EMOJIS: false,
                                     ADD_REACTIONS: false,
                                 });
-                                night_warrior.send(`<@&${warrior.id}>, \`чат открыт только ночью! Сейчас он закрывается!\``);
+                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт только ночью! Сейчас он закрывается!\``);
                             }
                         }else{
                             if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
@@ -343,7 +343,7 @@ async function check_gifts(){
                                     USE_EXTERNAL_EMOJIS: true,
                                     ADD_REACTIONS: true,
                                 });
-                                night_warrior.send(`<@&${warrior.id}>, \`чат открыт!\``);
+                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт!\``);
                             }
                         }
                     }
