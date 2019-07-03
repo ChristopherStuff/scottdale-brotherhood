@@ -48,7 +48,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.22';
+const version = '5.5.23';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1144,13 +1144,26 @@ bot.on('message', async message => {
             message.reply(`\`данный подарок нужно дарить в дневное время суток.\``);
             return message.delete();
         }
-        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '0')`);
-        let general = message.guild.channels.find(c => c.name == 'general');
-        let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
-        user.addRole(role);
-        message.member.removeRole(role);
-        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
-        return message.delete();
+        connection.query(`SELECT \`id\`, \`server\` \`user\`, \`money\` FROM \`profiles\` WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`, async (error, result, packets) => {
+            if (error) return console.error(error);
+            if (result.length > 1) return console.error(`Ошибка при выполнении, результатов много, error code: [#351]`);
+            if (result.length == 0){
+                message.reply(`\`недостаточно dp! Необходимо: 100.\``);
+                return message.delete();
+            }
+            if (+result[0].money < 100){
+                message.reply(`\`недостаточно dp! Необходимо: 100.\``);
+                return message.delete();
+            }
+            await connection.query(`UPDATE \`profiles\` SET money = money - 100 WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`);
+            await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '0')`);
+            let general = message.guild.channels.find(c => c.name == 'general');
+            let role = message.guild.roles.find(r => r.name == '⚡ TITAN ⚡');
+            user.addRole(role);
+            message.member.removeRole(role);
+            if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
+            return message.delete();
+        });
     }
 
     if (message.content.startsWith('/night_gift')){
@@ -1172,13 +1185,26 @@ bot.on('message', async message => {
             message.reply(`\`данный подарок нужно дарить в ночное время суток.\``);
             return message.delete();
         }
-        await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '1')`);
-        let general = message.guild.channels.find(c => c.name == 'general');
-        let role = message.guild.roles.find(r => r.name == '✮ Night Warrior ✮');
-        user.addRole(role);
-        message.member.removeRole(role);
-        if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
-        return message.delete();
+        connection.query(`SELECT \`id\`, \`server\` \`user\`, \`money\` FROM \`profiles\` WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`, async (error, result, packets) => {
+            if (error) return console.error(error);
+            if (result.length > 1) return console.error(`Ошибка при выполнении, результатов много, error code: [#351]`);
+            if (result.length == 0){
+                message.reply(`\`недостаточно dp! Необходимо: 200.\``);
+                return message.delete();
+            }
+            if (+result[0].money < 200){
+                message.reply(`\`недостаточно dp! Необходимо: 200.\``);
+                return message.delete();
+            }
+            await connection.query(`UPDATE \`profiles\` SET money = money - 100 WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`);
+            await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '1')`);
+            let general = message.guild.channels.find(c => c.name == 'general');
+            let role = message.guild.roles.find(r => r.name == '✮ Night Warrior ✮');
+            user.addRole(role);
+            message.member.removeRole(role);
+            if (general) general.send(`${user}, \`пользователь\` ${message.member} \`подарил вам роль\` <@&${role.id}>!`);
+            return message.delete();
+        });
     }
 
     if (message.content.startsWith('/get_log_data')){
