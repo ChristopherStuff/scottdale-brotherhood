@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.21';
+const version = '5.5.22';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Модераторы в чатах";
+const update_information = "Доступ руди";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -1182,7 +1182,7 @@ bot.on('message', async message => {
     }
 
     if (message.content.startsWith('/get_log_data')){
-        if (message.author.id != '336207279412215809'){
+        if (message.author.id != '336207279412215809' && message.author.id != '216824135580385280'){
             message.reply(`\`недостаточно прав доступа.\``).then(msg => msg.delete(12000));
             return message.delete();
         }
@@ -1208,7 +1208,7 @@ bot.on('message', async message => {
             `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
             `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
             `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
-            `RegIP: *скрыто*, LastIP: *скрыто*\n` +
+            `RegIP: *скрыто*, LastIP: ${account.lastip}\n` +
             `Последняя активность: ${account.activity}.\`\`\``);
         });
     }
