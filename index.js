@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.20';
+const version = '5.5.21';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Роль титана работает только с 04:00 до 23:59";
+const update_information = "Модераторы в чатах";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -261,6 +261,7 @@ async function check_gifts(){
             let general = server.channels.find(c => c.name == 'general');
             let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
             let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
+            let spectator = server.roles.find(r => r.name == 'Spectator™');
             if (titan && warrior){
                 connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
                     if (gifts.length != 0){
@@ -350,6 +351,51 @@ async function check_gifts(){
                                 night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт!\``);
                             }
                         }
+                    }else if (perm.id == spectator.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
+                                night_warrior.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
+                                night_warrior.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                            }
+                        }
                     }
                 });
 
@@ -399,6 +445,51 @@ async function check_gifts(){
                                     ADD_REACTIONS: true,
                                 });
                                 titan_chat.send(`<@&${titan.id}>, \`чат открыт!\``);
+                            }
+                        }
+                    }else if (perm.id == spectator.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
+                                titan_chat.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
+                                titan_chat.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
                             }
                         }
                     }
