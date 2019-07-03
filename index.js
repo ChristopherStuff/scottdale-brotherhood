@@ -48,12 +48,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.19';
+const version = '5.5.20';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Ночная роль работает только с 00:00 до 04:00";
+const update_information = "Роль титана работает только с 04:00 до 23:59";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -271,18 +271,21 @@ async function check_gifts(){
                                 if (+gift.type == 0){
                                     if (date >= 86400000){
                                         if (user.roles.some(r => r.id != titan.id)){
-                                            user.addRole(titan);
-                                            await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                            user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``).catch(err => {
-                                                if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
-                                            });
+                                            let data = new Date(+new Date().valueOf() + 10800000);
+                                            if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                                                user.addRole(titan);
+                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
+                                                user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``).catch(err => {
+                                                    if (general) general.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                                });
+                                            }
                                         }
                                     }
                                 }else if (+gift.type == 1){
                                     if (date >= 172800000){
                                         if (user.roles.some(r => r.id != warrior.id)){
                                             let data = new Date(+new Date().valueOf() + 10800000);
-                                            if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                                            if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
                                                 user.addRole(warrior);
                                                 await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
                                                 user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``).catch(err => {
@@ -298,6 +301,7 @@ async function check_gifts(){
                 });
                 let data = new Date(+new Date().valueOf() + 10800000);
                 let night_warrior = server.channels.find(c => c.name == 'night-warrior');
+                let titan_chat = server.channels.find(c => c.name == 'titan');
                 night_warrior.permissionOverwrites.forEach(perm => {
                     if (perm.id == warrior.id){
                         let permissions = new Discord.Permissions(perm.allow);
@@ -344,6 +348,57 @@ async function check_gifts(){
                                     ADD_REACTIONS: true,
                                 });
                                 night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт!\``);
+                            }
+                        }
+                    }
+                });
+
+                titan_chat.permissionOverwrites.forEach(perm => {
+                    if (perm.id == titan.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
+                                titan_chat.overwritePermissions(titan, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: false,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                                titan_chat.send(`<@&${titan.id}>, \`чат открыт только утром, днем и вечером! Сейчас он закрывается!\``);
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
+                                titan_chat.overwritePermissions(titan, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                                titan_chat.send(`<@&${titan.id}>, \`чат открыт!\``);
                             }
                         }
                     }
@@ -995,6 +1050,11 @@ bot.on('message', async message => {
         }
         if (user.roles.some(r => r.name == '⚡ TITAN ⚡')){
             message.reply(`\`у пользователя уже есть этот подарок!\``);
+            return message.delete();
+        }
+        let date = new Date(+new Date().valueOf() + 10800000);
+        if (date.getHours() == 0 && date.getHours() == 1 && date.getHours() == 2 && date.getHours() == 3){
+            message.reply(`\`данный подарок нужно дарить в дневное время суток.\``);
             return message.delete();
         }
         await connection.query(`INSERT INTO \`presents\` (\`server\`, \`user\`, \`type\`) VALUES ('${message.guild.id}', '${message.author.id}', '0')`);
