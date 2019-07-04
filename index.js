@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.26-hide';
+const version = '5.5.27';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -2132,6 +2132,9 @@ async function check_unwanted_user(){
                                                             connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${gserver.id}'`);
                                                         });
                                                     });
+                                                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`);
+                                                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${gserver.id}'`);
+                                                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${gserver.id}'`);
                                                     rep_message.edit(`` +
                                                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
                                                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
@@ -2139,9 +2142,6 @@ async function check_unwanted_user(){
                                                     `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
                                                     `**Вопросы на рассмотрении: ${+result[0].hold + 1}**\n` +
                                                     `**Закрытых: ${result[0].close}**`, image);
-                                                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`);
-                                                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${gserver.id}'`);
-                                                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${gserver.id}'`);
                                                     if (author){
                                                         channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник: Система.\``);
                                                     }else{
