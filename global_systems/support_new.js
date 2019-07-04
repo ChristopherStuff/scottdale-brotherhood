@@ -109,7 +109,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
             message.reply(`\`использование: /technical_set [all] [open] [hold] [close]\``);
             return message.delete();
         }
-        connection.query(`UPDATE \`tickets-global\` SET all = '${args[1]}', open = '${args[2]}', hold = '${args[3]}', close = '${args[4]}' WHERE \`server\` = '${message.guild.id}'`);
+        connection.query(`UPDATE \`tickets-global\` SET all, open, hold, close = '${args[1]}', '${args[2]}', '${args[3]}', '${args[4]}' WHERE \`server\` = '${message.guild.id}'`);
         message.reply(`\`значения установлены!\`\n\`[SUPPORT]\` \`all: ${args[1]}\`, \`open: ${args[2]}\`, \`hold: ${args[3]}\`, \`close: ${args[4]}\``);
         return message.delete();
     }
