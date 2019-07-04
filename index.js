@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.5.27';
+const version = '5.5.28';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Апдейт";
+const update_information = "Исправление ошибок с tickets";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -2108,6 +2108,8 @@ async function check_unwanted_user(){
                                             await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
                                             connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${gserver.id}'`, async (error, result) => {
                                                 if (error) return
+                                                const image = new Discord.RichEmbed();
+                                                image.setImage("https://imgur.com/LKDbJeM.gif");
                                                 if (result.length == 0){
                                                     ticket_channel.send(`` +
                                                     `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
