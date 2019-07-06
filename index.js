@@ -2094,7 +2094,7 @@ async function check_unwanted_user(){
                     channel.fetchMessages({limit: 1}).then(messages => {
                         if (messages.size == 1){
                             messages.forEach(msg => {
-                                let s_now = new Date().valueOf() - 60000;//18000000;
+                                let s_now = new Date().valueOf() - 18000000;
                                 if (msg.createdAt.valueOf() < s_now){
                                     if (msg.content.includes('Ваше обращение всё еще в обработке! На данный момент все модераторы заняты.') && msg.author.bot){
                                         connection.query(`SELECT * FROM \`tickets\` WHERE server = '${gserver.id}' AND ticket_id = '${channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
