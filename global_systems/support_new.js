@@ -198,6 +198,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd, support_
                     if (error) console.error(`[SUPPORT] Произошла ошибка при установки категории каналу.`);
                     message.channel.setParent(category.id);
                 });
+                if (answer[0].status == 0){
+                    message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: true });
+                }
                 message.delete();
                 if (author){
                     message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
@@ -248,6 +251,9 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd, support_
                     if (error) console.error(`[SUPPORT] Произошла ошибка при установки категории каналу.`);
                     message.channel.setParent(category.id);
                 });
+                if (answer[0].status == 0){
+                    message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: true });
+                }
                 message.delete();
                 if (author){
                     message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
