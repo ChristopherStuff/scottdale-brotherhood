@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.0';
+const version = '5.6.1';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Новый нелагающий support";
+const update_information = "Удаленный тикет идет не только в reports-log, но и отсылается пользователю, если у него открыты личные сообщения.";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -2842,6 +2842,7 @@ function tickets_check(){
                         }
                     });
                 }else if (ticket.parentID == close_tickets.id){
+                    let db_ticket = answer.find(_ticket => _ticket.ticket == ticket.name.split('ticket-')[1]);
                     ticket.fetchMessages({limit: 1}).then(async messages => {
                         let message = messages.first();
                         let back_time = new Date().valueOf() - support_settings["time_deleted"];
@@ -2883,7 +2884,9 @@ function tickets_check(){
                                 i--;
                             }
                             let ticket_log = server.channels.find(c => c.name == support_settings["log_channel"]);
+                            let author = server.members.get(db_ticket.author);
                             if (ticket_log) await ticket_log.send(`\`[SYSTEM]\` \`Канал ${ticket.name} был удален. [24 часа в статусе 'Закрыт']\``, { files: [ `./${ticket.name}.txt` ] });
+                            if (author) await author.send(`\`[SYSTEM]\` \`Здравствуйте! Ваш вопрос ${ticket.name} был удален. Все сообщения были сохранены в файл.\``, { files: [ `./${ticket.name}.txt` ] });
                             ticket.delete();
                             fs.unlinkSync(`./${ticket.name}.txt`);
                         }
