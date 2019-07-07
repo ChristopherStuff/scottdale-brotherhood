@@ -1,580 +1,337 @@
 const Discord = require('discord.js');
 const fs = require("fs");
 
-exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
+exports.run = async (bot, message, support_cooldown, connection, st_cd, support_settings) => {
     const image = new Discord.RichEmbed();
     image.setImage("https://imgur.com/LKDbJeM.gif");
-
-    if (message.channel.name == "support"){
-        if (message.author.bot) return message.delete();
-        if (support_cooldown.has(message.author.id)){
-            return message.delete();
-        }
-        support_cooldown.add(message.author.id);
-        setTimeout(() => {
-            if (support_cooldown.has(message.author.id)) support_cooldown.delete(message.author.id);
-        }, 30000);
-
-        connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
-            if (error) return message.delete();
-            if (result.length == 0){
-                message.channel.send(`` +
-                `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                `**Количество вопросов за все время: 0**\n` +
-                `**Необработанных модераторами: 0**\n` +
-                `**Вопросы на рассмотрении: 0**\n` +
-                `**Закрытых: 0**`, image).then(msg => {
-                    connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${message.guild.id}', '${msg.id}', '0', '0', '0', '0')`);
-                });
+    
+    if (message.channel.name == support_settings["support_channel"]){
+        if (message.author.bot) return message.delete(); // Проверка на бота
+        if (support_cooldown.has(message.author.id)) return message.delete(); // Проверка на cooldown
+        support_cooldown.add(message.author.id); // Добавление пользователя в cooldown
+        setTimeout(() => { if (support_cooldown.has(message.author.id)) support_cooldown.delete(message.author.id); }, 7000); // Удаление из cooldown
+        connection.query(`SELECT * FROM \`new-support\` WHERE \`server\` = '${message.guild.id}'`, async (error, answer) => {
+            if (error){
+                message.reply(`\`произошла ошибка базы данных. повторите позднее.\``).then(msg => msg.delete(12000));
                 return message.delete();
-            }else{
-                let rep_message = await message.channel.fetchMessage(result[0].message).catch(async err => {
-                    await message.channel.send(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                    `**Необработанных модераторами: ${result[0].open}**\n` +
-                    `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                    `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                        rep_message = msg;
-                        connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
-                    });
-                });
-                let category = message.guild.channels.find(c => c.name == "Активные жалобы");
-                let moderator = await message.guild.roles.find(r => r.name == 'Support Team');
-                if (!category || !moderator) return message.delete();
-                if (category.children.size >= 45){
-                    message.reply(`\`обращения в поддержку временно недоступны. Повторите попытку позднее.\``).then(msg => msg.delete(12000));
+            }
+            if (answer.length == 0){
+                let category = message.guild.channels.find(c => c.name == support_settings["active-tickets"]);
+                let moderator = message.guild.roles.find(r => r.name == support_settings["moderator"]);
+                if (!category){
+                    message.reply(`\`категория активных жалоб не найдена!\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }else if (!moderator){
+                    message.reply(`\`роль модератора не найдена!\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }else if (category.children.size >= 45){
+                    message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
                     return message.delete();
                 }
-                message.guild.createChannel(`ticket-${+result[0].tickets + 1}`, 'text', [
-                    {
-                        id: moderator.id,
-                        allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
-                        deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
-                    },
-                    {
-                        id: message.member.id,
-                        allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
-                        deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
-                    },
-                    {
-                        id: message.guild.id,
-                        deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS']
-                    }
-                ]).then(async channel => {
-                    await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
-                    await connection.query(`UPDATE \`tickets-global\` SET tickets = tickets + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    await connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    await connection.query(`INSERT INTO \`tickets\` (\`server\`, \`ticket_id\`, \`question\`, \`author\`) VALUES ('${message.guild.id}', '${+result[0].tickets + 1}', '${message.content}', '${message.author.id}')`);
-                    await channel.setParent(category.id).catch(() => { setTimeout(() => { channel.setParent(category.id); }, 4000); });
-                    message.delete();
-                    channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
-                        color: 3447003,
-                        title: "Обращение к поддержке Discord",
-                        fields: [{
-                            name: "Отправитель",
-                            value: `**Пользователь:** <@${message.author.id}>`,
-                        },{
-                            name: "Суть обращения",
-                            value: `${message.content}`,
-                        }]
-                    }}).catch(() => {
-                        channel.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
-                            color: 3447003,
-                            title: "Обращение к поддержке Discord",
-                            description: `${message.content}`
-                        }});
-                    });
-                    rep_message.edit(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
+                message.channel.send(`` +
+                    `**Приветствую! Вы попали в канал поддержки сервера ${support_settings["server_name"]}!**\n` +
                     `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: ${+result[0].tickets + 1}**\n` +
-                    `**Необработанных модераторами: ${+result[0].open + 1}**\n` +
-                    `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                    `**Закрытых: ${result[0].close}**`, image);
-                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[CREATE]\` <@${message.author.id}> \`создал обращение к поддержке:\` <#${channel.id}> \`[${channel.name}]\``);
-                    message.channel.send(`<@${message.author.id}>, \`обращение составлено. Нажмите на\` <#${channel.id}>`).then(msg => msg.delete(15000));
+                    `**Количество вопросов за все время: 1**\n` +
+                    `**Необработанных модераторами: 1**\n` +
+                    `**Вопросы на рассмотрении: 0**\n` +
+                    `**Закрытых: 0**`, image)
+                .then(async support_message => {
+                    await connection.query(`INSERT INTO \`new-support\` (\`server\`, \`message\`, \`tickets\`) VALUES ('${message.guild.id}', '${support_message.id}', '1')`, (error) => {
+                        if (error){
+                            console.error(`[SUPPORT] Произошла ошибка при UPDATE, суть: ${error}`);
+                            return message.delete();
+                        }
+                        message.guild.createChannel(`ticket-1`, 'text', [
+                            {
+                                id: moderator.id,
+                                allow: ['VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
+                                deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
+                            },
+                            {
+                                id: message.member.id,
+                                allow: ['VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
+                                deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
+                            },
+                            {
+                                id: message.guild.id,
+                                allow: ['SEND_MESSAGES'],
+                                deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE', 'VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS']
+                            }
+                        ]).then(async ticket => {
+                            await ticket.setParent(category.id).catch(() => { ticket.setParent(category.id); });
+                            await connection.query(`INSERT INTO \`tickets-new\` (\`server\`, \`ticket\`, \`question\`, \`author\`) VALUES ('${message.guild.id}', '1', '${message.content}', '${message.author.id}')`, async (error) => {
+                                if (error){
+                                    message.reply(`\`критическая ошибка! воспроизведение функционала невозможно.\``);
+                                    return message.delete();
+                                }
+                                message.delete();
+                                ticket.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
+                                    color: 3447003,
+                                    title: "Обращение к поддержке Discord",
+                                    fields: [{
+                                        name: "Отправитель",
+                                        value: `**Пользователь:** \`${message.member.displayName || message.member.user.tag}\``,
+                                    },{
+                                        name: "Суть обращения",
+                                        value: `${message.content}`,
+                                    }]
+                                }}).catch(() => {
+                                    ticket.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
+                                        color: 3447003,
+                                        title: "Обращение к поддержке Discord",
+                                        description: `${message.content}`
+                                    }});
+                                });
+                                let ticket_log = message.guild.channels.find(c => c.name == support_settings["log_channel"]);
+                                if (ticket_log) ticket_log.send(`\`[CREATE]\` <@${message.author.id}> \`создал обращение к поддержке:\` <#${ticket.id}> \`[${ticket.name}]\``);
+                                message.channel.send(`<@${message.author.id}>, \`обращение составлено. Нажмите на\` <#${ticket.id}>`).then(msg => msg.delete(15000));
+                                await ticket.setParent(category.id).catch(() => { ticket.setParent(category.id); });
+                            });
+                        });
+                    });
+                });
+            }else{
+                let category = message.guild.channels.find(c => c.name == support_settings["active-tickets"]);
+                let moderator = message.guild.roles.find(r => r.name == support_settings["moderator"]);
+                if (!category){
+                    message.reply(`\`категория активных жалоб не найдена!\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }else if (!moderator){
+                    message.reply(`\`роль модератора не найдена!\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }else if (category.children.size >= 45){
+                    message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }
+                await connection.query(`UPDATE \`new-support\` SET \`tickets\` = '${+answer[0].tickets + 1}' WHERE \`server\` = '${message.guild.id}'`, (error) => {
+                    if (error){
+                        console.error(`[SUPPORT] Произошла ошибка при UPDATE, суть: ${error}`);
+                        return message.delete();
+                    }
+                    message.guild.createChannel(`ticket-${+answer[0].tickets + 1}`, 'text', [
+                        {
+                            id: moderator.id,
+                            allow: ['VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
+                            deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
+                        },
+                        {
+                            id: message.member.id,
+                            allow: ['VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS'],
+                            deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE']
+                        },
+                        {
+                            id: message.guild.id,
+                            allow: ['SEND_MESSAGES'],
+                            deny: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'MANAGE_ROLES', 'MANAGE_WEBHOOKS', 'SEND_TTS_MESSAGES', 'MANAGE_MESSAGES', 'MENTION_EVERYONE', 'VIEW_CHANNEL', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS']
+                        }
+                    ]).then(async ticket => {
+                        await ticket.setParent(category.id).catch(() => { ticket.setParent(category.id); });
+                        await connection.query(`INSERT INTO \`tickets-new\` (\`server\`, \`ticket\`, \`question\`, \`author\`) VALUES ('${message.guild.id}', '${+answer[0].tickets + 1}', '${message.content}', '${message.author.id}')`, async (error) => {
+                            if (error){
+                                message.reply(`\`критическая ошибка! воспроизведение функционала невозможно.\``);
+                                return message.delete();
+                            }
+                            message.delete();
+                            ticket.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
+                                color: 3447003,
+                                title: "Обращение к поддержке Discord",
+                                fields: [{
+                                    name: "Отправитель",
+                                    value: `**Пользователь:** \`${message.member.displayName || message.member.user.tag}\``,
+                                },{
+                                    name: "Суть обращения",
+                                    value: `${message.content}`,
+                                }]
+                            }}).catch(() => {
+                                ticket.send(`<@${message.author.id}> \`для команды поддержки\` <@&${moderator.id}>`, {embed: {
+                                    color: 3447003,
+                                    title: "Обращение к поддержке Discord",
+                                    description: `${message.content}`
+                                }});
+                            });
+                            let ticket_log = message.guild.channels.find(c => c.name == support_settings["log_channel"]);
+                            if (ticket_log) ticket_log.send(`\`[CREATE]\` <@${message.author.id}> \`создал обращение к поддержке:\` <#${ticket.id}> \`[${ticket.name}]\``);
+                            message.channel.send(`<@${message.author.id}>, \`обращение составлено. Нажмите на\` <#${ticket.id}>`).then(msg => msg.delete(15000));
+                            await ticket.setParent(category.id).catch(() => { ticket.setParent(category.id); });
+                        });
+                    });
                 });
             }
         });
-    }
-
-    if (message.content.startsWith('/technical_set')){
-        if (!message.member.hasPermission("ADMINISTRATOR")) return
-        const args = message.content.slice(`/technical_set`).split(/ +/);
-        if (!args[1] || !args[2] || !args[3] || !args[4]){
-            message.reply(`\`использование: /technical_set [all] [open] [hold] [close]\``);
-            return message.delete();
-        }
-        connection.query(`UPDATE \`tickets-global\` SET \`tickets\` = '${args[1]}', \`open\` = '${args[2]}', \`hold\` = '${args[3]}', \`close\` = '${args[4]}' WHERE \`server\` = '${message.guild.id}'`);
-        message.reply(`\`значения установлены!\`\n\`[SUPPORT]\` \`all: ${args[1]}\`, \`open: ${args[2]}\`, \`hold: ${args[3]}\`, \`close: ${args[4]}\``);
-        return message.delete();
-    }
-
-    if (message.content.startsWith('/technical_get')){
-        if (!message.member.hasPermission("ADMINISTRATOR")) return
-        const args = message.content.slice(`/technical_get`).split(/ +/);
-        if (!args[1]){
-            message.reply(`\`использование: /technical_get [ticket-id]\``);
-            return message.delete();
-        }
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${args[1]}'`, async (err, tickets) => {
-            if (tickets.length == 0){
-                message.reply(`\`не найдено!\``);
-                return message.delete();
-            }else if (tickets.length > 1){
-                message.reply(`\`найдено большое количество тикетов, требуется удаление с базы данных [#${args[1]}-${tickets.length}]\``);
-                return message.delete();
-            }
-            message.reply(`\`вот информация по поводу вашего запроса:\`\nserver: \`${tickets[0].server}\`\nticket_id: \`${tickets[0].ticket_id}\`\n` +
-            `status: \`${tickets[0].status}\`\ndepartment: \`${tickets[0].department}\`\nquestion: \`${tickets[0].question}\`\nauthor: \`${tickets[0].author}\`\n` +
-            `additional_user: \`${tickets[0].additional_user}\``);
-            return message.delete();
-        });
-    }
-
-    if (message.content.startsWith('/technical_fix')){
-        if (!message.member.hasPermission("ADMINISTRATOR")) return
-        const args = message.content.slice(`/technical_fix`).split(/ +/);
-        if (!args[1] || !args[2] || !args[3]){
-            message.reply(`\`использование: /technical_fix [ticket-id] [название] [значение]\``);
-            return message.delete();
-        }
-        connection.query(`UPDATE \`tickets\` SET ${args[2]} = '${args[3]}' WHERE \`server\` = '${message.guild.id}' AND \`ticket_id\` = '${args[1]}'`);
-        message.reply(`\`значения установлены!\`\n\`[DEBUG]\` \`ticket: ${args[1]}, установлено ${args[2]} значение ${args[3]}\``);
-        return message.delete();
     }
 
     if (message.content == '/hold'){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
-        if (st_cd.has(message.guild.id)){
-            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
-            return message.delete();
-        }
+        if (!message.member.hasPermission("ADMINISTRATOR") && !message.member.roles.some(r => r.name == support_settings["moderator"]) && !message.member.roles.some(r => support_settings["administrators"].includes(r.name))) return message.delete();
+        if (st_cd.has(message.guild.id)) return message.delete();
         st_cd.add(message.guild.id);
-        setTimeout(() => {
-            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
-        }, 7000);
-
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
-            if (err){
-                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+        setTimeout(() => { if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id); }, 3000);
+        connection.query(`SELECT * FROM \`tickets-new\` WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, (error, answer) => {
+            if (error){
+                message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (answer.length == 0){
+                message.reply(`\`данная жалоба не была найдена в базе данных. error.\``);
+                return message.delete();
+            }else if (answer.length > 1){
+                message.reply(`\`ошибка получения. много результатов. передайте сообщение тех.администраторам discord.\``);
+                return message.delete();
+            }else if (answer[0].status == 2){
+                message.reply(`\`ошибка! данная жалоба уже на рассмотрении!\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
-            if (+tickets[0].status != 1) return message.delete();
-            let category = message.guild.channels.find(c => c.name == "Жалобы на рассмотрении");
-            let ticket_channel = message.guild.channels.find(c => c.name == 'support');
-            let author = message.guild.members.get(tickets[0].author);
-            if (!category || !ticket_channel) return message.delete();
-            if (category.children.size >= 45){
+            let category = message.guild.channels.find(c => c.name == support_settings["hold-tickets"]);
+            let author = message.guild.members.get(answer[0].author);
+            if (!category){
+                message.reply(`\`категория жалоб на рассмотрении не найдена!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (category.children.size >= 45){
                 message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
-            await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
-            connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
-                if (error) return message.delete();
-                if (result.length == 0){
-                    ticket_channel.send(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: 0**\n` +
-                    `**Необработанных модераторами: 0**\n` +
-                    `**Вопросы на рассмотрении: 0**\n` +
-                    `**Закрытых: 0**`, image).then(msg => {
-                        connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${message.guild.id}', '${msg.id}', '0', '0', '0', '0')`);
-                    });
-                    return message.delete();
-                }else{
-                    let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
-                        await ticket_channel.send(`` +
-                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                        `**Необработанных модераторами: ${result[0].open}**\n` +
-                        `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                        `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                            rep_message = msg;
-                            connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
-                        });
-                    });
-                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET hold = hold + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    rep_message.edit(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                    `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
-                    `**Вопросы на рассмотрении: ${+result[0].hold + 1}**\n` +
-                    `**Закрытых: ${result[0].close}**`, image);
-                    if (author){
-                        message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
-                    }else{
-                        message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
-                    }
-                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'На рассмотрении'\``);
+            connection.query(`UPDATE \`tickets-new\` SET \`status\` = '2' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                if (error){
+                    message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
                     return message.delete();
                 }
+                await message.channel.setParent(category.id).catch((error) => {
+                    if (error) console.error(`[SUPPORT] Произошла ошибка при установки категории каналу.`);
+                    message.channel.setParent(category.id);
+                });
+                message.delete();
+                if (author){
+                    message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данной жалобе [${message.channel.name}] был установлен статус: 'На рассмотрении'. Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == support_settings["log_channel"]);
+                if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'На рассмотрении'\``);
             });
         });
     }
 
     if (message.content == '/active'){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
-        if (st_cd.has(message.guild.id)){
-            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
-            return message.delete();
-        }
+        if (!message.member.hasPermission("ADMINISTRATOR") && !message.member.roles.some(r => r.name == support_settings["moderator"]) && !message.member.roles.some(r => support_settings["administrators"].includes(r.name))) return message.delete();
+        if (st_cd.has(message.guild.id)) return message.delete();
         st_cd.add(message.guild.id);
-        setTimeout(() => {
-            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
-        }, 7000);
-
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
-            if (err){
-                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+        setTimeout(() => { if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id); }, 3000);
+        connection.query(`SELECT * FROM \`tickets-new\` WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, (error, answer) => {
+            if (error){
+                message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (answer.length == 0){
+                message.reply(`\`данная жалоба не была найдена в базе данных. error.\``);
+                return message.delete();
+            }else if (answer.length > 1){
+                message.reply(`\`ошибка получения. много результатов. передайте сообщение тех.администраторам discord.\``);
+                return message.delete();
+            }else if (answer[0].status == 1){
+                message.reply(`\`ошибка! данная жалоба уже в обработке!\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
-            if (+tickets[0].status != 2) return message.delete();
-            let category = message.guild.channels.find(c => c.name == "Активные жалобы");
-            let ticket_channel = message.guild.channels.find(c => c.name == 'support');
-            let author = message.guild.members.get(tickets[0].author);
-            if (!category || !ticket_channel) return message.delete();
-            if (category.children.size >= 45){
+            let category = message.guild.channels.find(c => c.name == support_settings["active-tickets"]);
+            let author = message.guild.members.get(answer[0].author);
+            if (!category){
+                message.reply(`\`категория активных жалоб не найдена!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (category.children.size >= 45){
                 message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
-            await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
-            connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
-                if (error) return message.delete();
-                if (result.length == 0){
-                    ticket_channel.send(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: 0**\n` +
-                    `**Необработанных модераторами: 0**\n` +
-                    `**Вопросы на рассмотрении: 0**\n` +
-                    `**Закрытых: 0**`, image).then(msg => {
-                        connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${message.guild.id}', '${msg.id}', '0', '0', '0', '0')`);
-                    });
-                    return message.delete();
-                }else{
-                    let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
-                        await ticket_channel.send(`` +
-                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                        `**Необработанных модераторами: ${result[0].open}**\n` +
-                        `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                        `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                            rep_message = msg;
-                            connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
-                        });
-                    });
-                    connection.query(`UPDATE \`tickets\` SET status = 2 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET open = open + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
-                    rep_message.edit(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                    `**Необработанных модераторами: ${+result[0].open + 1}**\n` +
-                    `**Вопросы на рассмотрении: ${+result[0].hold - 1}**\n` +
-                    `**Закрытых: ${result[0].close}**`, image);
-                    if (author){
-                        message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
-                    }else{
-                        message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
-                    }
-                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'В обработке'\``);
+            connection.query(`UPDATE \`tickets-new\` SET \`status\` = '1' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                if (error){
+                    message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
                     return message.delete();
                 }
+                await message.channel.setParent(category.id).catch((error) => {
+                    if (error) console.error(`[SUPPORT] Произошла ошибка при установки категории каналу.`);
+                    message.channel.setParent(category.id);
+                });
+                message.delete();
+                if (author){
+                    message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данной жалобе [${message.channel.name}] был установлен статус: 'В обработке'. Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == support_settings["log_channel"]);
+                if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'В обработке'\``);
             });
         });
     }
 
-    if (message.content.startsWith('/add')){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
+    if (message.content.startsWith('/department')){
         if (!message.channel.name.startsWith('ticket-')) return message.delete();
-        let user = message.guild.member(message.mentions.users.first());
-        if (!user){
-            message.reply(`\`пользователь не указан! используйте: '/add @user', если на себя, то очистит доп.пользователей в жалобе.\``).then(msg => msg.delete(12000));
-            return message.delete();
-        }
-        if (st_cd.has(message.guild.id)){
-            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
-            return message.delete();
-        }
+        if (!message.member.hasPermission("ADMINISTRATOR") && !message.member.roles.some(r => r.name == support_settings["moderator"]) && !message.member.roles.some(r => support_settings["administrators"].includes(r.name))) return message.delete();
+        if (st_cd.has(message.guild.id)) return message.delete();
         st_cd.add(message.guild.id);
-        setTimeout(() => {
-            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
-        }, 7000);
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
-            if (err){
-                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
-                return message.delete();
-            }
-            if (user.id == message.author.id){
-                if (+tickets[0].additional_user != 0){
-                    let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
-                    if (permission) permission.delete();
-                    await connection.query(`UPDATE \`tickets\` SET additional_user = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                    message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
-                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] удалил доп.пользователей у жалобы\` <#${message.channel.id}> \`[${message.channel.name}]\``);
-                }else{
-                    message.reply(`\`дополнительных пользователей нет. их не нужно очищать.\``).then(msg => msg.delete(12000));
-                }
-                return message.delete();
-            }
-            if (tickets[0].additional_user == user.id){
-                message.reply(`\`данный пользователь уже добавлен!\``).then(msg => msg.delete(12000));
-                return message.delete();
-            }
-            if (+tickets[0].additional_user != 0){
-                let permission = message.channel.permissionOverwrites.find(p => p.id == `${tickets[0].additional_user}`);
-                if (permission) permission.delete();
-            }
-            await connection.query(`UPDATE \`tickets\` SET additional_user = '${user.id}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-            await message.channel.overwritePermissions(user, {
-                // GENERAL PERMISSIONS
-                CREATE_INSTANT_INVITE: false,
-                MANAGE_CHANNELS: false,
-                MANAGE_ROLES: false,
-                MANAGE_WEBHOOKS: false,
-                // TEXT PERMISSIONS
-                VIEW_CHANNEL: true,
-                SEND_MESSAGES: true,
-                SEND_TTS_MESSAGES: false,
-                MANAGE_MESSAGES: false,
-                EMBED_LINKS: true,
-                ATTACH_FILES: true,
-                READ_MESSAGE_HISTORY: true,
-                MENTION_EVERYONE: false,
-                USE_EXTERNAL_EMOJIS: false,
-                ADD_REACTIONS: false,
-            })
-            message.channel.send(`\`Модератор\` ${message.member} \`добавил к данной жалобе пользователя:\` ${user}`);
-            let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-            if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] ${user.displayName || user.user.tag} [${user.id}]\``);
-            return message.delete();
-        });
-    }
-
-    if (message.content.startsWith('/set')){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
-        if (!message.channel.name.startsWith('ticket-')) return message.delete();
-        const args = message.content.slice(`/run`).split(/ +/);
-        if (args[1] != '1' && args[1] != '0'){
-            message.reply(`\`используйте: '/set [0 или 1]'\n0 - модераторы, 1 - админы\``).then(msg => msg.delete(7000));
+        setTimeout(() => { if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id); }, 3000);
+        const args = message.content.slice(`/department`).split(/ +/);
+        if (!['0', '1'].includes(args[1])){
+            message.reply(`\`использование: /department [0/1]\n[0] - ${support_settings["moderator"]}\n[1] - ${support_settings["administrators"].join(', ')}\``).then(msg => msg.delete(20000));
             return message.delete();
         }
-        if (st_cd.has(message.guild.id)){
-            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
-            return message.delete();
-        }
-        st_cd.add(message.guild.id);
-        setTimeout(() => {
-            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
-        }, 7000);
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
-            let author = message.guild.members.get(tickets[0].author);
-            if (err){
-                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+        connection.query(`SELECT * FROM \`tickets-new\` WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, (error, answer) => {
+            if (error){
+                message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (answer.length == 0){
+                message.reply(`\`данная жалоба не была найдена в базе данных. error.\``);
+                return message.delete();
+            }else if (answer.length > 1){
+                message.reply(`\`ошибка получения. много результатов. передайте сообщение тех.администраторам discord.\``);
+                return message.delete();
+            }else if (+answer[0].department == +args[1]){
+                message.reply(`\`ошибка! нельзя передать жалобу тем же модераторам, которые сейчас её обрабатывают!\``).then(msg => msg.delete(18000));
+                return message.delete();
+            }else if (answer[0].status == 0){
+                message.reply(`\`жалоба закрыта, действия невозможны.\``).then(msg => msg.delete(12000));
                 return message.delete();
             }
-            if (tickets[0].department == args[1]) return message.delete();
-            let moderator = message.guild.roles.find(r => r.name == 'Support Team');
-            let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
-            let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
-            if (tickets[0].department == '0'){
-                let permission = message.channel.permissionOverwrites.find(p => p.id == `${moderator.id}`);
-                if (permission) permission.delete();
-                await message.channel.overwritePermissions(jr_administrator, {
-                    // GENERAL PERMISSIONS
-                    CREATE_INSTANT_INVITE: false,
-                    MANAGE_CHANNELS: false,
-                    MANAGE_ROLES: false,
-                    MANAGE_WEBHOOKS: false,
-                    // TEXT PERMISSIONS
-                    VIEW_CHANNEL: true,
-                    SEND_MESSAGES: true,
-                    SEND_TTS_MESSAGES: false,
-                    MANAGE_MESSAGES: false,
-                    EMBED_LINKS: true,
-                    ATTACH_FILES: true,
-                    READ_MESSAGE_HISTORY: true,
-                    MENTION_EVERYONE: false,
-                    USE_EXTERNAL_EMOJIS: false,
-                    ADD_REACTIONS: false,
-                });
-                await message.channel.overwritePermissions(administrator, {
-                    // GENERAL PERMISSIONS
-                    CREATE_INSTANT_INVITE: false,
-                    MANAGE_CHANNELS: false,
-                    MANAGE_ROLES: false,
-                    MANAGE_WEBHOOKS: false,
-                    // TEXT PERMISSIONS
-                    VIEW_CHANNEL: true,
-                    SEND_MESSAGES: true,
-                    SEND_TTS_MESSAGES: false,
-                    MANAGE_MESSAGES: false,
-                    EMBED_LINKS: true,
-                    ATTACH_FILES: true,
-                    READ_MESSAGE_HISTORY: true,
-                    MENTION_EVERYONE: false,
-                    USE_EXTERNAL_EMOJIS: false,
-                    ADD_REACTIONS: false,
-                });
-                if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}> \`. Источник:\` ${message.member}`);
-                }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена\` <@&${administrator.id}> \`и\` <@&${jr_administrator.id}> \`Источник:\` ${message.member}`);
-                }
-                let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] администрации сервера.\``);
-            }else if (tickets[0].department == '1'){
-                let permission = message.channel.permissionOverwrites.find(p => p.id == `${jr_administrator.id}`);
-                if (permission) permission.delete();
-                let permission_two = message.channel.permissionOverwrites.find(p => p.id == `${administrator.id}`);
-                if (permission_two) permission_two.delete();
-                await message.channel.overwritePermissions(moderator, {
-                    // GENERAL PERMISSIONS
-                    CREATE_INSTANT_INVITE: false,
-                    MANAGE_CHANNELS: false,
-                    MANAGE_ROLES: false,
-                    MANAGE_WEBHOOKS: false,
-                    // TEXT PERMISSIONS
-                    VIEW_CHANNEL: true,
-                    SEND_MESSAGES: true,
-                    SEND_TTS_MESSAGES: false,
-                    MANAGE_MESSAGES: false,
-                    EMBED_LINKS: true,
-                    ATTACH_FILES: true,
-                    READ_MESSAGE_HISTORY: true,
-                    MENTION_EVERYONE: false,
-                    USE_EXTERNAL_EMOJIS: false,
-                    ADD_REACTIONS: false,
-                });
-                if (author){
-                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
-                }else{
-                    message.channel.send(`\`Данная жалоба была перенаправлена\` <@&${moderator.id}> \`Источник:\` ${message.member}`);
-                }
-                let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                if (ticket_log) ticket_log.send(`\`[USER]\` \`Администратор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}] модераторам сервера.\``);
-            }
-            await connection.query(`UPDATE \`tickets\` SET department = '${args[1]}' WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-            return message.delete();
-        });
-    }
-
-    if (message.content == '/close'){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.delete();
-        if (!message.channel.name.startsWith('ticket-')) return message.delete();
-        if (st_cd.has(message.guild.id)){
-            message.reply(`**\`подождите, запрос обрабатывается..\`**`).then(msg => msg.delete(6000));
-            return message.delete();
-        }
-        st_cd.add(message.guild.id);
-        setTimeout(() => {
-            if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id);
-        }, 7000);
-
-        connection.query(`SELECT * FROM \`tickets\` WHERE server = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`, async (err, tickets) => {
-            if (err){
-                message.reply(`\`произошла ошибка на стороне web-сервера. повторите попытку позднее\``).then(msg => msg.delete(7000));
+            let moderator = message.guild.roles.find(r => r.name == support_settings["moderator"]);
+            let author = message.guild.members.get(answer[0].author);
+            if (!moderator){
+                message.reply(`\`не найдена роль модератора! некому обрабатывать жалобы!\``);
                 return message.delete();
             }
-            if (+tickets[0].status == 0) return message.delete();
-            let category = message.guild.channels.find(c => c.name == "Корзина");
-            let ticket_channel = message.guild.channels.find(c => c.name == 'support');
-            let author = message.guild.members.get(tickets[0].author);
-            if (!category || !ticket_channel) return message.delete();
-            if (category.children.size >= 45){
-                message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
-                return message.delete();
-            }
-            await message.channel.setParent(category.id).catch(() => { setTimeout(() => { message.channel.setParent(category.id); }, 4000); });
-            connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${message.guild.id}'`, async (error, result) => {
-                if (error) return message.delete();
-                if (result.length == 0){
-                    ticket_channel.send(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: 0**\n` +
-                    `**Необработанных модераторами: 0**\n` +
-                    `**Вопросы на рассмотрении: 0**\n` +
-                    `**Закрытых: 0**`, image).then(msg => {
-                        connection.query(`INSERT INTO \`tickets-global\` (\`server\`, \`message\`, \`tickets\`, \`open\`, \`hold\`, \`close\`) VALUES ('${message.guild.id}', '${msg.id}', '0', '0', '0', '0')`);
-                    });
+            connection.query(`UPDATE \`tickets-new\` SET \`department\` = '${args[1]}' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                if (error){
+                    message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
                     return message.delete();
-                }else{
-                    let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async (err) => {
-                        await ticket_channel.send(`` +
-                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                        `**Необработанных модераторами: ${result[0].open}**\n` +
-                        `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                        `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                            rep_message = msg;
-                            connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
-                        });
+                }
+                message.delete();
+                let redirected = [];
+                if (args[1] == '0'){
+                    support_settings["administrators"].forEach(admin => {
+                        let role = message.guild.roles.find(r => r.name == admin);
+                        if (role){
+                            let permission = message.channel.permissionOverwrites.find(p => p.id == role.id);
+                            permission.delete();
+                        }
                     });
-                    connection.query(`UPDATE \`tickets-global\` SET close = close + 1 WHERE \`server\` = '${message.guild.id}'`);
-                    if (+tickets[0].status == 1){
-                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                        connection.query(`UPDATE \`tickets-global\` SET open = open - 1 WHERE \`server\` = '${message.guild.id}'`);
-                        rep_message.edit(`` +
-                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                        `**Необработанных модераторами: ${+result[0].open - 1}**\n` +
-                        `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                        `**Закрытых: ${+result[0].close + 1}**`, image);
-                    }else{
-                        connection.query(`UPDATE \`tickets\` SET status = 0 WHERE \`server\` = '${message.guild.id}' AND ticket_id = '${message.channel.name.split('ticket-')[1]}'`);
-                        connection.query(`UPDATE \`tickets-global\` SET hold = hold - 1 WHERE \`server\` = '${message.guild.id}'`);
-                        rep_message.edit(`` +
-                        `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                        `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                        `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                        `**Необработанных модераторами: ${result[0].open}**\n` +
-                        `**Вопросы на рассмотрении: ${+result[0].hold - 1}**\n` +
-                        `**Закрытых: ${+result[0].close + 1}**`, image);
-                    }
-                    if (author){
-                        await message.channel.overwritePermissions(author, {
-                            // GENERAL PERMISSIONS
-                            CREATE_INSTANT_INVITE: false,
-                            MANAGE_CHANNELS: false,
-                            MANAGE_ROLES: false,
-                            MANAGE_WEBHOOKS: false,
-                            // TEXT PERMISSIONS
-                            VIEW_CHANNEL: true,
-                            SEND_MESSAGES: false,
-                            SEND_TTS_MESSAGES: false,
-                            MANAGE_MESSAGES: false,
-                            EMBED_LINKS: true,
-                            ATTACH_FILES: true,
-                            READ_MESSAGE_HISTORY: true,
-                            MENTION_EVERYONE: false,
-                            USE_EXTERNAL_EMOJIS: false,
-                            ADD_REACTIONS: false,
-                        });
-                    }
-                    if (+tickets[0].additional_user != 0){
-                        let user = message.guild.members.get(tickets[0].additional_user);
-                        if (user){
-                            await message.channel.overwritePermissions(user, {
+                    message.channel.overwritePermissions(moderator, {
+                        // GENERAL PERMISSIONS
+                        CREATE_INSTANT_INVITE: false,
+                        MANAGE_CHANNELS: false,
+                        MANAGE_ROLES: false,
+                        MANAGE_WEBHOOKS: false,
+                        // TEXT PERMISSIONS
+                        VIEW_CHANNEL: true,
+                        SEND_TTS_MESSAGES: false,
+                        MANAGE_MESSAGES: false,
+                        EMBED_LINKS: true,
+                        ATTACH_FILES: true,
+                        READ_MESSAGE_HISTORY: true,
+                        MENTION_EVERYONE: false,
+                        USE_EXTERNAL_EMOJIS: false,
+                        ADD_REACTIONS: false,
+                    });
+                    redirected.push(`<@&${moderator.id}>`);
+                }else if (args[1] == '1'){
+                    support_settings["administrators"].forEach(admin => {
+                        let role = message.guild.roles.find(r => r.name == admin);
+                        if (role){
+                            message.channel.overwritePermissions(role, {
                                 // GENERAL PERMISSIONS
                                 CREATE_INSTANT_INVITE: false,
                                 MANAGE_CHANNELS: false,
@@ -582,7 +339,6 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                                 MANAGE_WEBHOOKS: false,
                                 // TEXT PERMISSIONS
                                 VIEW_CHANNEL: true,
-                                SEND_MESSAGES: false,
                                 SEND_TTS_MESSAGES: false,
                                 MANAGE_MESSAGES: false,
                                 EMBED_LINKS: true,
@@ -592,79 +348,165 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd) => {
                                 USE_EXTERNAL_EMOJIS: false,
                                 ADD_REACTIONS: false,
                             });
+                            redirected.push(`<@&${role.id}>`);
                         }
-                    }
-                    let moderator = message.guild.roles.find(r => r.name == 'Support Team');
-                    let jr_administrator = message.guild.roles.find(r => r.name == '✔Jr.Administrator✔');
-                    let administrator = message.guild.roles.find(r => r.name == '✔ Administrator ✔');
-                    if (tickets[0].department == '0'){
-                        await message.channel.overwritePermissions(moderator, {
-                            // GENERAL PERMISSIONS
-                            CREATE_INSTANT_INVITE: false,
-                            MANAGE_CHANNELS: false,
-                            MANAGE_ROLES: false,
-                            MANAGE_WEBHOOKS: false,
-                            // TEXT PERMISSIONS
-                            VIEW_CHANNEL: true,
-                            SEND_MESSAGES: false,
-                            SEND_TTS_MESSAGES: false,
-                            MANAGE_MESSAGES: false,
-                            EMBED_LINKS: true,
-                            ATTACH_FILES: true,
-                            READ_MESSAGE_HISTORY: true,
-                            MENTION_EVERYONE: false,
-                            USE_EXTERNAL_EMOJIS: false,
-                            ADD_REACTIONS: false,
-                        });
-                    }else if (tickets[0].department == '1'){
-                        await message.channel.overwritePermissions(jr_administrator, {
-                            // GENERAL PERMISSIONS
-                            CREATE_INSTANT_INVITE: false,
-                            MANAGE_CHANNELS: false,
-                            MANAGE_ROLES: false,
-                            MANAGE_WEBHOOKS: false,
-                            // TEXT PERMISSIONS
-                            VIEW_CHANNEL: true,
-                            SEND_MESSAGES: false,
-                            SEND_TTS_MESSAGES: false,
-                            MANAGE_MESSAGES: false,
-                            EMBED_LINKS: true,
-                            ATTACH_FILES: true,
-                            READ_MESSAGE_HISTORY: true,
-                            MENTION_EVERYONE: false,
-                            USE_EXTERNAL_EMOJIS: false,
-                            ADD_REACTIONS: false,
-                        });
-                        await message.channel.overwritePermissions(administrator, {
-                            // GENERAL PERMISSIONS
-                            CREATE_INSTANT_INVITE: false,
-                            MANAGE_CHANNELS: false,
-                            MANAGE_ROLES: false,
-                            MANAGE_WEBHOOKS: false,
-                            // TEXT PERMISSIONS
-                            VIEW_CHANNEL: true,
-                            SEND_MESSAGES: false,
-                            SEND_TTS_MESSAGES: false,
-                            MANAGE_MESSAGES: false,
-                            EMBED_LINKS: true,
-                            ATTACH_FILES: true,
-                            READ_MESSAGE_HISTORY: true,
-                            MENTION_EVERYONE: false,
-                            USE_EXTERNAL_EMOJIS: false,
-                            ADD_REACTIONS: false,
-                        });
-                    }
-                    if (author){
-                        message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
-                    }else{
-                        message.channel.send(`\`Жалобе <#${message.channel.id}> был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
-                    }
-                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
-                    if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'Закрыта'\``);
-                    return message.delete();
+                    });
+                    let permission = message.channel.permissionOverwrites.find(p => p.id == moderator.id);
+                    permission.delete();
                 }
+                if (author){
+                    message.channel.send(`${author}, \`ваша жалоба была перенаправлена\` ${redirected.join(`, `)} \`Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данная жалоба была перенаправлена\` ${redirected.join(`, `)} \`Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                if (ticket_log) ticket_log.send(`\`[DEPARTMENT]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] перенаправил жалобу\` <#${message.channel.id}> \`[${message.channel.name}].\``);
             });
         });
     }
-    return
+
+    if (message.content.startsWith('/user')){
+        if (!message.channel.name.startsWith('ticket-')) return message.delete();
+        if (!message.member.hasPermission("ADMINISTRATOR") && !message.member.roles.some(r => r.name == support_settings["moderator"]) && !message.member.roles.some(r => support_settings["administrators"].includes(r.name))) return message.delete();
+        if (st_cd.has(message.guild.id)) return message.delete();
+        st_cd.add(message.guild.id);
+        setTimeout(() => { if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id); }, 3000);
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply(`\`использование: /user [пользователь]\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        connection.query(`SELECT * FROM \`tickets-new\` WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, (error, answer) => {
+            if (error){
+                message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (answer.length == 0){
+                message.reply(`\`данная жалоба не была найдена в базе данных. error.\``);
+                return message.delete();
+            }else if (answer.length > 1){
+                message.reply(`\`ошибка получения. много результатов. передайте сообщение тех.администраторам discord.\``);
+                return message.delete();
+            }else if (answer[0].status == 0){
+                message.reply(`\`жалоба закрыта, действия невозможны.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (user.id == message.author.id && answer[0].user == 0){
+                message.reply(`\`в жалобе уже нет пользователей!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (user.id == answer[0].user){
+                message.reply(`\`данный пользователь уже добавлен к данной жалобе!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (user.id != message.author.id && user.id == answer[0].author){
+                message.reply(`\`автора жалобы назначить как дополнительного пользователя нельзя!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
+            let author = message.guild.members.get(answer[0].author);
+            if (user.id == message.author.id){
+                connection.query(`UPDATE \`tickets-new\` SET \`user\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                    if (error){
+                        message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                        return message.delete();
+                    }
+                    message.delete();
+                    let permission = message.channel.permissionOverwrites.find(p => p.id == answer[0].user);
+                    permission.delete();
+                    if (author){
+                        message.channel.send(`${author}, \`модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
+                    }else{
+                        message.channel.send(`\`Модератор\` ${message.member} \`очистил дополнительных пользователей в данной жалобе.\``);
+                    }
+                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] очистил доп.пользователей в жалобе\` <#${message.channel.id}> \`[${message.channel.name}]\``);
+                });
+            }else{
+                connection.query(`UPDATE \`tickets-new\` SET \`user\` = '${user.id}' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                    if (error){
+                        message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                        return message.delete();
+                    }
+                    message.delete();
+                    let accept_message = 'добавил к данной жалобе пользователя:';
+                    if (answer[0].user != 0){
+                        accept_message = `обновил доп.пользователя в данной жалобе, удалил:\` <@${answer[0].user}>, \`добавил:`
+                        let permission = message.channel.permissionOverwrites.find(p => p.id == answer[0].user);
+                        permission.delete();
+                    }
+                    message.channel.overwritePermissions(user, {
+                        // GENERAL PERMISSIONS
+                        CREATE_INSTANT_INVITE: false,
+                        MANAGE_CHANNELS: false,
+                        MANAGE_ROLES: false,
+                        MANAGE_WEBHOOKS: false,
+                        // TEXT PERMISSIONS
+                        VIEW_CHANNEL: true,
+                        SEND_TTS_MESSAGES: false,
+                        MANAGE_MESSAGES: false,
+                        EMBED_LINKS: true,
+                        ATTACH_FILES: true,
+                        READ_MESSAGE_HISTORY: true,
+                        MENTION_EVERYONE: false,
+                        USE_EXTERNAL_EMOJIS: false,
+                        ADD_REACTIONS: false,
+                    });
+                    if (author){
+                        message.channel.send(`${author}, \`модератор\` ${message.member} \`${accept_message}\` ${user}`);
+                    }else{
+                        message.channel.send(`\`Модератор\` ${message.member} \`${accept_message}\` ${user}`);
+                    }
+                    let ticket_log = message.guild.channels.find(c => c.name == "reports-log");
+                    if (ticket_log) ticket_log.send(`\`[USER]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] добавил к жалобе\` <#${message.channel.id}> \`[${message.channel.name}] пользователя ${user.displayName || user.user.tag} [${user.id}]\``);
+                });
+            }
+        });
+    }
+
+    if (message.content == '/close'){
+        if (!message.channel.name.startsWith('ticket-')) return message.delete();
+        if (!message.member.hasPermission("ADMINISTRATOR") && !message.member.roles.some(r => r.name == support_settings["moderator"]) && !message.member.roles.some(r => support_settings["administrators"].includes(r.name))) return message.delete();
+        if (st_cd.has(message.guild.id)) return message.delete();
+        st_cd.add(message.guild.id);
+        setTimeout(() => { if (st_cd.has(message.guild.id)) st_cd.delete(message.guild.id); }, 3000);
+        connection.query(`SELECT * FROM \`tickets-new\` WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, (error, answer) => {
+            if (error){
+                message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (answer.length == 0){
+                message.reply(`\`данная жалоба не была найдена в базе данных. error.\``);
+                return message.delete();
+            }else if (answer.length > 1){
+                message.reply(`\`ошибка получения. много результатов. передайте сообщение тех.администраторам discord.\``);
+                return message.delete();
+            }else if (answer[0].status == 0){
+                message.reply(`\`ошибка! данная жалоба уже закрыта!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
+            let category = message.guild.channels.find(c => c.name == support_settings["close-tickets"]);
+            let author = message.guild.members.get(answer[0].author);
+            if (!category){
+                message.reply(`\`категория активных жалоб не найдена!\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }else if (category.children.size >= 45){
+                message.reply(`\`временно недоступно. очередь забита.\``).then(msg => msg.delete(12000));
+                return message.delete();
+            }
+            connection.query(`UPDATE \`tickets-new\` SET \`status\` = '0' WHERE \`server\` = '${message.guild.id}' AND \`ticket\` = '${message.channel.name.split('ticket-')[1]}'`, async (error) => {
+                if (error){
+                    message.reply(`\`произошла критическая ошибка. повторите попытку позже.\``).then(msg => msg.delete(12000));
+                    return message.delete();
+                }
+                await message.channel.setParent(category.id).catch((error) => {
+                    if (error) console.error(`[SUPPORT] Произошла ошибка при установки категории каналу.`);
+                    message.channel.setParent(category.id);
+                });
+                message.delete();
+                message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: false });
+                if (author){
+                    message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
+                }else{
+                    message.channel.send(`\`Данной жалобе [${message.channel.name}] был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
+                }
+                let ticket_log = message.guild.channels.find(c => c.name == support_settings["log_channel"]);
+                if (ticket_log) ticket_log.send(`\`[STATUS]\` \`Модератор ${message.member.displayName || message.member.user.tag} [${message.member.id}] установил жалобе\` <#${message.channel.id}> \`[${message.channel.name}] статус 'Закрыта'\``);
+            });
+        });
+    }
 };
