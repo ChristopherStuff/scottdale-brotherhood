@@ -199,7 +199,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd, support_
                     message.channel.setParent(category.id);
                 });
                 if (answer[0].status == 0){
-                    message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: true });
+                    message.channel.overwritePermissions(message.guild.roles.get(message.guild.id), { SEND_MESSAGES: true });
                 }
                 message.delete();
                 if (author){
@@ -252,7 +252,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd, support_
                     message.channel.setParent(category.id);
                 });
                 if (answer[0].status == 0){
-                    message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: true });
+                    message.channel.overwritePermissions(message.guild.roles.get(message.guild.id), { SEND_MESSAGES: true });
                 }
                 message.delete();
                 if (author){
