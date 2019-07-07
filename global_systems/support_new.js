@@ -498,7 +498,7 @@ exports.run = async (bot, message, support_cooldown, connection, st_cd, support_
                     message.channel.setParent(category.id);
                 });
                 message.delete();
-                message.channel.overwritePermissions(message.guild, { SEND_MESSAGES: false });
+                message.channel.overwritePermissions(message.guild.roles.get(message.guild.id), { SEND_MESSAGES: false });
                 if (author){
                     message.channel.send(`${author}, \`вашей жалобе был установлен статус: 'Закрыта'. Источник:\` ${message.member}`);
                 }else{
