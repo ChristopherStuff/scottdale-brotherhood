@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.4';
+const version = '5.6.5-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1275,7 +1275,7 @@ bot.on('message', async message => {
             "redrock": "10",
             "yuma": "12"
         }
-        if (!servers[args[2]]) return message.reply(`\`сервер: ${args[2]} не найден. Сервера: ${all_servers.join(', ')}\``);
+        if (!servers[args[2].toLowerCase()]) return message.reply(`\`сервер: ${args[2]} не найден. Сервера: ${all_servers.join(', ')}\``);
         /*
             1 уровень доступа: ['никнейм аккаунта', 'статус', 'уровень']
             2 уровень доступа: ['фракция', 'ранг', 'является администратором']
@@ -1283,13 +1283,13 @@ bot.on('message', async message => {
             4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
         */
 
-        request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2]]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
+        request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
             if (body == 'Не передан параметр Сервер или Имя') return message.reply(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
             if (body == 'No authorization') return message.reply(`\`не авторизован в базе данных.\``);
             if (body == 'Timeout') return message.reply(`\`время ответа от защищенного сервера истекло..\``);
             if (body == 'many accounts') return message.reply(`\`найдено большое количество аккаунтов по вашему запросу.\``);
             if (body == '0') return message.reply(`\`аккаунт не найден.\``);
-            request(`${process.env.secure_server}?idacc=${body}&server=${servers[args[2]]}&password=${process.env.password_secure_server}`, function (error, response, body) {
+            request(`${process.env.secure_server}?idacc=${body}&server=${servers[args[2].toLowerCase()]}&password=${process.env.password_secure_server}`, function (error, response, body) {
                 let account = JSON.parse(decodeURI(body));
                 /*
                 name: Kory_McGregor, status: offline, id: 123, level: 65,
