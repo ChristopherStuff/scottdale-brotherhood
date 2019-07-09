@@ -2896,3 +2896,46 @@ function tickets_check(){
         });
     }, 40000);
 }
+
+function generateOutputFile(channel, member) {
+    // use IDs instead of username cause some people have stupid emojis in their name
+    const fileName = `./${channel.id}-${member.id}.pcm`;
+    return fs.createWriteStream(fileName);
+  }
+
+  bot.on('message', msg => {
+    if (msg.content.startsWith('/join')) {
+      const voiceChannel = msg.guild.channels.get('549188073880027136');
+      //console.log(voiceChannel.id);
+      if (!voiceChannel || voiceChannel.type !== 'voice') {
+        return msg.reply(`ты лох!`)
+      }
+      voiceChannel.join()
+        .then(conn => {
+          msg.reply('готово!');
+          // create our voice receiver
+          const receiver = conn.createReceiver();
+  
+          conn.on('speaking', (user, speaking) => {
+            if (speaking) {
+              // this creates a 16-bit signed PCM, stereo 48KHz PCM stream.
+              const audioStream = receiver.createPCMStream(user);
+              // create an output stream so we can dump our data in a file
+              const outputStream = generateOutputFile(voiceChannel, user);
+              // pipe our audio data into the file stream
+              audioStream.pipe(outputStream);
+              outputStream.on("data", console.log);
+              // when the stream ends (the user stopped talking) tell the user
+              audioStream.on('end', () => {
+                
+              });
+            }
+          });
+        })
+        .catch(console.log);
+    }
+    if(msg.content.startsWith('/leave')) {
+      let voiceChannel = msg.guild.channels.get('549188073880027136');
+      voiceChannel.leave();
+    }
+  });
