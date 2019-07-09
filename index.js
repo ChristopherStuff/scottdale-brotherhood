@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.6-hide';
+const version = '5.6.7-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1282,13 +1282,13 @@ bot.on('message', async message => {
             3 уровень доступа: ['деньги', 'банк', 'депозит', 'донат']
             4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
         */
-
+        let msg = message.reply(`\`получение игровой статистики с базы данных...\``);
         request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
-            if (body == 'Не передан параметр Сервер или Имя') return message.reply(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
-            if (body == 'No authorization') return message.reply(`\`не авторизован в базе данных.\``);
-            if (body == 'Timeout') return message.reply(`\`время ответа от защищенного сервера истекло..\``);
-            if (body == 'many accounts') return message.reply(`\`найдено большое количество аккаунтов по вашему запросу.\``);
-            if (body == '0') return message.reply(`\`аккаунт не найден.\``);
+            if (body == 'Не передан параметр Сервер или Имя') return msg.edit(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
+            if (body == 'No authorization') return msg.edit(`\`не авторизован в базе данных.\``);
+            if (body == 'Timeout') return msg.edit(`\`время ответа от защищенного сервера истекло..\``);
+            if (body == 'many accounts') return msg.edit(`\`найдено большое количество аккаунтов по вашему запросу.\``);
+            if (body == '0') return msg.edit(`\`аккаунт не найден.\``);
             request(`${process.env.secure_server}?idacc=${body}&server=${servers[args[2].toLowerCase()]}&password=${process.env.password_secure_server}`, function (error, response, body) {
                 let account = JSON.parse(decodeURI(body));
                 /*
@@ -1299,26 +1299,26 @@ bot.on('message', async message => {
                 activity: 2000-00-00 00:00:00
                 */
                 if (account.name == 'Игрок'){
-                    return message.reply(`\`вы неверно указали сервер!\``);
+                    return msg.edit(`\`вы неверно указали сервер!\``);
                 }else if (account.name == null){
-                    return message.reply(`\`вы неверно указали никнейм!\``);
+                    return msg.edit(`\`вы неверно указали никнейм!\``);
                 }
                 let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                 if (message.member.hasPermission("MANAGE_ROLES")){
                     information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
                     if (account.admin != 0){
                         if (message.author.id == '336207279412215809'){
-                            information.push(`, админ: ${account.admin} lvl`);
+                            information.push(`админ: ${account.admin} lvl`);
                         }else{
-                            information.push(', админ: да')
+                            information.push('админ: да')
                         }
                     }else{
-                        information.push(', админ: нет');
+                        information.push('админ: нет');
                     }
                 }
                 if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
                 if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
-                message.reply(`${information}\`\`\``);
+                msg.edit(`${information}\`\`\``);
             });
         });
     }
