@@ -5,14 +5,6 @@ const md5 = require('../my_modules/md5');
 
 exports.run = async (bot, message, cooldown) => {
     if (message.content.startsWith('/connect')){
-        if (cooldown.has(message.author.id)){
-            message.reply(`\`повторить попытку можно будет через 2 минуты!\``).then(msg => msg.delete(7000));
-            return message.delete();
-        }
-        cooldown.add(message.author.id);
-        setTimeout(() => {
-            if (cooldown.has(message.author.id)) cooldown.delete(message.author.id);
-        }, 120000);
         const args = message.content.slice(`/connect`).split(/ +/);
         if (!args[1] || !args[2] || args[3]){
             message.reply(`\`использование: /connect [название аккаунта] [сервер]\``).then(msg => msg.delete(12000));
@@ -27,6 +19,14 @@ exports.run = async (bot, message, cooldown) => {
             message.reply(`\`для выполнения данного действия нужна роль проверенного!\``).then(msg => msg.delete(12000));
             return message.delete();
         }
+        if (cooldown.has(message.author.id)){
+            message.reply(`\`повторить попытку можно будет через 2 минуты!\``).then(msg => msg.delete(7000));
+            return message.delete();
+        }
+        cooldown.add(message.author.id);
+        setTimeout(() => {
+            if (cooldown.has(message.author.id)) cooldown.delete(message.author.id);
+        }, 120000);
         const code = md5(generator.generate({ length: 10, numbers: true, symbols: true }));
         await connection.query(`INSERT INTO \`per_day\` (\`server\`, \`game_server\`, \`game_name\`, \`discord_id\`, \`state\`) VALUES ('${message.guild.id}', '${args[2]}', '${args[1]}', '${message.author.id}', '${code}')`, async (error) => {
             if (error){
