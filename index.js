@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.10-hide';
+const version = '5.6.11-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1305,6 +1305,7 @@ bot.on('message', async message => {
                         return msg.edit(`\`вы неверно указали никнейм!\``);
                     }
                     if (message.member.hasPermission("MANAGE_ROLES")){
+                        conosle.log(`Модераторская стата!`);
                         let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                         if (message.member.hasPermission("MANAGE_ROLES")){
                             information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
@@ -1331,8 +1332,11 @@ bot.on('message', async message => {
                             if (profiles.length == 0) return msg.edit(`${message.member}, \`вы не авторизованы. /authme\``);
                             let ip_webserver = profiles[profiles.length - 1].ip;
                             if (ip_webserver != account.lastip){
-                                request(`http://ip-api.com/json/${ip_webserver}?lang=ru`, function (error, responce, discord_body){
-                                    request(`http://ip-api.com/json/${account.lastip}?lang=ru`, function (error, responce, account_body){
+                                conosle.log(`Пользовательская стата!`);
+                                request(`http://ip-api.com/json/${ip_webserver}?lang=ru`, function (error, responce, _discord_body){
+                                    request(`http://ip-api.com/json/${account.lastip}?lang=ru`, function (error, responce, _account_body){
+                                        let discord_body = JSON.parse(decodeURI(_discord_body));
+                                        let account_body = JSON.parse(decodeURI(_account_body));
                                         if (account_body.country == discord_body.country && account_body.city == discord_body.city && account_body.regionName == discord_body.regionName && account_body.isp == discord_body.isp){
                                             let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                                             if (message.member.hasPermission("MANAGE_ROLES")){
@@ -1360,6 +1364,7 @@ bot.on('message', async message => {
                                     });
                                 });
                             }else{
+                                conosle.log(`Пользовательская-подтвержденная стата!`);
                                 let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                                 if (message.member.hasPermission("MANAGE_ROLES")){
                                     information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
