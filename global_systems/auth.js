@@ -3,7 +3,7 @@ const fs = require("fs");
 const generator = require('../oauth2/generate-password');
 const md5 = require('../my_modules/md5');
 
-exports.run = async (bot, message, cooldown) => {
+exports.run = async (bot, message, cooldown, connection) => {
     if (message.content.startsWith('/connect')){
         const args = message.content.slice(`/connect`).split(/ +/);
         if (!args[1] || !args[2] || args[3]){
