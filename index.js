@@ -1255,6 +1255,7 @@ bot.on('message', async message => {
     }
 
     if (message.content.startsWith('/find_account')){
+        if (!message.author.bot) return
         if (req_cooldown.has(message.guild.id)) return message.delete();
         req_cooldown.add(message.guild.id);
         setTimeout(() => {
