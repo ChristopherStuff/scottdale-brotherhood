@@ -2887,7 +2887,7 @@ function tickets_check(){
                             let author = server.members.get(db_ticket.author);
                             if (ticket_log) await ticket_log.send(`\`[SYSTEM]\` \`Канал ${ticket.name} был удален. [24 часа в статусе 'Закрыт']\``, { files: [ `./${ticket.name}.txt` ] });
                             if (author) await author.send(`\`[SYSTEM]\` \`Здравствуйте! Ваш вопрос ${ticket.name} был удален. Все сообщения были сохранены в файл.\``, { files: [ `./${ticket.name}.txt` ] });
-                            ticket.delete();
+                            await ticket.delete();
                             fs.unlinkSync(`./${ticket.name}.txt`);
                         }
                     });
