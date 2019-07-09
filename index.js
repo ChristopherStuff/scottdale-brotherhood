@@ -2763,8 +2763,8 @@ bot.on('message', async (message) => {
 
     if (message.content == '/authme'){
         if (message.member.roles.some(r => r.name == 'Проверенный 🔐')){
-            let role = message.guild.roles.find(r => r.name == 'Проверенный 🔐');
-            message.member.removeRole(role);
+            message.reply(`**\`у вас уже есть роль проверенного!\`**`);
+            return message.delete();
         }
         if (auth_request.has(message.author.id)){
             message.reply(`**\`вы уже отправляли запрос на авторизацию, ожидайте 2 минуты с прошлого запроса\`**`);
