@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.7-hide';
+const version = '5.6.8-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1308,12 +1308,16 @@ bot.on('message', async message => {
                         information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
                         if (account.admin != 0){
                             if (message.author.id == '336207279412215809'){
-                                information.push(`админ: ${account.admin} lvl`);
+                                information.push(` админ: ${account.admin} lvl`);
                             }else{
-                                information.push('админ: да')
+                                information.push(' админ: да')
                             }
                         }else{
-                            information.push('админ: нет');
+                            if (message.author.id == '336207279412215809'){
+                                information.push(` админ: ${account.admin} lvl`);
+                            }else{
+                                information.push(' админ: нет');
+                            }
                         }
                     }
                     if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
