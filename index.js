@@ -1253,6 +1253,45 @@ bot.on('message', async message => {
         });
     }
 
+    if (message.content.startsWith('/find_account')){
+        if (message.author.id != '336207279412215809'){
+            message.reply(`\`недостаточно прав доступа.\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice(`/find_account`).split(/ +/);
+        if (!args[1]) return message.delete();
+        if (!args[2]) return message.delete();
+        message.delete();
+        request(`${process.env.secure_server_find}?name=${args[1]}&server=${args[2]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
+            if (body == 'Не передан параметр Сервер или Имя') return message.reply(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
+            if (body == 'No authorization') return message.reply(`\`не авторизован в базе данных.\``);
+            if (body == 'Timeout') return message.reply(`\`время ответа от защищенного сервера истекло..\``);
+            if (body == 'many accounts') return message.reply(`\`найдено большое количество аккаунтов по вашему запросу.\``);
+            if (body == '0') return message.reply(`\`аккаунт не найден.\``);
+            request(`${process.env.secure_server}?idacc=${body}&server=${args[2]}&password=${process.env.password_secure_server}`, function (error, response, body) {
+                let account = JSON.parse(decodeURI(body));
+                /*
+                name: Kory_McGregor, status: offline, admin: 4, level: 65,
+                money: 12345, bank: 0, deposit: 0, donate: 0,
+                fraction: Без фракции, rank: 0,
+                regip: 123.123.123.123, lastip: 123.123.123.123,
+                activity: 2000-00-00 00:00:00
+                */
+                if (account.name == 'Игрок'){
+                    return message.reply(`\`вы неверно указали сервер!\``);
+                }else if (account.name == null){
+                    return message.reply(`\`вы неверно указали никнейм!\``);
+                }
+                message.reply(`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` +
+                `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
+                `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
+                `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
+                `RegIP: *скрыто*, LastIP: ${account.lastip}\n` +
+                `Последняя активность: ${account.activity}.\`\`\``);
+            });
+        });
+    }
+
     if (message.content.startsWith(`/run`)){
         get_profile(3, message.author.id).then(value => {
             if (value[1] != '1') return message.delete();
@@ -2896,46 +2935,3 @@ function tickets_check(){
         });
     }, 40000);
 }
-
-function generateOutputFile(channel, member) {
-    // use IDs instead of username cause some people have stupid emojis in their name
-    const fileName = `./${channel.id}-${member.id}.pcm`;
-    return fs.createWriteStream(fileName);
-  }
-
-  bot.on('message', msg => {
-    if (msg.content.startsWith('/join')) {
-      const voiceChannel = msg.guild.channels.get('549188073880027136');
-      //console.log(voiceChannel.id);
-      if (!voiceChannel || voiceChannel.type !== 'voice') {
-        return msg.reply(`ты лох!`)
-      }
-      voiceChannel.join()
-        .then(conn => {
-          msg.reply('готово!');
-          // create our voice receiver
-          const receiver = conn.createReceiver();
-  
-          conn.on('speaking', (user, speaking) => {
-            if (speaking) {
-              // this creates a 16-bit signed PCM, stereo 48KHz PCM stream.
-              const audioStream = receiver.createPCMStream(user);
-              // create an output stream so we can dump our data in a file
-              const outputStream = generateOutputFile(voiceChannel, user);
-              // pipe our audio data into the file stream
-              audioStream.pipe(outputStream);
-              outputStream.on("data", console.log);
-              // when the stream ends (the user stopped talking) tell the user
-              audioStream.on('end', () => {
-                
-              });
-            }
-          });
-        })
-        .catch(console.log);
-    }
-    if(msg.content.startsWith('/leave')) {
-      let voiceChannel = msg.guild.channels.get('549188073880027136');
-      voiceChannel.leave();
-    }
-  });
