@@ -1337,7 +1337,7 @@ bot.on('message', async message => {
                                     request(`http://ip-api.com/json/${account.lastip}?lang=ru`, function (error, responce, _account_body){
                                         let discord_body = JSON.parse(decodeURI(_discord_body));
                                         let account_body = JSON.parse(decodeURI(_account_body));
-                                        if (account_body.country == discord_body.country && account_body.city == discord_body.city && account_body.regionName == discord_body.regionName && account_body.isp == discord_body.isp){
+                                        if (account_body.country == discord_body.country && account_body.city == discord_body.city){
                                             let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                                             if (message.member.hasPermission("MANAGE_ROLES")){
                                                 information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
