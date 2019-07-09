@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.12-hide';
+const version = '5.6.13-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1359,6 +1359,7 @@ bot.on('message', async message => {
                                             if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
                                             msg.edit(`${information}\`\`\``);
                                         }else{
+                                            console.log(`${ip_webserver} - ${account.lastip}`)
                                             msg.edit(`${message.member}, \`невозможно определить, что аккаунт ${account.name} ваш!\nПодтвердите ваш аккаунт через: '/authme'\``)
                                         }
                                     });
