@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.8-hide';
+const version = '5.6.9-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1255,7 +1255,6 @@ bot.on('message', async message => {
     }
 
     if (message.content.startsWith('/find_account')){
-        if (!message.author.bot) return
         if (req_cooldown.has(message.guild.id)) return message.delete();
         req_cooldown.add(message.guild.id);
         setTimeout(() => {
@@ -1283,6 +1282,7 @@ bot.on('message', async message => {
             3 уровень доступа: ['деньги', 'банк', 'депозит', 'донат']
             4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
         */
+        if (!message.member.hasPermission("MANAGE_ROLES") && !message.roles.some(r => r.name == 'Проверенный 🔐')) return message.reply(`\`для выполнения данного действия нужна роль проверенного!\``);
         message.reply(`\`получение игровой статистики с базы данных...\``).then(msg => {
             request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
                 if (body == 'Не передан параметр Сервер или Имя') return msg.edit(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
@@ -1304,26 +1304,85 @@ bot.on('message', async message => {
                     }else if (account.name == null){
                         return msg.edit(`\`вы неверно указали никнейм!\``);
                     }
-                    let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                     if (message.member.hasPermission("MANAGE_ROLES")){
-                        information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
-                        if (account.admin != 0){
-                            if (message.author.id == '336207279412215809'){
-                                information.push(` админ: ${account.admin} lvl`);
+                        let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
+                        if (message.member.hasPermission("MANAGE_ROLES")){
+                            information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
+                            if (account.admin != 0){
+                                if (message.author.id == '336207279412215809'){
+                                    information.push(` админ: ${account.admin} lvl`);
+                                }else{
+                                    information.push(' админ: да')
+                                }
                             }else{
-                                information.push(' админ: да')
-                            }
-                        }else{
-                            if (message.author.id == '336207279412215809'){
-                                information.push(` админ: ${account.admin} lvl`);
-                            }else{
-                                information.push(' админ: нет');
+                                if (message.author.id == '336207279412215809'){
+                                    information.push(` админ: ${account.admin} lvl`);
+                                }else{
+                                    information.push(' админ: нет');
+                                }
                             }
                         }
+                        if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
+                        if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
+                        msg.edit(`${information}\`\`\``);
+                    }else{
+                    // http://ip-api.com/json/123.123.123.123?lang=ru
+                        connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '${message.guild.id}' AND \`userid\` = '${message.author.id}'`, async (err, profiles) => {
+                            if (profiles.length == 0) return msg.edit(`${message.member}, \`вы не авторизованы. /authme\``);
+                            let ip_webserver = profiles[profiles.length - 1].ip;
+                            if (ip_webserver != account.lastip){
+                                request(`http://ip-api.com/json/${ip_webserver}?lang=ru`, function (error, responce, discord_body){
+                                    request(`http://ip-api.com/json/${account.lastip}?lang=ru`, function (error, responce, account_body){
+                                        if (account_body.country == discord_body.country && account_body.city == discord_body.city && account_body.regionName == discord_body.regionName && account_body.isp == discord_body.isp){
+                                            let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
+                                            if (message.member.hasPermission("MANAGE_ROLES")){
+                                                information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
+                                                if (account.admin != 0){
+                                                    if (message.author.id == '336207279412215809'){
+                                                        information.push(` админ: ${account.admin} lvl`);
+                                                    }else{
+                                                        information.push(' админ: да')
+                                                    }
+                                                }else{
+                                                    if (message.author.id == '336207279412215809'){
+                                                        information.push(` админ: ${account.admin} lvl`);
+                                                    }else{
+                                                        information.push(' админ: нет');
+                                                    }
+                                                }
+                                            }
+                                            if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
+                                            if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
+                                            msg.edit(`${information}\`\`\``);
+                                        }else{
+                                            msg.edit(`${message.member}, \`невозможно определить, что аккаунт ${account.name} ваш!\nПодтвердите ваш аккаунт через: '/authme'\``)
+                                        }
+                                    });
+                                });
+                            }else{
+                                let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
+                                if (message.member.hasPermission("MANAGE_ROLES")){
+                                    information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
+                                    if (account.admin != 0){
+                                        if (message.author.id == '336207279412215809'){
+                                            information.push(` админ: ${account.admin} lvl`);
+                                        }else{
+                                            information.push(' админ: да')
+                                        }
+                                    }else{
+                                        if (message.author.id == '336207279412215809'){
+                                            information.push(` админ: ${account.admin} lvl`);
+                                        }else{
+                                            information.push(' админ: нет');
+                                        }
+                                    }
+                                }
+                                if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
+                                if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
+                                msg.edit(`${information}\`\`\``);
+                            }
+                        });
                     }
-                    if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
-                    if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
-                    msg.edit(`${information}\`\`\``);
                 });
             });
         });
@@ -2698,8 +2757,8 @@ bot.on('message', async (message) => {
 
     if (message.content == '/authme'){
         if (message.member.roles.some(r => r.name == 'Проверенный 🔐')){
-            message.reply(`**\`у вас уже есть роль!\`**`);
-            return message.delete();
+            let role = message.guild.roles.find(r => r.name == 'Проверенный 🔐');
+            message.member.removeRole(role);
         }
         if (auth_request.has(message.author.id)){
             message.reply(`**\`вы уже отправляли запрос на авторизацию, ожидайте 2 минуты с прошлого запроса\`**`);
