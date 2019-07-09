@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.5-hide';
+const version = '5.6.6-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1303,14 +1303,21 @@ bot.on('message', async message => {
                 }else if (account.name == null){
                     return message.reply(`\`вы неверно указали никнейм!\``);
                 }
-                let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
+                let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                 if (message.member.hasPermission("MANAGE_ROLES")){
                     information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
-                    if (account.admin != 0) information.push(', админ: да')
-                    else information.push(', админ: нет');
+                    if (account.admin != 0){
+                        if (message.author.id == '336207279412215809'){
+                            information.push(`, админ: ${account.admin} lvl`);
+                        }else{
+                            information.push(', админ: да')
+                        }
+                    }else{
+                        information.push(', админ: нет');
+                    }
                 }
                 if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
-                if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${activity}`)
+                if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${account.activity}`)
                 message.reply(`${information}\`\`\``);
             });
         });
