@@ -2886,7 +2886,7 @@ function tickets_check(){
                             let ticket_log = server.channels.find(c => c.name == support_settings["log_channel"]);
                             let author = server.members.get(db_ticket.author);
                             if (ticket_log) await ticket_log.send(`\`[SYSTEM]\` \`Канал ${ticket.name} был удален. [24 часа в статусе 'Закрыт']\``, { files: [ `./${ticket.name}.txt` ] });
-                            if (author) await author.send(`\`[SYSTEM]\` \`Здравствуйте! Ваш вопрос ${ticket.name} был удален. Все сообщения были сохранены в файл.\``, { files: [ `./${ticket.name}.txt` ] });
+                            if (author) await author.send(`\`[SYSTEM]\` \`Здравствуйте! Ваш вопрос ${ticket.name} был удален. Все сообщения были сохранены в файл.\``, { files: [ `./${ticket.name}.txt` ] }).catch(err => { console.error('Не могу отправить сообщение пользователю тикет: ' + ticket.name) });
                             await ticket.delete();
                             fs.unlinkSync(`./${ticket.name}.txt`);
                         }
