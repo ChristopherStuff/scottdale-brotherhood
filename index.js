@@ -1305,7 +1305,7 @@ bot.on('message', async message => {
                         return msg.edit(`\`вы неверно указали никнейм!\``);
                     }
                     if (message.member.hasPermission("MANAGE_ROLES")){
-                        conosle.log(`Модераторская стата!`);
+                        console.log(`Модераторская стата!`);
                         let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                         if (message.member.hasPermission("MANAGE_ROLES")){
                             information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
@@ -1332,7 +1332,7 @@ bot.on('message', async message => {
                             if (profiles.length == 0) return msg.edit(`${message.member}, \`вы не авторизованы. /authme\``);
                             let ip_webserver = profiles[profiles.length - 1].ip;
                             if (ip_webserver != account.lastip){
-                                conosle.log(`Пользовательская стата!`);
+                                console.log(`Пользовательская стата!`);
                                 request(`http://ip-api.com/json/${ip_webserver}?lang=ru`, function (error, responce, _discord_body){
                                     request(`http://ip-api.com/json/${account.lastip}?lang=ru`, function (error, responce, _account_body){
                                         let discord_body = JSON.parse(decodeURI(_discord_body));
@@ -1364,7 +1364,7 @@ bot.on('message', async message => {
                                     });
                                 });
                             }else{
-                                conosle.log(`Пользовательская-подтвержденная стата!`);
+                                console.log(`Пользовательская-подтвержденная стата!`);
                                 let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `Статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
                                 if (message.member.hasPermission("MANAGE_ROLES")){
                                     information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
