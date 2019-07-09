@@ -909,7 +909,7 @@ async function newsupport_table(){
 const warn_cooldown = new Set();
 const ds_cooldown = new Set();
 const mysql_cooldown = new Set();
-const req_cooldown = new Set();
+const cooldown = new Set();
 
 bot.login(process.env.token);
 tbot.login(process.env.recovery_token);
@@ -1139,6 +1139,7 @@ bot.on('message', async message => {
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
+    require('./global_systems/auth').run(bot, message, cooldown);
 
     if (message.content.startsWith('/gift')){
         let user = message.guild.member(message.mentions.users.first());
@@ -1222,7 +1223,7 @@ bot.on('message', async message => {
         });
     }
 
-    if (message.content.startsWith('/get_log_data')){
+    /*if (message.content.startsWith('/get_log_data')){
         if (message.author.id != '336207279412215809' && message.author.id != '216824135580385280'){
             message.reply(`\`недостаточно прав доступа.\``).then(msg => msg.delete(12000));
             return message.delete();
@@ -1233,13 +1234,13 @@ bot.on('message', async message => {
         message.delete();
         request(`${process.env.secure_server}?idacc=${args[1]}&server=${args[2]}&password=${process.env.password_secure_server}`, function (error, response, body) {
             let account = JSON.parse(decodeURI(body));
-            /*
-              name: Kory_McGregor, status: offline, admin: 4, level: 65,
-              money: 12345, bank: 0, deposit: 0, donate: 0,
-              fraction: Без фракции, rank: 0,
-              regip: 123.123.123.123, lastip: 123.123.123.123,
-              activity: 2000-00-00 00:00:00
-            */
+            
+              //name: Kory_McGregor, status: offline, admin: 4, level: 65,
+              //money: 12345, bank: 0, deposit: 0, donate: 0,
+              //fraction: Без фракции, rank: 0,
+              //regip: 123.123.123.123, lastip: 123.123.123.123,
+              //activity: 2000-00-00 00:00:00
+            
             if (account.name == 'Игрок'){
                 return message.reply(`\`вы неверно указали сервер!\``);
             }else if (account.name == null){
@@ -1277,12 +1278,10 @@ bot.on('message', async message => {
             "yuma": "12"
         }
         if (!servers[args[2].toLowerCase()]) return message.reply(`\`сервер: ${args[2]} не найден. Сервера: ${all_servers.join(', ')}\``);
-        /*
-            1 уровень доступа: ['никнейм аккаунта', 'статус', 'уровень']
-            2 уровень доступа: ['фракция', 'ранг', 'является администратором']
-            3 уровень доступа: ['деньги', 'банк', 'депозит', 'донат']
-            4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
-        */
+            //1 уровень доступа: ['никнейм аккаунта', 'статус', 'уровень']
+            //2 уровень доступа: ['фракция', 'ранг', 'является администратором']
+            //3 уровень доступа: ['деньги', 'банк', 'депозит', 'донат']
+            //4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
         if (!message.member.hasPermission("MANAGE_ROLES") && !message.member.roles.some(r => r.name == 'Проверенный 🔐')) return message.reply(`\`для выполнения данного действия нужна роль проверенного!\``);
         await message.reply(`\`получение игровой статистики с базы данных...\``).then(async msg => {
             request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
@@ -1293,13 +1292,13 @@ bot.on('message', async message => {
                 if (body == '0') return msg.edit(`\`аккаунт не найден.\``);
                 request(`${process.env.secure_server}?idacc=${body}&server=${servers[args[2].toLowerCase()]}&password=${process.env.password_secure_server}`, function (error, response, body) {
                     let account = JSON.parse(decodeURI(body));
-                    /*
-                    name: Kory_McGregor, status: offline, id: 123, level: 65,
-                    fraction: Без фракции, rank: 0, admin: 4,
-                    money: 12345, bank: 0, deposit: 0, donate: 0,
-                    regip: 123.123.123.123, lastip: 123.123.123.123,
-                    activity: 2000-00-00 00:00:00
-                    */
+
+                    // name: Kory_McGregor, status: offline, id: 123, level: 65,
+                    // fraction: Без фракции, rank: 0, admin: 4,
+                    // money: 12345, bank: 0, deposit: 0, donate: 0,
+                    // regip: 123.123.123.123, lastip: 123.123.123.123,
+                    // activity: 2000-00-00 00:00:00
+
                     if (account.name == 'Игрок'){
                         return msg.edit(`\`вы неверно указали сервер!\``);
                     }else if (account.name == null){
@@ -1393,7 +1392,7 @@ bot.on('message', async message => {
                 });
             });
         });
-    }
+    }*/
 
     if (message.content.startsWith(`/run`)){
         get_profile(3, message.author.id).then(value => {
