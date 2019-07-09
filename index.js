@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.2';
+const version = '5.6.3';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Поиск аккаунтов в базе данных сервера.";
+const update_information = "Команда /find_account [никнейм] [сервер] доступна!";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -909,6 +909,7 @@ async function newsupport_table(){
 const warn_cooldown = new Set();
 const ds_cooldown = new Set();
 const mysql_cooldown = new Set();
+const req_cooldown = new Set();
 
 bot.login(process.env.token);
 tbot.login(process.env.recovery_token);
@@ -1254,14 +1255,34 @@ bot.on('message', async message => {
     }
 
     if (message.content.startsWith('/find_account')){
-        if (message.author.id != '336207279412215809'){
-            message.reply(`\`недостаточно прав доступа.\``).then(msg => msg.delete(12000));
-            return message.delete();
-        }
+        if (req_cooldown.has(message.guild.id)) return message.delete();
+        req_cooldown.add(message.guild.id);
+        setTimeout(() => {
+            if (req_cooldown.has(message.guild.id)) req_cooldown.delete(message.guild.id);
+        }, 12000);
         const args = message.content.slice(`/find_account`).split(/ +/);
         if (!args[1]) return message.delete();
         if (!args[2]) return message.delete();
-        message.delete();
+        let all_servers = ['phoenix', 'tucson', 'scottdale', 'chandler', 'brainburg', 'saintrose', 'mesa', 'redrock', 'yuma'];
+        let servers = {
+            "phoenix": "1",
+            "tucson": "2",
+            "scottdale": "3",
+            "chandler": "4",
+            "brainburg": "5",
+            "saintrose": "8",
+            "mesa": "9",
+            "redrock": "10",
+            "yuma": "12"
+        }
+        if (!servers[args[2]]) return message.reply(`\`сервер: ${args[2]} не найден. Сервера: ${all_servers.join(', ')}\``);
+        /*
+            1 уровень доступа: ['никнейм аккаунта', 'статус', 'уровень']
+            2 уровень доступа: ['фракция', 'ранг', 'является администратором']
+            3 уровень доступа: ['деньги', 'банк', 'депозит', 'донат']
+            4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
+        */
+
         request(`${process.env.secure_server_find}?name=${args[1]}&server=${args[2]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
             if (body == 'Не передан параметр Сервер или Имя') return message.reply(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
             if (body == 'No authorization') return message.reply(`\`не авторизован в базе данных.\``);
@@ -1271,9 +1292,9 @@ bot.on('message', async message => {
             request(`${process.env.secure_server}?idacc=${body}&server=${args[2]}&password=${process.env.password_secure_server}`, function (error, response, body) {
                 let account = JSON.parse(decodeURI(body));
                 /*
-                name: Kory_McGregor, status: offline, admin: 4, level: 65,
+                name: Kory_McGregor, status: offline, id: 123, level: 65,
+                fraction: Без фракции, rank: 0, admin: 4,
                 money: 12345, bank: 0, deposit: 0, donate: 0,
-                fraction: Без фракции, rank: 0,
                 regip: 123.123.123.123, lastip: 123.123.123.123,
                 activity: 2000-00-00 00:00:00
                 */
@@ -1282,12 +1303,15 @@ bot.on('message', async message => {
                 }else if (account.name == null){
                     return message.reply(`\`вы неверно указали никнейм!\``);
                 }
-                message.reply(`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` +
-                `Статус: ${account.status}, уровень администрирования: ${account.admin}, лвл: ${account.level}\n` +
-                `Наличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}\n` +
-                `Фракция: ${account.fraction}, ранг во фракции: ${account.rank}\n` +
-                `RegIP: *скрыто*, LastIP: ${account.lastip}\n` +
-                `Последняя активность: ${account.activity}.\`\`\``);
+                let information = [`\`вот информация по запросу ${account.name}\`\n\`\`\`\n` + `статус аккаунта: ${account.status} [ID: ${account.id}], уровень: ${account.level}`];
+                if (message.member.hasPermission("MANAGE_ROLES")){
+                    information.push(`\nФракция: ${account.fraction}, ранг во фракции: ${account.rank}`);
+                    if (account.admin != 0) information.push(', админ: да')
+                    else information.push(', админ: нет');
+                }
+                if (message.member.hasPermission("ADMINISTRATOR")) information.push(`\nНаличные: ${account.money}, банк: ${account.bank}, депозит: ${account.deposit}, донат: ${account.donate}`)
+                if (message.author.id == '336207279412215809') information.push(`\nRegIP: ${account.regip}, LastIP: ${account.lastip}, активность: ${activity}`)
+                message.reply(`${information}\`\`\``);
             });
         });
     }
