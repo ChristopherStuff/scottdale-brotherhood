@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.15-hide';
+const version = '5.6.16-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Команда /find_account [никнейм] [сервер] доступна!";
+const update_information = "Команда /ban [user] [reason]";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -964,6 +964,7 @@ bot.on('ready', async () => {
     tickets_check();
     remove_verify();
     check_gifts();
+    bans_autoupdate();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
@@ -3036,4 +3037,49 @@ function tickets_check(){
             });
         });
     }, 40000);
+}
+
+async function bans_autoupdate(){
+    setInterval(() => {
+        let server = bot.guilds.get('355656045600964609');
+        if (!server) return
+        let channel = server.channels.find(c => c.name == 'accept-bans');
+        if (!channel) return
+        channel.fetchMessage('598338061952352276').then(msg => {
+            if (!msg) return;
+            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`accepted\` != '-1' AND \`success\` != '1'`, function (error, answers) {
+                const embed = new Discord.RichEmbed();
+                let actions = [];
+                await answers.forEach(answer => {
+                    if (answer.accepted == '0' && answer.success == 0){
+                        let moderator = server.members.get(answer.moderator);
+                        let user = server.members.get(answer.user);
+                        if (answer.action == 'ban'){
+                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
+                            if (actions.length >= 15){
+                                embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
+                                actions = [];
+                            }
+                        }
+                    }else if (answer.accepted != '0' && answer.success == 0){
+                        let moderator = server.members.get(answer.moderator);
+                        let user = server.members.get(answer.user);
+                        if (!user) return
+                        if (answer.action == 'ban'){
+                            connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
+                                if (error) return console.error(error);
+                                user.ban(answer.reason + ` / ${moderator.displayName || moderator.user.tag || answer.moderator}`);
+                            });
+                        }
+                    }
+                });
+                if (actions.length != 0){
+                    embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
+                    actions = [];
+                }
+                embed.setColor('#FF0000');
+                msg.edit(embed);
+            });
+        });
+    }, 34000);
 }
