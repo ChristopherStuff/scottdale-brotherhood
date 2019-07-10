@@ -46,7 +46,7 @@ exports.run = async (bot, message, cooldown, connection) => {
     }
 
     if (message.content.startsWith('/list_connections')){
-        if (!message.hasPermission("ADMINISTRATOR")) return
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
         connection.query(`SELECT * FROM \`per_day\` WHERE \`server\` = '${message.guild.id}' AND \`verify\` = '1' AND \`accepted_admin\` = '0'`, async (error, answers) => {
             if (answers.length == 0) return message.reply(`\`заявок на данный момент нет.\``);
             const embed = new Discord.RichEmbed();
