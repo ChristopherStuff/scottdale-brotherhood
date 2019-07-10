@@ -38,7 +38,7 @@ exports.run = async (bot, message, cooldown, connection) => {
         `${date.getHours().toString().padStart(2, '0')}:` +
         `${date.getMinutes().toString().padStart(2, '0')}:` +
         `${date.getSeconds().toString().padStart(2, '0')}`;
-        connection.query(`INSERT INTO \`admin_actions\` (\`server\`, \`moderator\`, \`action\`, \`time\`, \`user\`, \`reason\`) VALUES ('${message.guild.id}', '${message.author.id}', 'ban', '${mysql_date}', '${user.id}', '${args.slice(2)}')`, (error) => {
+        connection.query(`INSERT INTO \`admin_actions\` (\`server\`, \`moderator\`, \`action\`, \`time\`, \`user\`, \`reason\`) VALUES ('${message.guild.id}', '${message.author.id}', 'ban', '${mysql_date}', '${user.id}', '${args.slice(3)}')`, (error) => {
             if (error){
                 message.reply(`\`ошибка на стороне сервера! действия не выполнены!\``);
                 return message.delete();
