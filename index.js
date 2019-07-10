@@ -3090,7 +3090,7 @@ async function bans_autoupdate(){
                         let moderator = server.members.get(answer.moderator);
                         let user = server.members.get(answer.user);
                         if (answer.action == 'ban'){
-                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${time(new Date(answer.time).valueOf)} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
+                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${time(new Date(answer.time).valueOf())} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
                             if (actions.length >= 4){
                                 embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
                                 actions = [];
