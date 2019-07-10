@@ -3053,13 +3053,19 @@ async function unban_autoupdate(){
                 let date = new Date(answer.time).valueOf();
                 let now = new Date().valueOf();
                 if (date < now){
-                    connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
-                        if (error) return console.error(error);
-                        if (answer.action == 'ban'){
-                            server.unban(answer.user);
-                            spectator_chat(`<@${answer.user}> \`был разблокирован! Блокировал:\` <@${answer.moderator}>, \`причина блокировки была: ${answer.reason}\``);
-                        }
-                    });
+                    if (answer.accepted != '0' && answer.accepted != '-1'){
+                        connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
+                            if (error) return console.error(error);
+                            if (answer.action == 'ban'){
+                                server.unban(answer.user);
+                                spectator_chat.send(`<@${answer.user}> \`был разблокирован! Блокировал:\` <@${answer.moderator}>, \`причина блокировки была: ${answer.reason}\``);
+                            }
+                        });
+                    }else if (answer.accepted == '-1'){
+                        connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
+                            if (error) return console.error(error);
+                        });
+                    }
                 }
             });
         });
