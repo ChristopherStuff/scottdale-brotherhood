@@ -3,6 +3,16 @@ const fs = require("fs");
 const generator = require('../oauth2/generate-password');
 const md5 = require('../my_modules/md5');
 
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
+function isInteger(n) {
+    return n === +n && n === (n|0);
+}
+
 exports.run = async (bot, message, cooldown, connection) => {
     if (message.content.startsWith('/ban')){
         if (!message.member.hasPermission("MANAGE_ROLES")){
@@ -11,8 +21,8 @@ exports.run = async (bot, message, cooldown, connection) => {
         }
         const args = message.content.slice(`/ban`).split(/ +/);
         let user = message.guild.member(message.mentions.users.first());
-        if (!user || !args[2]){
-            message.reply(`\`использование: /ban [user] [причина]\``).then(msg => msg.delete(10000));
+        if (!user || !args[2] || !args[3] || !isInteger(+args[2])){
+            message.reply(`\`использование: /ban [user] [дни] [причина]\``).then(msg => msg.delete(10000));
             return message.delete();
         }
         if (cooldown.has(message.author.id)){
@@ -23,7 +33,12 @@ exports.run = async (bot, message, cooldown, connection) => {
         setTimeout(() => {
             if (cooldown.has(message.author.id)) cooldown.delete(message.author.id);
         }, 30000);
-        connection.query(`INSERT INTO \`admin_actions\` (\`server\`, \`moderator\`, \`action\`, \`user\`, \`reason\`) VALUES ('${message.guild.id}', '${message.author.id}', 'ban', '${user.id}', '${args.slice(2)}')`, (error) => {
+        let date = addDays(new Date(), +args[2]);
+        let mysql_date = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ` +
+        `${date.getHours().toString().padStart(2, '0')}:` +
+        `${date.getMinutes().toString().padStart(2, '0')}:` +
+        `${date.getSeconds().toString().padStart(2, '0')}`;
+        connection.query(`INSERT INTO \`admin_actions\` (\`server\`, \`moderator\`, \`action\`, \`time\`, \`user\`, \`reason\`) VALUES ('${message.guild.id}', '${message.author.id}', 'ban', '${mysql_date}', '${user.id}', '${args.slice(2)}')`, (error) => {
             if (error){
                 message.reply(`\`ошибка на стороне сервера! действия не выполнены!\``);
                 return message.delete();

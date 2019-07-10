@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.16';
+const version = '5.6.18;
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Команда /ban [user] [reason]";
+const update_information = "Команда /ban [user] [дни] [reason] со временем";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -965,6 +965,7 @@ bot.on('ready', async () => {
     remove_verify();
     check_gifts();
     bans_autoupdate();
+    unban_autoupdate();
     started_at = now_date();
     require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
     await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
@@ -3039,6 +3040,32 @@ function tickets_check(){
     }, 40000);
 }
 
+async function unban_autoupdate(){
+    setInterval(() => {
+        let server = bot.guilds.get('355656045600964609');
+        if (!server) return
+        let channel = server.channels.find(c => c.name == 'accept-bans');
+        let spectator_chat = server.channels.find(c => c.name == 'spectator-chat');
+        if (!channel || !spectator_chat) return
+        connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` = '1'`, async (error, answers) => {
+            if (answers.length == 0) return
+            await answers.forEach(answer => {
+                let date = new Date(answer.time).valueOf();
+                let now = new Date().valueOf();
+                if (date < now){
+                    connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
+                        if (error) return console.error(error);
+                        if (answer.action == 'ban'){
+                            server.unban(answer.user);
+                            spectator_chat(`<@${answer.user}> \`был разблокирован! Блокировал:\` <@${answer.moderator}>, \`причина блокировки была: ${answer.reason}\``);
+                        }
+                    });
+                }
+            });
+        });
+    }, 180000);
+}
+
 async function bans_autoupdate(){
     setInterval(() => {
         let server = bot.guilds.get('355656045600964609');
@@ -3048,7 +3075,7 @@ async function bans_autoupdate(){
         if (!channel || !spectator_chat) return
         channel.fetchMessage('598338061952352276').then(msg => {
             if (!msg) return;
-            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` != '0'`, async (error, answers) => {
+            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` != '1'`, async (error, answers) => {
                 if (answers.length == 0) return
                 const embed = new Discord.RichEmbed();
                 let actions = [];
