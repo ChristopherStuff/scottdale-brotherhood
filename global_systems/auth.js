@@ -44,4 +44,23 @@ exports.run = async (bot, message, cooldown, connection) => {
             return message.delete();
         });
     }
+
+    if (message.content.startsWith('/list_connections')){
+        if (!message.hasPermission("ADMINISTRATOR")) return
+        connection.query(`SELECT * FROM \`per_day\` WHERE \`server\` = '${message.guild.id}' AND \`verify\` = '1' AND \`accepted_admin\` = '0'`, (error, answers) => {
+            if (answers.length == 0) return message.reply(`\`заявок на данный момент нет.\``);
+            const embed = new Discord.RichEmbed();
+            let actions = [];
+            await answers.forEach(answer => {
+                let member = message.guild.members.get(answer.discord_id);
+                actions.push(`\`${member.displayName || member.user.tag || answer.discord_id} [${answer.ip_web} - ${answer.ip_account}]\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_auth&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_auth&id=${answer.id})`);
+                if (actions.length >= 20){
+                    embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
+                    actions = [];
+                }
+            });
+            embed.setColor('#FF0000');
+            message.channel.send(embed);
+        });
+    }
 }

@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.14-hide';
+const version = '5.6.15-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -1139,7 +1139,7 @@ bot.on('message', async message => {
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
-    require('./global_systems/auth').run(bot, message, cooldown, connection);
+    require('./global_systems/auth').run(bot, message, cooldown, connection, request);
 
     if (message.content.startsWith('/gift')){
         let user = message.guild.member(message.mentions.users.first());
