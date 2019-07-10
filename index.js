@@ -3090,7 +3090,7 @@ async function bans_autoupdate(){
                                 actions = [];
                             }
                         }
-                    }else if (answer.accepted != '0' && answer.success == 0){
+                    }else if (answer.accepted != '0' && answer.accepted != '-1' && answer.success == 0){
                         let moderator = server.members.get(answer.moderator);
                         let user = server.members.get(answer.user);
                         if (!user) return
