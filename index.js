@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.16-hide';
+const version = '5.6.16';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -3048,7 +3048,8 @@ async function bans_autoupdate(){
         if (!channel || !spectator_chat) return
         channel.fetchMessage('598338061952352276').then(msg => {
             if (!msg) return;
-            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` == '0'`, async (error, answers) => {
+            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` != '0'`, async (error, answers) => {
+                if (answers.length == 0) return
                 const embed = new Discord.RichEmbed();
                 let actions = [];
                 await answers.forEach(answer => {
