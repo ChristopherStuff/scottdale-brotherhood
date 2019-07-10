@@ -3044,10 +3044,11 @@ async function bans_autoupdate(){
         let server = bot.guilds.get('355656045600964609');
         if (!server) return
         let channel = server.channels.find(c => c.name == 'accept-bans');
-        if (!channel) return
+        let spectator_chat = server.channels.find(c => c.name == 'spectator-chat');
+        if (!channel || !spectator_chat) return
         channel.fetchMessage('598338061952352276').then(msg => {
             if (!msg) return;
-            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`accepted\` != '-1' AND \`success\` != '1'`, async (error, answers) => {
+            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` == '0'`, async (error, answers) => {
                 const embed = new Discord.RichEmbed();
                 let actions = [];
                 await answers.forEach(answer => {
@@ -3069,6 +3070,17 @@ async function bans_autoupdate(){
                             connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
                                 if (error) return console.error(error);
                                 user.ban(answer.reason + ` / ${moderator.displayName || moderator.user.tag || answer.moderator}`);
+                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был одобрен модератором.\``);
+                            });
+                        }
+                    }else if (answer.accepted = '-1' && answer.success == 0){
+                        let moderator = server.members.get(answer.moderator);
+                        let user = server.members.get(answer.user);
+                        if (!user) return
+                        if (answer.action == 'ban'){
+                            connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
+                                if (error) return console.error(error);
+                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был отказан модератором.\``);
                             });
                         }
                     }
