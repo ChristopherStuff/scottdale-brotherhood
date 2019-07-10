@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.20';
+const version = '5.6.21';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -3090,7 +3090,12 @@ async function bans_autoupdate(){
                         let moderator = server.members.get(answer.moderator);
                         let user = server.members.get(answer.user);
                         if (answer.action == 'ban'){
-                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${time(new Date(answer.time).valueOf())} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
+                            let date = new Date(answer.time).valueOf()
+                            let mysql_date = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ` +
+                            `${date.getHours().toString().padStart(2, '0')}:` +
+                            `${date.getMinutes().toString().padStart(2, '0')}:` +
+                            `${date.getSeconds().toString().padStart(2, '0')}`;
+                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${mysql_date} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
                             if (actions.length >= 4){
                                 embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
                                 actions = [];
@@ -3123,6 +3128,7 @@ async function bans_autoupdate(){
                     embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
                     actions = [];
                 }
+                embed.setDescription(`\`В данном канале принимаются или отклоняются запросы на баны от SP\``);
                 embed.setColor('#FF0000');
                 msg.edit(embed);
             });
