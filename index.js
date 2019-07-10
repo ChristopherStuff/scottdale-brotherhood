@@ -3047,7 +3047,7 @@ async function bans_autoupdate(){
         if (!channel) return
         channel.fetchMessage('598338061952352276').then(msg => {
             if (!msg) return;
-            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`accepted\` != '-1' AND \`success\` != '1'`, function (error, answers) {
+            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`accepted\` != '-1' AND \`success\` != '1'`, async (error, answers) => {
                 const embed = new Discord.RichEmbed();
                 let actions = [];
                 await answers.forEach(answer => {
