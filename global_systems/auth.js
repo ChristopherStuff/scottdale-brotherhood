@@ -59,6 +59,10 @@ exports.run = async (bot, message, cooldown, connection) => {
                     actions = [];
                 }
             });
+            if (actions.length != 0){
+                embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
+                actions = [];
+            }
             embed.setColor('#FF0000');
             message.channel.send(embed);
         });
