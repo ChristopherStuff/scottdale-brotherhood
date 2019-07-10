@@ -47,12 +47,12 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.19';
+const version = '5.6.20';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
 
-const update_information = "Видно при принятии насколько бан";
+const update_information = "Время подправил";
 let t_mode = 0;
 const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
 const doc = new GoogleSpreadsheet(process.env.skey);
@@ -3090,8 +3090,8 @@ async function bans_autoupdate(){
                         let moderator = server.members.get(answer.moderator);
                         let user = server.members.get(answer.user);
                         if (answer.action == 'ban'){
-                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${answer.time} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
-                            if (actions.length >= 3){
+                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${time(new Date(answer.time).valueOf)} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
+                            if (actions.length >= 5){
                                 embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
                                 actions = [];
                             }
