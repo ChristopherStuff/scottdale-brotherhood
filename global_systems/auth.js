@@ -28,7 +28,7 @@ exports.run = async (bot, message, cooldown, connection) => {
             if (cooldown.has(message.author.id)) cooldown.delete(message.author.id);
         }, 120000);
         const code = md5(generator.generate({ length: 10, numbers: true, symbols: true }));
-        await connection.query(`INSERT INTO \`per_day\` (\`server\`, \`game_server\`, \`game_name\`, \`discord_id\`, \`state\`) VALUES ('${message.guild.id}', '${args[2]}', '${args[1]}', '${message.author.id}', '${code}')`, async (error) => {
+        await connection.query(`INSERT INTO \`per_day\` (\`server\`, \`game_server\`, \`game_name\`, \`discord_id\`, \`state\`) VALUES ('${message.guild.id}', '${_servers[args[2].toLowerCase()]}', '${args[1]}', '${message.author.id}', '${code}')`, async (error) => {
             if (error){
                 message.reply(`\`критическая ошибка! воспроизведение функционала невозможно.\``);
                 return message.delete();
