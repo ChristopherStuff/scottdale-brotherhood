@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.21';
+const version = '5.6.22-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -3090,7 +3090,7 @@ async function bans_autoupdate(){
                         let moderator = server.members.get(answer.moderator);
                         let user = server.members.get(answer.user);
                         if (answer.action == 'ban'){
-                            let date = new Date(answer.time).valueOf()
+                            let date = new Date(answer.time);
                             let mysql_date = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ` +
                             `${date.getHours().toString().padStart(2, '0')}:` +
                             `${date.getMinutes().toString().padStart(2, '0')}:` +
@@ -3109,7 +3109,7 @@ async function bans_autoupdate(){
                             connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
                                 if (error) return console.error(error);
                                 user.ban(answer.reason + ` / ${moderator.displayName || moderator.user.tag || answer.moderator}`);
-                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был одобрен модератором.\``);
+                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был одобрен модератором.\nИнформация о запросе. Заблокирован: ${user.displayName || user.user.tag || user.id} по причине: ${answer.reason}\``);
                             });
                         }
                     }else if (answer.accepted = '-1' && answer.success == 0){
