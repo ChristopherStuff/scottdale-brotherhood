@@ -53,7 +53,7 @@ exports.run = async (bot, message, cooldown, connection) => {
             let actions = [];
             await answers.forEach(answer => {
                 let member = message.guild.members.get(answer.discord_id);
-                actions.push(`\`${member.displayName || member.user.tag || answer.discord_id} [${answer.ip_web} - ${answer.ip_account}]\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_auth&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_auth&id=${answer.id})`);
+                actions.push(`\`${member.displayName || member.user.tag || answer.discord_id} хочет привязать ${answer.game_name} [${answer.ip_web} - ${answer.ip_account}]\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_auth&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_auth&id=${answer.id})`);
                 if (actions.length >= 20){
                     embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
                     actions = [];
