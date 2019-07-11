@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.23-hide';
+const version = '5.6.24-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -646,9 +646,9 @@ async function special_discord_update(){
 
                 if (central.members.get(member.id)){
                     let g_member = central.members.get(member.id);
-                    if (g_member.roles.some(r => ['✦ Администратор ✦', '✦ Младший администратор ✦'].includes(r.name))){
+                    if (g_member.roles.some(r => ['★ Администратор ★', '★ Старший Модератор ★'].includes(r.name))){
                         server_were_admin.push('Центральный Округ');
-                    }else if (g_member.roles.some(r => ['✦ Модератор ✦', '✦ Хелпер ✦'].includes(r.name))){
+                    }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Хелпер ★'].includes(r.name))){
                         server_were_helper.push('Центральный Округ');
                     }
                 }
@@ -1107,8 +1107,8 @@ user.on('message', async (message) => {
     if (message.content == '/all_discord_servers'){
         if (message.author.id != user.user.id) return
         const embed = new Discord.RichEmbed()
-        .setTitle("**Arizona Role Play » Все discord-сервера Arizona Role Play.**")
-        .setDescription('**Phoenix: [нажми](https://discord.gg/5Kq9pjB)\nTucson: [нажми](https://discord.gg/23fwg3s)\nScottdale: [нажми](https://discord.gg/m3TbZyZ)\nChandler: [нажми](https://discordapp.com/invite/29sC6AC)\nBrainburg: [нажми](https://discord.gg/vvXaw9V)\nSaint Rose: [нажми](https://discord.gg/cb2rQTB)\nMesa: [нажми](https://discord.gg/HaWKZVe)\nRed-Rock: [нажми](https://discord.gg/kp7ENmW)\nYuma: [нажми](https://discord.gg/qrsWEPQ)**')
+        .setTitle("**Arizona Role Play » Все discord-сервера Arizona Games**")
+        .setDescription('**Phoenix: [нажми](https://discord.gg/5Kq9pjB)\nTucson: [нажми](https://discord.gg/23fwg3s)\nScottdale: [нажми](https://discord.gg/m3TbZyZ)\nChandler: [нажми](https://discordapp.com/invite/29sC6AC)\nBrainburg: [нажми](https://discord.gg/vvXaw9V)\nSaint Rose: [нажми](https://discord.gg/cb2rQTB)\nMesa: [нажми](https://discord.gg/HaWKZVe)\nRed-Rock: [нажми](https://discord.gg/kp7ENmW)\nYuma: [нажми](https://discord.gg/qrsWEPQ)\n\nЦентральный округ: [нажми](https://discord.gg/HaaK4zb)\nЮжный округ: [нажми](https://discord.gg/AS2878X)\nСеверный округ: [нажми](https://discord.gg/ub34KmJ)\nВосточный округ: [нажми](https://discord.gg/zCgDn2b)\n\nЖизнь в деревне: [нажми](https://discord.gg/sJtBreA)**')
         .setColor("#FF8E01")
         .setTimestamp()
         .setFooter("Техническая поддержка » Arizona Role Play", "https://i.imgur.com/5qSrUJW.png")
