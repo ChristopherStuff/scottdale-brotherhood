@@ -47,7 +47,7 @@ connection.on('error', function(err) {
     }
 });
 
-const version = '5.6.22-hide';
+const version = '5.6.23-hide';
 // Первая цифра означает глобальное обновление. (global_systems)
 // Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
 // Третяя цифра обозначает количество мелких фиксов. (например опечатка)
@@ -533,7 +533,9 @@ async function special_discord_update(){
         let eastern = user.guilds.get('465086262383083520');
         let north = user.guilds.get('477547500232769536');
         let vostok = user.guilds.get('577511138032484360');
-        if (!phoenix || !tucson || !scottdale || !chandler || !brainburg || !saintrose || !mesa || !redrock || !yuma || !central || !eastern || !north || !vostok) console.log('Один из серверов не найден!');
+
+        let bone_country = user.guilds.get('527799726557364237');
+        if (!phoenix || !tucson || !scottdale || !chandler || !brainburg || !saintrose || !mesa || !redrock || !yuma || !central || !eastern || !north || !vostok || !bone_country) console.log('Один из серверов не найден!');
         
         await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
             special_server.members.forEach(async (member) => {
@@ -675,6 +677,13 @@ async function special_discord_update(){
                         server_were_admin.push('Восточный округ');
                     }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Младший Модератор ★'].includes(r.name))){
                         server_were_helper.push('Восточный округ');
+                    }
+                }
+
+                if (bone_country.members.get(member.id)){
+                    let g_member = bone_country.members.get(member.id);
+                    if (g_member.roles.some(r => ['[A] Администрация проекта'].includes(r.name))){
+                        server_were_admin.push('Жизнь в деревне');
                     }
                 }
 
@@ -1121,6 +1130,31 @@ function send_action(server, action){
     const actionsHook = new Discord.WebhookClient("583400700034154516", "fPBO8gncxRtToyvIkJ5Sb5kp-X8iBEZ02ZRwJ5yGA3EVh5wiA-p9NlsuLCKtu2xDHBzo");
     actionsHook.send(`**\`[${hour}:${min}:${sec}]\` \`${action}\`**`);
 }
+
+spec_bot.on('message', async message => {
+    if (message.channel.type == "dm") return
+    if (message.guild.id != "543799835652915241") return
+
+    if (message.content.startsWith(`/run`)){
+        get_profile(3, message.author.id).then(value => {
+            if (value[1] != '1') return message.delete();
+            const args = message.content.slice(`/run`).split(/ +/);
+            let cmdrun = args.slice(1).join(" ");
+            if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
+                message.reply(`**\`вам запрещено получение токена.\`**`);
+                return message.delete();
+            }else if (cmdrun.includes('secure_server')){
+                message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
+                return message.delete();
+            }
+            try {
+                eval(cmdrun);
+            } catch (err) {
+                message.reply(`**\`произошла ошибка: ${err.name} - ${err.message}\`**`);
+            }
+        });
+    }
+});
 
 bot.on('message', async message => {
     if (message.channel.type == "dm") return
