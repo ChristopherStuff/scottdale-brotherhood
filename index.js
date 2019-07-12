@@ -1,17 +1,14 @@
 const Discord = require('discord.js');
-const bot = new Discord.Client();
-const tbot = new Discord.Client();
-const user = new Discord.Client();
-const spec_bot = new Discord.Client();
-const bbc_user = new Discord.Client();
-const adm_user = new Discord.Client();
 const fs = require("fs");
-const md5 = require('./my_modules/md5');
-const download = require('./my_modules/download-to-file'); // download('url, './dir/file.txt', function (err, filepath) {})
-const file_length = fs.readFileSync('./index.js').length;
-const mysql = require('./google_module/mysql');
-const generator = require('./oauth2/generate-password');
-const request = require('./google_module/request');
+const md5 = require('./modules/crypt-modules/md5');
+const mysql = require('./modules/mysql');
+const generator = require('./modules/generate-password');
+const request = require('./modules/request');
+const _vk = require(`./modules/node-vk-bot-api`);
+const bot = new Discord.Client();
+const user = new Discord.Client();
+const robo_hamster = new Discord.Client();
+const vk = new _vk({ token: process.env.tokenvk })
 
 const connection = mysql.createConnection({
     host     : process.env.mysql_host,
@@ -20,195 +17,21 @@ const connection = mysql.createConnection({
     database : process.env.mysql_database,
 });
 
-const VkBot = require(`./modules/node-vk-bot-api`);
-const vkint = new VkBot({ token: process.env.tokenvk })
-
 connection.connect(function(err){
-    if (err){
-        console.log(err);
-        return console.log('[MYSQL] Ошибка подключения к базе MySQL');
-    }
+    if (err) return console.log('[MYSQL] Ошибка подключения к базе MySQL');
     console.log('[MYSQL] Вы успешно подключились к базе данных.')
-    connection.query("SET SESSION wait_timeout = 604800"); // 3 дня
+    connection.query("SET SESSION wait_timeout = 604800");
 });
 
-connection.on('error', function(err) {
-    if (err.code == 'PROTOCOL_CONNECTION_LOST'){
-        console.log('[MYSQL] Соединение с базой MySQL потеряно. Выполняю переподключение...');
-        connection.connect(function(err){
-            if (err){
-                return console.log('[MYSQL] Ошибка подключения к базе MySQL');
-            }
-            console.log('[MYSQL] Вы успешно подключились к базе данных.')
-            connection.query("SET SESSION wait_timeout = 604800"); // 3 дня
-        });
-    }else{
-        console.log('[MYSQL] Произошла ошибка MySQL, информация об ошибке: ' + err);
-    }
-});
+let t_mode = 0; // Статус технических работ
+let started_at; // Время запуска бота
+let levelhigh = 0; // Степень защиты от ddos атаки ботами
+let lasttestid = 'net'; // Послений пользователь который написал -+ban
 
-const version = '5.6.24-hide';
-// Первая цифра означает глобальное обновление. (global_systems)
-// Вторая цифра обозначет обновление одной из подсистем. (команда к примеру)
-// Третяя цифра обозначает количество мелких фиксов. (например опечатка)
-
-const update_information = "Время подправил";
-let t_mode = 0;
-const GoogleSpreadsheet = require('./google_module/google-spreadsheet');
-const doc = new GoogleSpreadsheet(process.env.skey);
-const creds_json = {
-    client_email: process.env.google_client_email,
-    private_key: `-----BEGIN PRIVATE KEY-----\n${process.env.google_private_key}\n${process.env.google_key_two}\n${process.env.google_key_three}\nKPAu6SL9OraGwtioCgWyBwlTHuN3yn2o9mpnAzNmzqTh6WbRPD5PrB2jq8Pk1MiV\nbz/I+0DRPhcA/37t23q6UUo16gSofFFLaD0npMaoOY2aK+os0NdnmGai8Y8XzVoN\nbbgXKgDvpIy7TLpS4z79mpAsrSl109+evVhOSp4SP4NIWUb0Mu+OkYcNWmIhfFUF\nkLMDgWqJAgMBAAECggEAKmTuCmLFEIUDFeRBd5i+Xex/B9BJDoexCzX9LwacqN8D\n79FCoZmL/0aqt6VNBbA4d1q017j6WgUxw/HI2H40CQY9xqy+F/e9xP7NuWHmhmqZ\nTnjVrc4azpGfiQxWkD/waStbC5XuVdBMo9xWKaBW8ySKEIYOgUSZteDK4uIB+rmn\nbT6993l0elYZClt7hQuZtEqi/o/YOdYj6FMx0ONlkqqh4TmHG4s0rBNjzFuXfOwF\nVdrx2saEpORATA/UPOMf31ox2gqs2jays/HYnjxt6Q5sD750fMdY/4/vEkfpWeV2\nUDJg6tvIVWIUKN5ofQZfmGRqHkRxoC2U+beljvq2SQKBgQDpsP8xsaJaUt2guBhr\nHnSGS57PgrJ/NLPSmkgcG3hhhZ38VL7hPaT48CUZ1kGOOncjkUngl14tfmvPzkxp\n5XaO/VMNdrhk8Cg5/orQ1HjuxR5DzYWHDuTwFtlFtBZILA6cpN758zjYsAEHgMCD\nOoegeZPPf9BZ9Mkf5H4n5xG6rQKBgQDBwaU2RtiGbGIxMUN+1LuZFgexw86Q0v+I\nLE196ZQCUxgdJv58YFQZQbvfaivd+ugoZE17DS99lyQvbfwIN0L/ngEcHuRZYIEN\nqi3FNO+ylcC3LLmD5h4jw9Lfgsy2992GOP/uIaCxGXzqkSGg2dmET7/akFdbwmys\nCOLFzWZmzQKBgFxcdh//4vjr82hIGm6L1OYXESdWspGQFNpR29owCT4R/0TxgZeo\nM4Gn+CHkCnjaJqhKDfbUHIbChn3VPWJFLLyK5r5Vg79xI5T4Q4kR0NId2j5WBkZA\n3r79aNYhvQS9VPEYQIBtXrRVq7J5cpzrDxufsYm7LG/BTZRrTGkc7GbpAoGAL+f9\nPWpO5w2tSZRwp89ZgwRbaqyLSmuhGr45esRiACEjeTHHAmGe6Y/DL/5EUmJTPIlw\nTth3wYm5PLDo++8N9b3PcHCC7UZbIlHNd1EbYwB74c6BIAeptBYa8YCZtTOb5i/5\nt5tA7AjtReIUenzit0Awo43Ey79Kt06LI3UhuJECgYATKkzkljEePsdYjWT6HyWj\n4GcG9OArgGHjvDuGjgav30qtfYSntDeRQBsnyTIHZ7V7vFDPK7qO2tyWsMW6YFi2\noTSqjNqNln1CdeS2zWLLtKoQY+5Y090ThJHLo16Neb+NNX15+TeCFdTs7QAEubJd\n+vOOQNHRvfnm63KuSIKlmw==\n-----END PRIVATE KEY-----\n`,
-}
-doc.useServiceAccountAuth(creds_json, function (err) {
-    if (err) console.log(err);
-});
-
-function endsWithAny(suffixes, string) {
-    return suffixes.some(function (suffix) {
-        return string.endsWith(suffix);
-    });
-}
-
-function time(s) {
-    let ms = s % 1000;
-    s = (s - ms) / 1000;
-    let secs = s % 60;
-    s = (s - secs) / 60;
-    let mins = s % 60;
-    s = (s - mins) / 60;
-    let hrs = s % 24;
-    s = (s - hrs) / 24;
-    let days = s;
-    let status = true;
-    let output = '';
-
-    if (days != 0){
-        if (days.toString().endsWith('1') && !days.toString().endsWith('11')){
-            output += days + ' день';
-        }else if (endsWithAny(['2', '3', '4'], days.toString()) && !endsWithAny(['12', '13', '14'], days.toString())){
-            output += days + ' дня';
-        }else{
-            output += days + ' дней';
-        }
-        status = false;
-    }
-    if (hrs != 0){
-        if (status){
-            if (hrs.toString().endsWith('1') && !hrs.toString().endsWith('11')){
-                output += hrs + ' час';
-            }else if (endsWithAny(['2', '3', '4'], hrs.toString()) && !endsWithAny(['12', '13', '14'], hrs.toString())){
-                output += hrs + ' часа';
-            }else{
-                output += hrs + ' часов';
-            }
-            status = false;
-        }
-    }
-    if (mins != 0){
-        if (status){
-            if (mins.toString().endsWith('1') && !mins.toString().endsWith('11')){
-                output += mins + ' минуту';
-            }else if (endsWithAny(['2', '3', '4'], mins.toString()) && !endsWithAny(['12', '13', '14'], mins.toString())){
-                output += mins + ' минуты';
-            }else{
-                output += mins + ' минут';
-            }
-            status = false;
-        }
-    }
-    if (secs != 0){
-        if (status){
-            if (secs.toString().endsWith('1') && !secs.toString().endsWith('11')){
-                output += secs + ' секунду';
-            }else if (endsWithAny(['2', '3', '4'], secs.toString()) && !endsWithAny(['12', '13', '14'], secs.toString())){
-                output += secs + ' секунды';
-            }else{
-                output += secs + ' секунд';
-            }
-            status = false;
-        }
-    }
-    if (ms != 0){
-        if (status){
-            output += ms + ' ms';
-        }
-    }
-    return output;
-}
-
-async function get_profile(gameserver, author_id){
-    return new Promise(async function(resolve, reject) {
-        await doc.getRows(gameserver, { offset: 1, limit: 5000000, orderby: 'col2' }, (err, rows) => {
-            if (err){
-                console.error(`[DB] При получении данных с листа произошла ошибка!`);
-                return reject(new Error(`При использовании 'getrows' произошла ошибка при получении данных.`));
-            }
-            let db_account = rows.find(row => row.idпользователя == author_id); // Поиск аккаунта в базе данных.
-            if (!db_account) return resolve(false); // Если аккаунт не существует, вывести false;
-            let account_info = [
-                db_account.idпользователя, // Вывод ID пользователя.
-                db_account.статусразработчика, // Вывод статуса разработчика.
-                db_account.мутдо, // Вывод мута valueOf
-            ];
-            resolve(account_info);
-        });
-    });
-}
-
-async function change_profile(gameserver, author_id, table, value){
-    return new Promise(async function(resolve, reject) {
-        await doc.getRows(gameserver, { offset: 1, limit: 5000000, orderby: 'col2' }, (err, rows) => {
-            if (err){
-                console.error(`[DB] При получении данных с листа произошла ошибка!`);
-                return reject(new Error(`При использовании 'getrows' произошла ошибка при получении данных.`));
-            }
-            let db_account = rows.find(row => row.idпользователя == author_id); // Поиск аккаунта в базе данных.
-            if (!db_account) return resolve(false);
-            if (table == 'idпользователя') db_account.idпользователя = `${value}`;
-            else if (table == 'статусразработчика') db_account.статусразработчика = `${value}`;
-            else if (table == 'мутдо') db_account.мутдо = `${value}`;
-            else return reject(new Error("Значение table указано не верно!"));
-            db_account.save();
-            resolve(true);
-        });
-    });
-}
-
-function now_date(){
-    let date = new Date(+new Date().valueOf() + 10800000);
-    return `${date.getDate().toString().padStart(2, '0')}.` +
-        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
-        `${date.getFullYear()} ` +
-        `${date.getHours().toString().padStart(2, '0')}:` +
-        `${date.getMinutes().toString().padStart(2, '0')}:` +
-        `${date.getSeconds().toString().padStart(2, '0')}`;
-}
-function date_now(){
-    let date = new Date(+new Date().valueOf() + 10800000);
-    return `${date.getDate().toString().padStart(2, '0')}.` +
-        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
-        `${date.getFullYear()} `;
-}
-
-let started_at;
-
-
-const low = require('./lib/main');
-const FileSync = require('./lib/FileSync');
-
-const adapter = new FileSync('db.json')
-const db = low(adapter)
-
-let levelhigh = 0;
-let lasttestid = 'net';
-
-const nrpnames = new Set(); // Невалидные ники будут записаны в nrpnames
 const sened = new Set(); // Уже отправленные запросы будут записаны в sened
 const support_cooldown = new Set(); // Запросы от игроков.
 const snyatie = new Set(); // Уже отправленные запросы на снятие роли быдут записаны в snyatie
-const has_removed = new Set();
-const auth_request = new Set();
+const auth_request = new Set(); // Задержка между отправкой запроса авторизации
 const st_cd = new Set(); // Задержка между действиями
 const support_settings = {
     "server_name": "Scottdale Brotherhood", // Название сервера, будет в информации
@@ -227,14 +50,12 @@ const support_settings = {
 
 let antislivsp1 = new Set();
 let antislivsp2 = new Set();
-let global_cd = new Set();
 
 let setembed_general = ["не указано", "не указано", "не указано", "не указано", "не указано", "не указано", "не указано"];
 let setembed_fields = ["нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет"];
 let setembed_addline = ["нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет", "нет"];
 
 let serverid = '355656045600964609';
-let databaseid = '493459379878625320';
 
 let tags = require('./plugins/tags').get('tags');
 let manytags = require('./plugins/tags').get('manytags');
@@ -246,772 +67,59 @@ const events = {
     MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
 };
 
-async function remove_verify(){
-    setInterval(() => {
-        let server = bot.guilds.get(serverid);
-        if (server){
-            let role = server.roles.find(r => r.name == 'Проверенный 🔐');
-            if (role){
-                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '355656045600964609'`, async (err, profiles) => {
-                    // let date = require('./objects/functions').getDateMySQL();
-                    server.roles.find(r => r.name == 'Проверенный 🔐').members.forEach(member => {
-                        if (!profiles.some(p => p.userid == member.id)){
-                            let moderator = server.channels.find(c => c.name == 'spectator-chat');
-                            if (moderator) moderator.send(`\`[СИНХРОНИЗАЦИЯ]\` ${member} \`был лишен роли ${role.name}. Причина: Не авторизован через /authme.\``);
-                            member.removeRole(role);
-                        }
-                    });
-                });
-            }
-        }
-    }, 85000);
-}
-
-async function check_gifts(){
-    setInterval(() => {
-        let server = bot.guilds.get(serverid);
-        if (server){
-            let general = server.channels.find(c => c.name == 'general');
-            let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
-            let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
-            let spectator = server.roles.find(r => r.name == 'Spectator™');
-            if (titan && warrior){
-                connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
-                    if (gifts.length != 0){
-                        gifts.forEach(async gift => {
-                            let user = server.members.get(gift.user);
-                            if (user){
-                                let date = (new Date().valueOf() + 10800000) - new Date(`${gift.date}`).valueOf();
-                                if (+gift.type == 0){
-                                    if (date >= 86400000){
-                                        if (user.roles.some(r => r.id != titan.id)){
-                                            let data = new Date(+new Date().valueOf() + 10800000);
-                                            if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
-                                                user.addRole(titan);
-                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                                user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
-                                            }
-                                        }
-                                    }
-                                }else if (+gift.type == 1){
-                                    if (date >= 172800000){
-                                        if (user.roles.some(r => r.id != warrior.id)){
-                                            let data = new Date(+new Date().valueOf() + 10800000);
-                                            if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
-                                                user.addRole(warrior);
-                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
-                                                user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
-                                            }
-                                        }
-                                    } 
-                                }
-                            }
-                        });
-                    }
-                });
-                let data = new Date(+new Date().valueOf() + 10800000);
-                let night_warrior = server.channels.find(c => c.name == 'night-warrior');
-                let titan_chat = server.channels.find(c => c.name == 'titan');
-                night_warrior.permissionOverwrites.forEach(perm => {
-                    if (perm.id == warrior.id){
-                        let permissions = new Discord.Permissions(perm.allow);
-                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
-                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
-                                night_warrior.overwritePermissions(warrior, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: false,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: false,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: false,
-                                    ADD_REACTIONS: false,
-                                });
-                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт только ночью! Сейчас он закрывается!\``);
-                            }
-                        }else{
-                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
-                                night_warrior.overwritePermissions(warrior, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: true,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: true,
-                                    ADD_REACTIONS: true,
-                                });
-                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт!\``);
-                            }
-                        }
-                    }else if (perm.id == spectator.id){
-                        let permissions = new Discord.Permissions(perm.allow);
-                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
-                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
-                                night_warrior.overwritePermissions(spectator, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: false,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: false,
-                                    ADD_REACTIONS: false,
-                                });
-                            }
-                        }else{
-                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
-                                night_warrior.overwritePermissions(spectator, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: true,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: true,
-                                    ADD_REACTIONS: true,
-                                });
-                            }
-                        }
-                    }
-                });
-
-                titan_chat.permissionOverwrites.forEach(perm => {
-                    if (perm.id == titan.id){
-                        let permissions = new Discord.Permissions(perm.allow);
-                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
-                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
-                                titan_chat.overwritePermissions(titan, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: false,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: false,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: false,
-                                    ADD_REACTIONS: false,
-                                });
-                                titan_chat.send(`<@&${titan.id}>, \`чат открыт только утром, днем и вечером! Сейчас он закрывается!\``);
-                            }
-                        }else{
-                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
-                                titan_chat.overwritePermissions(titan, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: true,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: true,
-                                    ADD_REACTIONS: true,
-                                });
-                                titan_chat.send(`<@&${titan.id}>, \`чат открыт!\``);
-                            }
-                        }
-                    }else if (perm.id == spectator.id){
-                        let permissions = new Discord.Permissions(perm.allow);
-                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
-                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
-                                titan_chat.overwritePermissions(spectator, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: false,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: false,
-                                    ADD_REACTIONS: false,
-                                });
-                            }
-                        }else{
-                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
-                                titan_chat.overwritePermissions(spectator, {
-                                    // GENERAL PERMISSIONS
-                                    CREATE_INSTANT_INVITE: false,
-                                    MANAGE_CHANNELS: false,
-                                    MANAGE_ROLES: false,
-                                    MANAGE_WEBHOOKS: false,
-                                    // TEXT PERMISSIONS
-                                    VIEW_CHANNEL: true,
-                                    SEND_MESSAGES: true,
-                                    SEND_TTS_MESSAGES: false,
-                                    MANAGE_MESSAGES: false,
-                                    EMBED_LINKS: true,
-                                    ATTACH_FILES: true,
-                                    READ_MESSAGE_HISTORY: true,
-                                    MENTION_EVERYONE: false,
-                                    USE_EXTERNAL_EMOJIS: true,
-                                    ADD_REACTIONS: true,
-                                });
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    }, 60000);
-}
-
-async function special_discord_update(){
-    setInterval(async () => {
-        let special_server = spec_bot.guilds.get('543799835652915241');
-        let check_server = user.guilds.get('543354025387491339');
-        if (!special_server || !check_server) return console.log('Сервер спец.администрации не найден!');
-        let admin_role = special_server.roles.find(r => r.name == 'Администратор');
-        let helper_role = special_server.roles.find(r => r.name == 'Хелпер');
-        let checker_role = special_server.roles.find(r => r.name == 'Команда проверки');
-        if (!admin_role || !helper_role) return console.log('Роли хелпера или админа не найдены на спец админском');
-        let all_chat = special_server.channels.find(c => c.name == 'основной');
-        if (!all_chat) return console.log('Чат "основной" не был найден!');
-        let phoenix = user.guilds.get('544446632226324481');
-        let tucson = user.guilds.get('438803520288981004');
-        let scottdale = user.guilds.get('355656045600964609');
-        let chandler = user.guilds.get('555334013255155712');
-        let brainburg = user.guilds.get('282282840840732672');
-        let saintrose = user.guilds.get('347728316557426688');
-        let mesa = user.guilds.get('399241867914379265');
-        let redrock = user.guilds.get('470981734863994881');
-        let yuma = user.guilds.get('528635749206196232');
-
-        let central = user.guilds.get('325607843547840522');
-        let eastern = user.guilds.get('465086262383083520');
-        let north = user.guilds.get('477547500232769536');
-        let vostok = user.guilds.get('577511138032484360');
-
-        let bone_country = user.guilds.get('527799726557364237');
-        if (!phoenix || !tucson || !scottdale || !chandler || !brainburg || !saintrose || !mesa || !redrock || !yuma || !central || !eastern || !north || !vostok || !bone_country) console.log('Один из серверов не найден!');
-        
-        await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-            special_server.members.forEach(async (member) => {
-
-                if (member.roles.some(r => r.name == '🔒 Блокировка')){
-                    let db_account = rows.find(row => row.idпользователя == member.id); // Поиск аккаунта в базе данных.
-                    let date = new Date().valueOf();
-                    if (date > db_account.мутдо){
-                        let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-                        await member.removeRole(role);
-                        db_account.del();
-                        all_chat.send(`${member}, **\`блокировка чата была снята.\`**`);
-                    }
-                }
-                
-                let server_were_admin = [];
-                let server_were_helper = [];
-                let user_checker = false;
-
-                if (check_server.members.get(member.id)){
-                    let g_member = check_server.members.get(member.id);
-                    if (g_member.roles.some(r => ['Checkers Team'].includes(r.name))){
-                        user_checker = true;
-                    }
-                }
-
-                if (phoenix.members.get(member.id)){
-                    let g_member = phoenix.members.get(member.id);
-                    if (g_member.roles.some(r => ['Администрация 4 уровня', 'Администрация 3 уровня'].includes(r.name))){
-                        server_were_admin.push('Phoenix');
-                    }else if (g_member.roles.some(r => ['Администрация 1-2 уровня'].includes(r.name))){
-                        server_were_helper.push('Phoenix');
-                    }
-                }
-                
-                if (tucson.members.get(member.id)){
-                    let g_member = tucson.members.get(member.id);
-                    if (g_member.roles.some(r => ['Администратор 4 уровня', 'Администратор 3 уровня'].includes(r.name))){
-                        server_were_admin.push('Tucson');
-                    }else if (g_member.roles.some(r => ['Администратор 2 уровня', 'Администратор 1 уровня'].includes(r.name))){
-                        server_were_helper.push('Tucson');
-                    }
-                }
-                
-                if (scottdale.members.get(member.id)){
-                    let g_member = scottdale.members.get(member.id);
-                    if (g_member.roles.some(r => ['✔ Administrator ✔', '✔Jr.Administrator✔'].includes(r.name))){
-                        server_were_admin.push('Scottdale');
-                    }else if (g_member.roles.some(r => ['✔ Helper ✔'].includes(r.name))){
-                        server_were_helper.push('Scottdale');
-                    }
-                }
-                
-                if (chandler.members.get(member.id)){
-                    let g_member = chandler.members.get(member.id);
-                    if (g_member.roles.some(r => ['Администратор 4 уровня', 'Администратор 3 уровня'].includes(r.name))){
-                        server_were_admin.push('Chandler');
-                    }else if (g_member.roles.some(r => ['Хелпер'].includes(r.name))){
-                        server_were_helper.push('Chandler');
-                    }
-                }
-                
-                if (brainburg.members.get(member.id)){
-                    let g_member = brainburg.members.get(member.id);
-                    if (g_member.roles.some(r => ['⚃ Администратор 4 ур. ⚃', '⚂ Администратор 3 ур. ⚂'].includes(r.name))){
-                        server_were_admin.push('Brainburg');
-                    }else if (g_member.roles.some(r => ['⚁ Администратор 2 ур. ⚁', '⚀ Администратор 1 ур. ⚀'].includes(r.name))){
-                        server_were_helper.push('Brainburg');
-                    }
-                }
-                
-                if (saintrose.members.get(member.id)){
-                    let g_member = saintrose.members.get(member.id);
-                    if (g_member.roles.some(r => ['◉ Ст. Администратор [4 LVL]', '◉ Мл. Администратор [3 LVL]'].includes(r.name))){
-                        server_were_admin.push('Saint Rose');
-                    }else if (g_member.roles.some(r => ['◉ Хелпер [1-2 LVL]'].includes(r.name))){
-                        server_were_helper.push('Saint Rose');
-                    }
-                }
-                
-                if (mesa.members.get(member.id)){
-                    let g_member = mesa.members.get(member.id);
-                    if (g_member.roles.some(r => ['✔Administration✔', '✔Jr.Administration✔'].includes(r.name))){
-                        server_were_admin.push('Mesa');
-                    }else if (g_member.roles.some(r => ['✔Moderator✔'].includes(r.name))){
-                        server_were_helper.push('Mesa');
-                    }
-                }
-                
-                if (redrock.members.get(member.id)){
-                    let g_member = redrock.members.get(member.id);
-                    if (g_member.roles.some(r => ['IV ⚡️ Администратор', 'III ⚡️ Старший модератор'].includes(r.name))){
-                        server_were_admin.push('Red-Rock');
-                    }else if (g_member.roles.some(r => ['II ⚡️ Модератор', 'I ⚡️ Младший модератор'].includes(r.name))){
-                        server_were_helper.push('Red-Rock');
-                    }
-                }
-                
-                if (yuma.members.get(member.id)){
-                    let g_member = yuma.members.get(member.id);
-                    if (g_member.roles.some(r => ['✔ Administrator ✔', '✔Jr.Administrator✔'].includes(r.name))){
-                        server_were_admin.push('Yuma');
-                    }else if (g_member.roles.some(r => ['✔ Helper ✔'].includes(r.name))){
-                        server_were_helper.push('Yuma');
-                    }
-                }
-
-
-                if (central.members.get(member.id)){
-                    let g_member = central.members.get(member.id);
-                    if (g_member.roles.some(r => ['★ Администратор ★', '★ Старший Модератор ★'].includes(r.name))){
-                        server_were_admin.push('Центральный Округ');
-                    }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Хелпер ★'].includes(r.name))){
-                        server_were_helper.push('Центральный Округ');
-                    }
-                }
-
-                if (eastern.members.get(member.id)){
-                    let g_member = eastern.members.get(member.id);
-                    if (g_member.roles.some(r => ['☆ Администратор ☆', '☆ Старший Модератор ☆'].includes(r.name))){
-                        server_were_admin.push('Южный округ');
-                    }else if (g_member.roles.some(r => ['☆ Модератор ☆', '☆  Младший Модератор  ☆'].includes(r.name))){
-                        server_were_helper.push('Южный округ');
-                    }
-                }
-
-                if (north.members.get(member.id)){
-                    let g_member = north.members.get(member.id);
-                    if (g_member.roles.some(r => ['✔ Administrator ✔', '✔ Jr.Administrator ✔'].includes(r.name))){
-                        server_were_admin.push('Северный округ');
-                    }else if (g_member.roles.some(r => ['✔ Moderator ✔', '✔ Helper ✔'].includes(r.name))){
-                        server_were_helper.push('Северный округ');
-                    }
-                }
-
-                if (vostok.members.get(member.id)){
-                    let g_member = vostok.members.get(member.id);
-                    if (g_member.roles.some(r => ['★ Администратор ★', '★ Старший Модератор ★'].includes(r.name))){
-                        server_were_admin.push('Восточный округ');
-                    }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Младший Модератор ★'].includes(r.name))){
-                        server_were_helper.push('Восточный округ');
-                    }
-                }
-
-                if (bone_country.members.get(member.id)){
-                    let g_member = bone_country.members.get(member.id);
-                    if (g_member.roles.some(r => ['[A] Администрация проекта'].includes(r.name))){
-                        server_were_admin.push('Жизнь в деревне');
-                    }
-                }
-
-                if (user_checker == true){
-                    if (!member.roles.some(r => checker_role.id == r.id)){
-                        await member.addRole(checker_role);
-                        await all_chat.send(`**${member}, \`вам была выдана роль ${checker_role.name}. Источник: ${check_server.name}\`**`);
-                    }
-                }else{
-                    if (member.roles.some(r => checker_role.id == r.id)){
-                        await member.removeRole(checker_role);
-                        await all_chat.send(`**${member}, \`вам была снята роль ${checker_role.name}.\`**`);
-                    }
-                }
-
-                if (server_were_admin.length > 0){
-                    if (!member.roles.some(r => admin_role.id == r.id)){
-                        await member.addRole(admin_role);
-                        await all_chat.send(`**${member}, \`вам была выдана роль ${admin_role.name}. Администратор на: ${server_were_admin.join(', ')}\`**`);
-                        if (member.roles.some(r => helper_role.id == r.id)){
-                            await member.removeRole(helper_role);
-                        }
-                    }
-                }else if (server_were_helper.length > 0){
-                    if (!member.roles.some(r => helper_role.id == r.id)){
-                        await member.addRole(helper_role);
-                        await all_chat.send(`**${member}, \`вам была выдана роль ${helper_role.name}. Хелпер на: ${server_were_helper.join(', ')}\`**`);
-                        if (member.roles.some(r => admin_role.id == r.id)){
-                            await member.removeRole(admin_role);
-                        }
-                    }
-                }
-
-                if (server_were_admin.length == 0){
-                    if (member.roles.some(r => admin_role.id == r.id)){
-                        await member.removeRole(admin_role);
-                        await all_chat.send(`**${member}, \`вам была снята роль ${admin_role.name}. Не является администратором на одном из серверов.\`**`);
-                    }
-                }
-
-                if (server_were_helper.length == 0){
-                    if (member.roles.some(r => helper_role.id == r.id)){
-                        await member.removeRole(helper_role);
-                        await all_chat.send(`**${member}, \`вам была снята роль ${helper_role.name}. Не является хелпером на одном из серверов.\`**`);
-                    }
-                }
-            });
-        });
-    }, 40000);
-}
-
-async function check_updates(r_msg){
-    setTimeout(async () => {
-        let channel = bot.guilds.get('493459379878625320').channels.find(c => c.name == 'bot-updates');
-        if (!channel) return console.error(`Канал обновлений не найден!`);
-        get_profile(10, serverid).then(async value => {
-            channel.fetchMessages({limit: 1}).then(async messages => {
-                let msg = messages.first();
-                if (msg.content != version){
-                    let server = bot.guilds.get('355656045600964609');
-                    let sp_channel = server.channels.find(c => c.name == 'spectator-chat');
-                    if (!server) return console.error('ошибка загрузки обновления, сервер не найден');
-                    if (!sp_channel) return console.error('ошибка загрузки обновления, sp-chat не найден');
-                    const embed = new Discord.RichEmbed();
-                    embed.addField(`**Обновление. Версия: \`${version}\`**`, `**${update_information}**`);
-                    await r_msg.edit(r_msg.content.replace('[Проверка наличия обновлений...]', `[Обновление завершено. (v.${msg.content}) (v.${version})]`)).then(async () => {
-                        if (version.includes('-hide')){
-                            await channel.send(version);
-                            if (value[1] != file_length) change_profile(10, serverid, 'статусразработчика', file_length);
-                        }else{
-                            await sp_channel.send(embed).then(async () => {
-                                await channel.send(version);
-                                if (value[1] != file_length) change_profile(10, serverid, 'статусразработчика', file_length);
-                            });
-                        }
-                    });
-                }else{
-                    if (value[1] != file_length){
-                        let server = bot.guilds.get('355656045600964609');
-                        let sp_channel = server.channels.find(c => c.name == 'spectator-chat');
-                        await r_msg.edit(r_msg.content.replace('[Проверка наличия обновлений...]', `[Ошибка проверки версии.]`));
-                        await sp_channel.send(`\`[ERROR]\` \`Версия не обновлена. Автоматическое отключение. [до: ${value[1]}, после: ${file_length}]\``);
-                        return process.exit();
-                    }
-                    r_msg.edit(r_msg.content.replace('[Проверка наличия обновлений...]', `[Версии совпадают. (v.${msg.content}) (v.${version})]`));
-                }
-            });
-        });
-    }, 10000);
-};
-
-async function update_sellers(){
-    setInterval(() => {
-        let server = bot.guilds.get('355656045600964609');
-        if (!server) return
-        let channel = server.channels.find(c => c.name == 'buy-dashboard');
-        if (!channel) return
-        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > 0 AND \`server\` = '355656045600964609'`, async (err, result, fields) => {
-            channel.fetchMessages({limit: 1}).then(async messages => {
-                let names = [];
-                let cost = [];
-                let amount = [];
-                result.forEach(res => {
-                    names.push(res.name);
-                    cost.push(res.cost);
-                    amount.push(res.amount);
-                });
-                const table = new Discord.RichEmbed();
-                table.setTitle(`**Ассортимент Discord-сервера**`);
-                table.setDescription(`**В данном канале вы можете приобрести товары у администрации discord-сервера! В качестве цены указана валюта - Discord Point (₯).\nКоманда для покупки товара: /buy [название товара]**`);
-                table.setColor(`#0601ff`);
-                if (names.length > 0) table.addField(`Название товара`, `${names.join('\n')}`, true);
-                if (amount.length > 0) table.addField(`В наличии`, `${amount.join('\n')}`, true);
-                if (cost.length > 0) table.addField(`Цена`, `${cost.join(' ₯\n')} ₯`, true);
-                table.setFooter(`© Сopyright 2019`, server.icon_url);
-                let msg = messages.first();
-                if (!msg){
-                    channel.send(table);
-                }else{
-                    msg.edit(table);
-                }
-            });
-        });
-    }, 20000)
-}
-
-async function nalog_biz(){
-    setInterval(() => {
-        connection.query(`SELECT * FROM \`storage\` WHERE \`server\` = '355656045600964609'`, async (error, storages) => {
-            storages.forEach(storage => {
-                let date = new Date().valueOf();
-                if (storage.nalog_new < date){
-                    if (storage.money < storage.nalog){
-                        if (storage.status == true) {
-                            connection.query(`UPDATE \`storage\` SET status = '0' WHERE \`id\` = '${storage.id}'`);
-                            let member = bot.guilds.get(storage.server).members.get(storage.owner);
-                            send_action(storage.server, `${member.displayName || member.user.tag} (${storage.owner}) предприятие было закрыто за неуплату налога (NEED: ${storage.nalog} - NOW: ${storage.money}). Предприятие - ${storage.name}`);
-                        }
-                    }else{
-                        connection.query(`UPDATE \`storage\` SET money = money - ${storage.nalog} WHERE \`id\` = '${storage.id}'`);
-                        connection.query(`UPDATE \`storage\` SET nalog_new = '${+date + 3600000}' WHERE \`id\` = '${storage.id}'`);
-                        let member = bot.guilds.get(storage.server).members.get(storage.owner);
-                        send_action(storage.server, `${member.displayName || member.user.tag} (${storage.owner}) c предприятия списан налог (NEED: ${storage.nalog} - NOW: ${storage.money - storage.nalog}). Предприятие - ${storage.name}`);
-                    }
-                }
-            });
-        });
-
-        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`server\` = '355656045600964609'`, async (error, shops) => {
-            shops.forEach(shop => {
-                let date = new Date().valueOf();
-                if (shop.nalog_new < date){
-                    if (shop.money < shop.nalog){
-                        if (shop.status == true) {
-                            connection.query(`UPDATE \`buy_dashboard\` SET status = '0' WHERE \`id\` = '${shop.id}'`);
-                            let member = bot.guilds.get(shop.server).members.get(shop.owner);
-                            send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) заведение было закрыто за неуплату налога (NEED: ${shop.nalog} - NOW: ${shop.money}). Заведение - ${shop.name}`);
-                        }
-                    }else{
-                        connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${shop.nalog} WHERE \`id\` = '${shop.id}'`);
-                        connection.query(`UPDATE \`buy_dashboard\` SET nalog_new = '${+date + 3600000}' WHERE \`id\` = '${shop.id}'`);
-                        let member = bot.guilds.get(shop.server).members.get(shop.owner);
-                        send_action(shop.server, `${member.displayName || member.user.tag} (${shop.owner}) c заведения списан налог (NEED: ${shop.nalog} - NOW: ${shop.money - shop.nalog}). Заведение - ${shop.name}`);
-                    }
-                }
-            });
-        });
-    }, 27000);
-}
-
-async function update_items(){
-    setInterval(() => {
-        connection.query(`SELECT * FROM \`items\` WHERE \`server\` = '355656045600964609'`, async (error, items) => {
-	    if(items.lenght <= 0) return; 
-            items.forEach(item => {
-                let date = new Date().valueOf();
-                if (item.date_end < date){
-                    connection.query(`SELECT * FROM \`storage\` WHERE \`id\` = '${item.storage}'`, async (error, storage) => {
-                        if (error) return console.error(error);
-                        if (storage.length < 1 || storage.length > 1){
-                            connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
-                        }else{
-                            connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`id\` = '${item.dashboard}'`, async (error, shop) => {
-                                if (error) return console.error(error);
-                                if (shop.length < 1 || shop.length > 1){
-                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
-                                }else{
-                                    connection.query(`UPDATE \`buy_dashboard\` SET amount = amount + 1 WHERE \`id\` = '${shop[0].id}'`);
-                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        });
-    }, 12000);
-}
-
-async function newsupport_table(){
-    setInterval(() => {
-        let server = bot.guilds.get(serverid);
-        connection.query(`SELECT * FROM \`tickets-global\` WHERE \`server\` = '${server.id}'`, async (error, result) => {
-            if (result.length != 0){
-                const image = new Discord.RichEmbed();
-                image.setImage("https://imgur.com/LKDbJeM.gif");
-                let ticket_channel = server.channels.find(c => c.name == 'support');
-                let rep_message = await ticket_channel.fetchMessage(result[0].message).catch(async err => {
-                    await ticket_channel.send(`` +
-                    `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                    `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                    `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                    `**Необработанных модераторами: ${result[0].open}**\n` +
-                    `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                    `**Закрытых: ${result[0].close}**`, image).then(msg => {
-                        rep_message = msg;
-                        connection.query(`UPDATE \`tickets-global\` SET message = '${msg.id}' WHERE \`server\` = '${message.guild.id}'`);
-                    });
-                });
-                rep_message.edit(`` +
-                `**Приветствую! Вы попали в канал поддержки сервера Scottdale Brotherhood!**\n` +
-                `**Тут Вы сможете задать вопрос модераторам или администраторам сервера!**\n\n` +
-                `**Количество вопросов за все время: ${result[0].tickets}**\n` +
-                `**Необработанных модераторами: ${result[0].open}**\n` +
-                `**Вопросы на рассмотрении: ${result[0].hold}**\n` +
-                `**Закрытых: ${result[0].close}**`, image);
-            }
-        });
-    }, 17000);
-}
-
 const warn_cooldown = new Set();
 const ds_cooldown = new Set();
 const mysql_cooldown = new Set();
 const cooldown = new Set();
 
 bot.login(process.env.token);
-tbot.login(process.env.recovery_token);
-bbc_user.login(process.env.bbc_token);
-adm_user.login(process.env.adm_user_token);
 user.login(process.env.user_token);
-spec_bot.login(process.env.spec_token);
-
-
-bbc_user.on('ready', async () => {
-    console.log(`Авторизован как ${bbc_user.user.tag} [${bbc_user.user.id}]`);
-    bbc_user.user.setActivity('в монитор', { type: "WATCHING" });
-});
-
-adm_user.on('ready', async () => {
-    console.log(`Авторизован как ${adm_user.user.tag} [${adm_user.user.id}]`);
-    let server = await adm_user.guilds.get('493459379878625320');
-    let channel = await server.channels.get('509368301730791436');
-    await channel.fetchMessages({limit: 1}).then(async messages => {
-	let msg = messages.first();
-	const type = msg.content.split('<=+=>')[0];
-	const content = msg.content.split('<=+=>')[1];
-	adm_user.user.setActivity(content, { type: `${type}` });
-    });
-});
-
-adm_user.on('message', async (message) => {
-    if (message.channel.type == 'dm') return
-    if (message.channel.id != '509368301730791436') return
-	const type = message.content.split('<=+=>')[0];
-	const content = message.content.split('<=+=>')[1];
-	adm_user.user.setActivity(content, { type: `${type}` });
-});
+robo_hamster.login(process.env.spec_token);
 
 user.on('ready', async () => {
-    console.log(`Авторизован как ${user.user.tag} [${user.user.id}]`);
     user.user.setActivity('за серверами', { type: "WATCHING" });
-});
-
-tbot.on('ready', () => {
-    console.log('TБот был успешно запущен.'); 
 });
 
 bot.on('ready', async () => {
     console.log("Бот был успешно запущен!");
     bot.user.setPresence({ game: { name: 'hacker' }, status: 'dnd' })
-    check_unwanted_user();
-    update_sellers();
-    nalog_biz();
-    update_items();
-    support_autoupdate();
-    tickets_check();
-    remove_verify();
-    check_gifts();
-    bans_autoupdate();
-    unban_autoupdate();
-    started_at = now_date();
-    require('./plugins/remote_access').start(bot); // Подгрузка плагина удаленного доступа.
-    await bot.guilds.get(serverid).channels.get('493181639011074065').send('**\`[BOT] - Запущен. [#' + new Date().valueOf() + '-' + bot.uptime + '] [Проверка наличия обновлений...]\`**').then(msg => {
-        check_updates(msg);
-    });
+    check_unwanted_user(); // Система снятия варнов discord
+    update_sellers(); // Обновление таблицы магазинов
+    nalog_biz(); // Налог на бизнес
+    update_items(); // Обновление предметов
+    support_autoupdate(); // Обновление support
+    tickets_check(); // Проверка тикетов
+    remove_verify(); // Снятие верефикации у тех, кто не авторизован
+    check_gifts(); // Проверка подарков
+    bans_autoupdate(); // Проверка банов (система наказаний)
+    unban_autoupdate(); // Проверка разблокировок
+    started_at = now_date(); // Когда был запущен бот
 });
 
-spec_bot.on('ready', () => {
+robo_hamster.on('ready', () => {
     console.log("Спец.Бот был успешно запущен!");
-    spec_bot.user.setPresence({ game: { name: `${version}` }, status: 'online' })
-    special_discord_update();
+    special_discord_update(); // Обновление спец.админского дискорда
 });
 
-vkint.startPolling(() => {
+vk.startPolling(() => {
     console.log('ВК интеграция успешно запущена!')
-  })
+});
 
-
-vkint.command('/ping_scottdale', (ctx) => {
-
+vk.command('/ping_scottdale', (ctx) => {
     ctx.reply(`Скоттдейл на связи!`)
-    });
+});
 
-vkint.command('/tmode03', (ctx) => {
+vk.command('/tmode03', (ctx) => {
 	let from = ctx.message.from_id;
-	if(from != 442332049 && from != 398115725) return ctx.reply(`Перевести бота в режим технических работ могут только: Kory McGregor & Yuki Flores`);
-	if(t_mode == 0) {
+	if (from != 442332049 && from != 398115725) return ctx.reply(`Перевести бота в режим технических работ могут только: Kory McGregor & Yuki Flores`);
+	if (t_mode == 0){
 		t_mode = 1;
 		return ctx.reply(`[Scottdale] Робохомячок переведен в режим технических работ.`);
-	}
-	if(t_mode == 1) {
-		t_mode = 0;
+	}else{
+        t_mode = 0;
 		return ctx.reply(`[Scottdale] Робохомячок введен в обычный режим работы.`);
 	}
-    });
-
-
+});
 
 user.on('message', async (message) => {
     if (message.author.id != user.user.id) return
@@ -1117,42 +225,26 @@ user.on('message', async (message) => {
     }
 });
 
-function send_action(server, action){
-    let date = new Date(new Date().valueOf() + +10800000);
-    let year = `${date.getFullYear()}`;
-    let month = `${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-    let day = `${date.getDate().toString().padStart(2, '0')}`;
-    let hour = `${date.getHours().toString().padStart(2, '0')}`;
-    let min = `${date.getMinutes().toString().padStart(2, '0')}`;
-    let sec = `${date.getSeconds().toString().padStart(2, '0')}`;
-    connection.query(`INSERT INTO \`action_log\` (\`server\`, \`year\`, \`month\`, \`day\`, \`hour\`, \`min\`, \`sec\`, \`action\`) VALUES ('${server}', '${year}', '${month}', '${day}', '${hour}', '${min}', '${sec}', '${action}')`);
-    console.log(`[${hour}:${min}:${sec}] ${action}`);
-    const actionsHook = new Discord.WebhookClient("583400700034154516", "fPBO8gncxRtToyvIkJ5Sb5kp-X8iBEZ02ZRwJ5yGA3EVh5wiA-p9NlsuLCKtu2xDHBzo");
-    actionsHook.send(`**\`[${hour}:${min}:${sec}]\` \`${action}\`**`);
-}
-
-spec_bot.on('message', async message => {
+robo_hamster.on('message', async message => {
     if (message.channel.type == "dm") return
     if (message.guild.id != "543799835652915241") return
 
     if (message.content.startsWith(`/run`)){
-        get_profile(3, message.author.id).then(value => {
-            if (value[1] != '1') return message.delete();
-            const args = message.content.slice(`/run`).split(/ +/);
-            let cmdrun = args.slice(1).join(" ");
-            if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
-                message.reply(`**\`вам запрещено получение токена.\`**`);
-                return message.delete();
-            }else if (cmdrun.includes('secure_server')){
-                message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
-                return message.delete();
-            }
-            try {
-                eval(cmdrun);
-            } catch (err) {
-                message.reply(`**\`произошла ошибка: ${err.name} - ${err.message}\`**`);
-            }
-        });
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        const args = message.content.slice(`/run`).split(/ +/);
+        let cmdrun = args.slice(1).join(" ");
+        if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
+            message.reply(`**\`вам запрещено получение токена.\`**`);
+            return message.delete();
+        }else if (cmdrun.includes('secure_server')){
+            message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
+            return message.delete();
+        }
+        try {
+            eval(cmdrun);
+        } catch (err) {
+            message.reply(`**\`произошла ошибка: ${err.name} - ${err.message}\`**`);
+        }
     }
 });
 
@@ -1174,7 +266,7 @@ bot.on('message', async message => {
     require('./global_systems/support_new').run(bot, message, support_cooldown, connection, st_cd, support_settings);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
-    require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode);
+    require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, t_mode);
     require('./global_systems/auth').run(bot, message, cooldown, connection, request);
 
     if (message.content.startsWith('/gift')){
@@ -1431,60 +523,23 @@ bot.on('message', async message => {
     }*/
 
     if (message.content.startsWith(`/run`)){
-        get_profile(3, message.author.id).then(value => {
-            if (value[1] != '1') return message.delete();
-            const args = message.content.slice(`/run`).split(/ +/);
-            let cmdrun = args.slice(1).join(" ");
-            if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
-                message.reply(`**\`вам запрещено получение токена.\`**`);
-                return message.delete();
-            }else if (cmdrun.includes('secure_server')){
-                message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
-                return message.delete();
-            }
-            try {
-                eval(cmdrun);
-            } catch (err) {
-                message.reply(`**\`произошла ошибка: ${err.name} - ${err.message}\`**`);
-            }
-        });
-    }
-	
-    if (message.content == '/reset_ddos'){
-        if (!message.member.hasPermission("MANAGE_ROLES")) return message.reply(`нет прав.`)
-        levelhigh = 0;
-        message.channel.send(`\`[SYSTEM]\` \`Уровень опасности сервера был установлен на 0. Источник: ${message.member.displayName}\``)
-    }
-    
-    if (message.content.toLowerCase().startsWith(`/bug`)){
-        const args = message.content.slice('/bug').split(/ +/);
-        if (!args[1]){
-            message.reply(`\`привет! Для отправки отчета об ошибках используй: /bug [текст]\``).then(msg => msg.delete(15000));
-            return message.delete()
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        const args = message.content.slice(`/run`).split(/ +/);
+        let cmdrun = args.slice(1).join(" ");
+        if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
+            message.reply(`**\`вам запрещено получение токена.\`**`);
+            return message.delete();
+        }else if (cmdrun.includes('secure_server')){
+            message.reply(`**\`сервер защищен, получение данных с него персонально - запрещено.\`**`);
+            return message.delete();
         }
-        let bugreport = args.slice(1).join(" ");
-        if (bugreport.length < 5 || bugreport.length > 1300){
-            message.reply(`\`нельзя отправить запрос с длинной меньше 5 или больше 1300 символов!\``).then(msg => msg.delete(15000));
-            return message.delete()
+        try {
+            eval(cmdrun);
+        } catch (err) {
+            message.reply(`**\`произошла ошибка: ${err.name} - ${err.message}\`**`);
         }
-        let author_bot = message.guild.members.find(m => m.id == 336207279412215809);
-        if (!author_bot){
-            message.reply(`\`я не смог отправить сообщение.. Создателя данного бота нет на данном сервере.\``).then(msg => msg.delete(15000));
-            return message.delete()
-        }
-        author_bot.send(`**Привет, Kory_McGregor! Пользователь <@${message.author.id}> \`(${message.author.id})\` отправил запрос с сервера \`${message.guild.name}\` \`(${message.guild.id})\`.**\n` +
-        `**Суть обращения:** ${bugreport}`);
-        message.reply(`\`хэй! Я отправил твое сообщение на рассмотрение моему боссу робохомячков!\``).then(msg => msg.delete(15000));
-        return message.delete();
     }
 
-    let dataserver = bot.guilds.find(g => g.id == "493459379878625320");
-    let scottdale = bot.guilds.find(g => g.id == "355656045600964609");
-    if (!dataserver){
-        message.channel.send(`\`Data-Server of Scottdale не был загружен!\nПередайте это сообщение техническим администраторам Discord:\`<@336207279412215809>, <@402092109429080066>`)
-        console.error(`Процесс завершен. Data-Server не найден.`)
-        return bot.destroy();
-    }
     if (message.content.startsWith(`/nick`)){
         const args = message.content.slice(`/nick`).split(/ +/);
         if (!args[1]){
@@ -1680,19 +735,19 @@ bot.on('message', async message => {
     }
 	
     if (message.content.startsWith("/dwarn")){
-	if (!message.member.hasPermission("ADMINISTRATOR")){
-	    message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
-	    return message.delete();
-	}
-	let user = message.guild.member(message.mentions.users.first());
+        if (!message.member.hasPermission("ADMINISTRATOR")){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        let user = message.guild.member(message.mentions.users.first());
         if (!user){
             message.reply(`\`пользователь не указан! '/dwarn [user]'\``)
             return message.delete();
         }
-	antislivsp1.delete(user.id);
-	antislivsp2.delete(user.id);
-	let spchangg = message.guild.channels.find(c => c.name == "spectator-chat");
-	spchangg.send(`\`${message.member.displayName} очистил все предупреждения системой антислива пользователю\` <@${user.id}>`);
+        antislivsp1.delete(user.id);
+        antislivsp2.delete(user.id);
+        let spchangg = message.guild.channels.find(c => c.name == "spectator-chat");
+        spchangg.send(`\`${message.member.displayName} очистил все предупреждения системой антислива пользователю\` <@${user.id}>`);
     }
 });
 
@@ -1996,52 +1051,6 @@ bot.on('guildBanAdd', async (guild, user) => {
             guild.channels.find(c => c.name == "general").send(`**${user} был заблокирован.**`)
         })
     }, 2000);
-});
-
-tbot.on('voiceStateUpdate', async (oldMember, newMember) => {
-    if (oldMember.voiceChannelID == newMember.voiceChannelID) return
-    if (newMember.hasPermission("ADMINISTRATOR")) return
-    let member_oldchannel = await newMember.guild.channels.get(oldMember.voiceChannelID);
-    let member_newchannel = await newMember.guild.channels.get(newMember.voiceChannelID);
-    if (member_newchannel){
-        if (member_newchannel.name == '✔ Обзвон ✔'){
-            let edit_channel = newMember.guild.channels.find(c => c.name == "closed-accept");
-            if (!edit_channel) return console.log('[ERROR] Не возможно найти текстовой канал конференции.');
-            await edit_channel.overwritePermissions(newMember, {
-                // GENERAL PERMISSIONS
-                CREATE_INSTANT_INVITE: false,
-                MANAGE_CHANNELS: false,
-                MANAGE_ROLES: false,
-                MANAGE_WEBHOOKS: false,
-                // TEXT PERMISSIONS
-                VIEW_CHANNEL: true,
-                SEND_MESSAGES: true,
-                SEND_TTS_MESSAGES: false,
-                MANAGE_MESSAGES: false,
-                EMBED_LINKS: true,
-                ATTACH_FILES: true,
-                READ_MESSAGE_HISTORY: false,
-                MENTION_EVERYONE: false,
-                USE_EXTERNAL_EMOJIS: false,
-                ADD_REACTIONS: false,
-            }, 'подключение (конференция)');
-            edit_channel.send(`**<@${newMember.id}> \`успешно подключился.\`**`);
-            console.log(`${newMember.displayName || newMember.user.username} подключился к обзвону.`);
-        }
-    }
-    if (member_oldchannel){
-        if (member_oldchannel.name == '✔ Обзвон ✔'){
-        let edit_channel = newMember.guild.channels.find(c => c.name == "closed-accept");
-            if (!edit_channel) return console.log('[ERROR] Не возможно найти текстовой канал конференции.');
-            edit_channel.permissionOverwrites.forEach(async (perm) => {
-                if (perm.type != 'member') return
-                if (perm.id != newMember.id) return
-                await perm.delete('отключение (конференция)');
-            });
-            edit_channel.send(`**<@${newMember.id}> \`отключился.\`**`);
-            console.log(`${newMember.displayName || newMember.user.username} вышел с обзвона.`);
-        }
-    }
 });
 
 bot.on('voiceStateUpdate', async (oldMember, newMember) => {
@@ -2392,254 +1401,6 @@ bot.on('guildMemberAdd', async (member) => {
 
 bot.on('message', async (message) => {if (message.type === "PINS_ADD") if (message.channel.name == "spectator-chat") message.delete();});
 
-spec_bot.on('raw', async event => {
-    if (!events.hasOwnProperty(event.t)) return; // Если не будет добавление или удаление смайлика, то выход
-    if (event.t == "MESSAGE_REACTION_ADD"){
-        let event_guildid = event.d.guild_id // ID discord сервера
-        let event_channelid = event.d.channel_id // ID канала
-        let event_userid = event.d.user_id // ID того кто поставил смайлик
-        let event_messageid = event.d.message_id // ID сообщение куда поставлен смайлик
-        let event_emoji_name = event.d.emoji.name // Название смайлика
-
-        if (event_userid == spec_bot.user.id) return // Если поставил смайлик бот то выход
-        if (event_guildid != '543799835652915241') return // Если сервер будет другой то выход
-
-        let server = await spec_bot.guilds.get(event_guildid); // Получить сервер из его ID
-        let channel = await server.channels.get(event_channelid); // Получить канал на сервере по списку каналов
-        let message = await channel.fetchMessage(event_messageid); // Получить сообщение из канала
-        let member = await server.members.get(event_userid); // Получить пользователя с сервера
-
-        if (event_emoji_name == "🔒"){
-            if (!member.roles.some(r => ['Модератор ☠', 'Главная Администрация', 'Зам.Гл.Администратора'].includes(r.name)) && !member.hasPermission("ADMINISTRATOR")) return
-            if (!message.member.roles.some(r => r.name == '🔒 Блокировка')){
-                let special_server = spec_bot.guilds.get('543799835652915241');
-                if (!special_server) return console.log('Сервер спец.администрации не найден!');
-                let all_chat = special_server.channels.find(c => c.name == 'основной');
-                if (!all_chat) return console.log('Чат "основной" не был найден!');
-                let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-                if (!role) return console.log('Роль Блокировка не найдена.');
-                if (global_cd.has(server.id)) return
-                global_cd.add(server.id);
-                setTimeout(() => {
-                    if (global_cd.has(server.id)) global_cd.delete(server.id);
-                }, 3000);
-
-                await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                    let db_account = rows.find(row => row.idпользователя == message.author.id);
-                    if (!db_account){
-                        let date = new Date().valueOf();
-                        doc.addRow(11, {
-                            idпользователя: `${message.author.id}`,
-                            статусразработчика: '0',
-                            мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                        }, async function(err){
-                            if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                            await message.member.addRole(role);
-                            const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                            all_chat.send(`${message.member}, **\`модератор\` ${member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        });
-                    }else{
-                        let date = new Date().valueOf();
-                        await db_account.del();
-                        doc.addRow(11, {
-                            idпользователя: `${message.author.id}`,
-                            статусразработчика: '0',
-                            мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                        }, async function(err){
-                            if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                            await message.member.addRole(role);
-                            const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                            all_chat.send(`${message.member}, **\`модератор\` ${member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        });
-                    }
-                });
-            }else{
-                let special_server = spec_bot.guilds.get('543799835652915241');
-                if (!special_server) return console.log('Сервер спец.администрации не найден!');
-                let all_chat = special_server.channels.find(c => c.name == 'основной');
-                if (!all_chat) return console.log('Чат "основной" не был найден!');
-                let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-                if (!role) return console.log('Роль Блокировка не найдена.');
-                if (global_cd.has(server.id)) return
-                global_cd.add(server.id);
-                setTimeout(() => {
-                    if (global_cd.has(server.id)) global_cd.delete(server.id);
-                }, 3000);
-
-                await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                    let db_account = rows.find(row => row.idпользователя == message.author.id);
-                    if (!db_account){
-                        let date = new Date().valueOf();
-                        doc.addRow(11, {
-                            idпользователя: `${message.author.id}`,
-                            статусразработчика: '0',
-                            мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                        }, async function(err){
-                            if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                            const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                            all_chat.send(`${message.member}, **\`модератор\` ${member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        });
-                    }else{
-                        db_account.мутдо = +db_account.мутдо + 1800000;
-                        await db_account.save();
-                        const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                        all_chat.send(`${message.member}, **\`модератор\` ${member} \`продлил вам блокировку чата на 30 минут.\`**`, embed);
-                    }
-                });
-            }
-        }else if (event_emoji_name == '🔑'){
-            if (!member.roles.some(r => ['Модератор ☠', 'Главная Администрация', 'Зам.Гл.Администратора'].includes(r.name)) && !member.hasPermission("ADMINISTRATOR")) return
-            if (message.member.roles.some(r => r.name == '🔒 Блокировка')){
-                let special_server = spec_bot.guilds.get('543799835652915241');
-                if (!special_server) return console.log('Сервер спец.администрации не найден!');
-                let all_chat = special_server.channels.find(c => c.name == 'основной');
-                if (!all_chat) return console.log('Чат "основной" не был найден!');
-                let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-                if (!role) return console.log('Роль Блокировка не найдена.');
-                if (global_cd.has(server.id)) return
-                global_cd.add(server.id);
-                setTimeout(() => {
-                    if (global_cd.has(server.id)) global_cd.delete(server.id);
-                }, 3000);
-
-                await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                    let db_account = rows.find(row => row.idпользователя == message.author.id);
-                    if (db_account) db_account.del();
-                    await message.member.removeRole(role);
-                    all_chat.send(`${message.member}, **\`блокировка чата была снята модератором:\` ${member}**`);
-                });
-            }
-        }
-    }
-});
-
-spec_bot.on('message', async (message) => {
-    if (message.channel.type == 'dm') return
-    if (message.guild.id != '543799835652915241') return
-    if (message.content == "/ping") return message.reply("`я онлайн, последняя загрузка была: " + started_at + "`") && console.log(`Бот ответил ${message.member.displayName}, что я онлайн.`);
-
-    if (message.content.startsWith("/mute")){
-        if (!message.member.roles.some(r => ['Модератор ☠', 'Главная Администрация', 'Зам.Гл.Администратора'].includes(r.name)) && !message.member.hasPermission("ADMINISTRATOR")) return
-        let user = message.guild.member(message.mentions.members.first());
-        if (!user){
-            message.reply(`**\`пользователь не указан!\`**`).then(msg => msg.delete(7000));
-            return message.delete();
-        }
-
-        if (!user.roles.some(r => r.name == '🔒 Блокировка')){
-            let special_server = spec_bot.guilds.get('543799835652915241');
-            if (!special_server) return console.log('Сервер спец.администрации не найден!');
-            let all_chat = special_server.channels.find(c => c.name == 'основной');
-            if (!all_chat) return console.log('Чат "основной" не был найден!');
-            let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-            if (!role) return console.log('Роль Блокировка не найдена.');
-            if (global_cd.has(message.guild.id)) return
-            global_cd.add(message.guild.id);
-            setTimeout(() => {
-                if (global_cd.has(message.guild.id)) global_cd.delete(message.guild.id);
-            }, 3000);
-
-            await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                let db_account = rows.find(row => row.idпользователя == user.id);
-                if (!db_account){
-                    let date = new Date().valueOf();
-                    doc.addRow(11, {
-                        idпользователя: `${user.id}`,
-                        статусразработчика: '0',
-                        мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                    }, async function(err){
-                        if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                        await user.addRole(role);
-                        const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                        all_chat.send(`${user}, **\`модератор\` ${message.member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        return message.react(`✔`);
-                    });
-                }else{
-                    let date = new Date().valueOf();
-                    await db_account.del();
-                    doc.addRow(11, {
-                        idпользователя: `${user.id}`,
-                        статусразработчика: '0',
-                        мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                    }, async function(err){
-                        if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                        await user.addRole(role);
-                        const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                        all_chat.send(`${user}, **\`модератор\` ${message.member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        return message.react(`✔`);
-                    });
-                }
-            });
-        }else{
-            let special_server = spec_bot.guilds.get('543799835652915241');
-            if (!special_server) return console.log('Сервер спец.администрации не найден!');
-            let all_chat = special_server.channels.find(c => c.name == 'основной');
-            if (!all_chat) return console.log('Чат "основной" не был найден!');
-            let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-            if (!role) return console.log('Роль Блокировка не найдена.');
-            if (global_cd.has(message.guild.id)) return
-            global_cd.add(message.guild.id);
-            setTimeout(() => {
-                if (global_cd.has(message.guild.id)) global_cd.delete(message.guild.id);
-            }, 3000);
-
-            await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                let db_account = rows.find(row => row.idпользователя == user.id);
-                if (!db_account){
-                    let date = new Date().valueOf();
-                    doc.addRow(11, {
-                        idпользователя: `${user.id}`,
-                        статусразработчика: '0',
-                        мутдо: `${+date + 1800000}`, // 3 600 000 (hour)
-                    }, async function(err){
-                        if (err) return console.error(`[DB] Ошибка добавления профиля на лист!`);
-                        const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                        all_chat.send(`${user}, **\`модератор\` ${message.member} \`выдал вам блокировку чата на 30 минут.\`**`, embed);
-                        return message.react(`✔`);
-                    });
-                }else{
-                    db_account.мутдо = +db_account.мутдо + 1800000;
-                    await db_account.save();
-                    const embed = new Discord.RichEmbed().setDescription(`**Нажмите на [выделенный текст](${message.url}) для перехода.**`);
-                    all_chat.send(`${user}, **\`модератор\` ${message.member} \`продлил вам блокировку чата на 30 минут.\`**`, embed);
-                    return message.react(`✔`);
-                }
-            });
-        }
-    }
-
-    if (message.content.startsWith("/unmute")){
-        if (!message.member.roles.some(r => ['Модератор ☠', 'Главная Администрация', 'Зам.Гл.Администратора'].includes(r.name)) && !message.member.hasPermission("ADMINISTRATOR")) return
-        let user = message.guild.member(message.mentions.members.first());
-        if (!user){
-            message.reply(`**\`пользователь не указан!\`**`).then(msg => msg.delete(7000));
-            return message.delete();
-        }
-
-        if (user.roles.some(r => r.name == '🔒 Блокировка')){
-            let special_server = spec_bot.guilds.get('543799835652915241');
-            if (!special_server) return console.log('Сервер спец.администрации не найден!');
-            let all_chat = special_server.channels.find(c => c.name == 'основной');
-            if (!all_chat) return console.log('Чат "основной" не был найден!');
-            let role = special_server.roles.find(r => r.name == '🔒 Блокировка');
-            if (!role) return console.log('Роль Блокировка не найдена.');
-            if (global_cd.has(message.guild.id)) return
-            global_cd.add(message.guild.id);
-            setTimeout(() => {
-                if (global_cd.has(message.guild.id)) global_cd.delete(message.guild.id);
-            }, 3000);
-
-            await doc.getRows(11, { offset: 1, limit: 5000000, orderby: 'col2' }, async (err, rows) => {
-                let db_account = rows.find(row => row.idпользователя == user.id);
-                if (db_account) db_account.del();
-                await user.removeRole(role);
-                all_chat.send(`${user}, **\`блокировка чата была снята модератором:\` ${message.member}**`);
-                return message.react(`✔`);
-            });
-        }
-    }
-});
-
 bot.on('message', async (message) => {
     if (message.channel.type == 'dm') return
     if (message.guild.id != '355656045600964609' && message.guild.id != '488400983496458260') return
@@ -2660,9 +1421,8 @@ bot.on('message', async (message) => {
                 let role = await serv.roles.find(r => r.name == 'Проверенный 🔐');
                 if (!role) return message.react('❌');
                 await member.addRole(role).then(() => {
-                    send_action(serv.id, `${member.displayName || member.user.tag} (${member.id}) получил роль проверенного. Назначение: авторизация`);
+                    channel.send(`${member}, \`вам была выдана роль ${role.name}!\``);
                 });
-                await channel.send(`${member}, \`вам была выдана роль ${role.name}!\``);
                 return message.react('✔');
             }
         }
@@ -2691,10 +1451,8 @@ bot.on('message', async (message) => {
                 const embed = new Discord.RichEmbed();
                 embed.setDescription(`**${message.member}, для авторизации нажмите на [выделенный текст](https://discordapp.com/oauth2/authorize?response_type=code&client_id=488717818829996034&scope=identify+guilds+email&state=scottdale_${password}).**`);
                 message.member.send(embed).then(() => {
-                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
 		            message.reply(`**\`код авторизации был отправлен в личные сообщения!\`**`).then(msg => msg.delete(12000));
 		        }).catch(err => {
-                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
                     message.reply(`**\`ошибка при отправке в личные сообщения, оставлю код тут!\`**`, embed);
                 });
                 return message.delete();
@@ -2702,10 +1460,8 @@ bot.on('message', async (message) => {
                 const embed = new Discord.RichEmbed();
                 embed.setDescription(`**${message.member}, для авторизации нажмите на [выделенный текст](https://discordapp.com/oauth2/authorize?response_type=code&client_id=488717818829996034&scope=identify+guilds+email&state=scottdale_${result[0].state}).**`);
                 message.member.send(embed).then(() => {
-                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в личные сообщения. Назначение: authme`);
 		            message.reply(`**\`код авторизации был отправлен в личные сообщения!\`**`).then(msg => msg.delete(12000));
 		        }).catch(err => {
-                    send_action(message.guild.id, `${message.member.displayName || message.member.user.tag} (${message.member.id}) отправлен код авторизации в канал ${message.channel.name}. Назначение: authme`);
                     message.reply(`**\`ошибка при отправке в личные сообщения, оставлю код тут!\`**`, embed);
                 });
                 return message.delete();
@@ -2733,28 +1489,28 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
         let role = newMember.guild.roles.get(newRoleID);
         let date = date_now();
         if(role.name == "✔ Helper ✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на 1 лвл адм | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на 1 лвл адм | <@${newMember.id}>`)
         }
         else if(role.name == "✔Jr.Administrator✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | повышен на 3 лвл адм | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | повышен на 3 лвл адм | <@${newMember.id}>`)
         }
         else if(role.name == "✔ Administrator ✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | повышен на 4 лвл адм | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | повышен на 4 лвл адм | <@${newMember.id}>`)
         }
         else if(role.name == "Следящие за хелперами") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на след.за.хелп | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на след.за.хелп | <@${newMember.id}>`)
         }
         else if(role.name == "Тех.поддержка сервера") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на тех.администратора | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на тех.администратора | <@${newMember.id}>`)
         }
         else if(role.name == "✯Управляющие сервером.✯") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Повышен в управляющий состав сервера | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Повышен в управляющий состав сервера | <@${newMember.id}>`)
         }
         else if(role.name == "✮Ministers✮") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост министра | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост министра | <@${newMember.id}>`)
         }
         else if(role.name == "✵Leader✵") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост лидера | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост лидера | <@${newMember.id}>`)
         }
     }
     else{
@@ -2767,28 +1523,28 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
         let role = newMember.guild.roles.get(oldRoleID);
         let date = date_now();
         if(role.name == "✔ Helper ✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Возможно снят с 1 лвла админки [Проверять!] | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Возможно снят с 1 лвла админки [Проверять!] | <@${newMember.id}>`)
         }
         else if(role.name == "✔Jr.Administrator✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с 3 лвла админики | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с 3 лвла админики | <@${newMember.id}>`)
         }
         else if(role.name == "✔ Administrator ✔") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с 4 лвла админки | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с 4 лвла админки | <@${newMember.id}>`)
         }
         else if(role.name == "Следящие за хелперами") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с должности след.за.хелп | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с должности след.за.хелп | <@${newMember.id}>`)
         }
         else if(role.name == "Тех.поддержка сервера") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с должности технического администратора | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с должности технического администратора | <@${newMember.id}>`)
         }
         else if(role.name == "✯Управляющие сервером.✯") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Исключен из управляющего состава сервера | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Исключен из управляющего состава сервера | <@${newMember.id}>`)
         }
         else if(role.name == "✮Ministers✮") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста министра | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста министра | <@${newMember.id}>`)
         }
         else if(role.name == "✵Leader✵") {
-            vkint.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста лидера | <@${newMember.id}>`)
+            vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста лидера | <@${newMember.id}>`)
         }
     }
 });
@@ -3039,4 +1795,685 @@ async function bans_autoupdate(){
             });
         });
     }, 34000);
+}
+
+connection.on('error', function(err) {
+    if (err.code == 'PROTOCOL_CONNECTION_LOST'){
+        console.log('[MYSQL] Соединение с базой MySQL потеряно. Выполняю переподключение...');
+        connection.connect(function(err){
+            if (err){
+                return console.log('[MYSQL] Ошибка подключения к базе MySQL');
+            }
+            console.log('[MYSQL] Вы успешно подключились к базе данных.')
+            connection.query("SET SESSION wait_timeout = 604800"); // 3 дня
+        });
+    }else{
+        console.log('[MYSQL] Произошла ошибка MySQL, информация об ошибке: ' + err);
+    }
+});
+
+function endsWithAny(suffixes, string) {
+    return suffixes.some(function (suffix) {
+        return string.endsWith(suffix);
+    });
+}
+
+function time(s) {
+    let ms = s % 1000;
+    s = (s - ms) / 1000;
+    let secs = s % 60;
+    s = (s - secs) / 60;
+    let mins = s % 60;
+    s = (s - mins) / 60;
+    let hrs = s % 24;
+    s = (s - hrs) / 24;
+    let days = s;
+    let status = true;
+    let output = '';
+
+    if (days != 0){
+        if (days.toString().endsWith('1') && !days.toString().endsWith('11')){
+            output += days + ' день';
+        }else if (endsWithAny(['2', '3', '4'], days.toString()) && !endsWithAny(['12', '13', '14'], days.toString())){
+            output += days + ' дня';
+        }else{
+            output += days + ' дней';
+        }
+        status = false;
+    }
+    if (hrs != 0){
+        if (status){
+            if (hrs.toString().endsWith('1') && !hrs.toString().endsWith('11')){
+                output += hrs + ' час';
+            }else if (endsWithAny(['2', '3', '4'], hrs.toString()) && !endsWithAny(['12', '13', '14'], hrs.toString())){
+                output += hrs + ' часа';
+            }else{
+                output += hrs + ' часов';
+            }
+            status = false;
+        }
+    }
+    if (mins != 0){
+        if (status){
+            if (mins.toString().endsWith('1') && !mins.toString().endsWith('11')){
+                output += mins + ' минуту';
+            }else if (endsWithAny(['2', '3', '4'], mins.toString()) && !endsWithAny(['12', '13', '14'], mins.toString())){
+                output += mins + ' минуты';
+            }else{
+                output += mins + ' минут';
+            }
+            status = false;
+        }
+    }
+    if (secs != 0){
+        if (status){
+            if (secs.toString().endsWith('1') && !secs.toString().endsWith('11')){
+                output += secs + ' секунду';
+            }else if (endsWithAny(['2', '3', '4'], secs.toString()) && !endsWithAny(['12', '13', '14'], secs.toString())){
+                output += secs + ' секунды';
+            }else{
+                output += secs + ' секунд';
+            }
+            status = false;
+        }
+    }
+    if (ms != 0){
+        if (status){
+            output += ms + ' ms';
+        }
+    }
+    return output;
+}
+
+function now_date(){
+    let date = new Date(+new Date().valueOf() + 10800000);
+    return `${date.getDate().toString().padStart(2, '0')}.` +
+        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
+        `${date.getFullYear()} ` +
+        `${date.getHours().toString().padStart(2, '0')}:` +
+        `${date.getMinutes().toString().padStart(2, '0')}:` +
+        `${date.getSeconds().toString().padStart(2, '0')}`;
+}
+function date_now(){
+    let date = new Date(+new Date().valueOf() + 10800000);
+    return `${date.getDate().toString().padStart(2, '0')}.` +
+        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
+        `${date.getFullYear()} `;
+}
+
+async function remove_verify(){
+    setInterval(() => {
+        let server = bot.guilds.get(serverid);
+        if (server){
+            let role = server.roles.find(r => r.name == 'Проверенный 🔐');
+            if (role){
+                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '355656045600964609'`, async (err, profiles) => {
+                    // let date = require('./objects/functions').getDateMySQL();
+                    server.roles.find(r => r.name == 'Проверенный 🔐').members.forEach(member => {
+                        if (!profiles.some(p => p.userid == member.id)){
+                            let moderator = server.channels.find(c => c.name == 'spectator-chat');
+                            if (moderator) moderator.send(`\`[СИНХРОНИЗАЦИЯ]\` ${member} \`был лишен роли ${role.name}. Причина: Не авторизован через /authme.\``);
+                            member.removeRole(role);
+                        }
+                    });
+                });
+            }
+        }
+    }, 85000);
+}
+
+async function check_gifts(){
+    setInterval(() => {
+        let server = bot.guilds.get(serverid);
+        if (server){
+            let general = server.channels.find(c => c.name == 'general');
+            let titan = server.roles.find(r => r.name == '⚡ TITAN ⚡');
+            let warrior = server.roles.find(r => r.name == '✮ Night Warrior ✮');
+            let spectator = server.roles.find(r => r.name == 'Spectator™');
+            if (titan && warrior){
+                connection.query(`SELECT * FROM \`presents\` WHERE \`server\` = '355656045600964609'`, async (err, gifts) => {
+                    if (gifts.length != 0){
+                        gifts.forEach(async gift => {
+                            let user = server.members.get(gift.user);
+                            if (user){
+                                let date = (new Date().valueOf() + 10800000) - new Date(`${gift.date}`).valueOf();
+                                if (+gift.type == 0){
+                                    if (date >= 86400000){
+                                        if (user.roles.some(r => r.id != titan.id)){
+                                            let data = new Date(+new Date().valueOf() + 10800000);
+                                            if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                                                user.addRole(titan);
+                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
+                                                user.send(`${user}, \`вам была выдана роль ${titan.name} за вручение подарков!\``);
+                                            }
+                                        }
+                                    }
+                                }else if (+gift.type == 1){
+                                    if (date >= 172800000){
+                                        if (user.roles.some(r => r.id != warrior.id)){
+                                            let data = new Date(+new Date().valueOf() + 10800000);
+                                            if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
+                                                user.addRole(warrior);
+                                                await connection.query(`DELETE FROM \`presents\` WHERE \`server\` = '${gift.server}' AND \`user\` = '${gift.user}' AND \`type\` = '${gift.type}'`);
+                                                user.send(`${user}, \`вам была выдана роль ${warrior.name} за вручение подарков!\``);
+                                            }
+                                        }
+                                    } 
+                                }
+                            }
+                        });
+                    }
+                });
+                let data = new Date(+new Date().valueOf() + 10800000);
+                let night_warrior = server.channels.find(c => c.name == 'night-warrior');
+                let titan_chat = server.channels.find(c => c.name == 'titan');
+                night_warrior.permissionOverwrites.forEach(perm => {
+                    if (perm.id == warrior.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
+                                night_warrior.overwritePermissions(warrior, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: false,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт только ночью! Сейчас он закрывается!\``);
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
+                                night_warrior.overwritePermissions(warrior, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                                night_warrior.send(`<@&${warrior.id}>, \`ночной чат открыт!\``);
+                            }
+                        }
+                    }else if (perm.id == spectator.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() != 0 && data.getHours() != 1 && data.getHours() != 2 && data.getHours() != 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
+                                night_warrior.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
+                                night_warrior.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                            }
+                        }
+                    }
+                });
+
+                titan_chat.permissionOverwrites.forEach(perm => {
+                    if (perm.id == titan.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS") || permissions.has("READ_MESSAGE_HISTORY")){
+                                titan_chat.overwritePermissions(titan, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: false,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                                titan_chat.send(`<@&${titan.id}>, \`чат открыт только утром, днем и вечером! Сейчас он закрывается!\``);
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS") || !permissions.has("READ_MESSAGE_HISTORY")){
+                                titan_chat.overwritePermissions(titan, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                                titan_chat.send(`<@&${titan.id}>, \`чат открыт!\``);
+                            }
+                        }
+                    }else if (perm.id == spectator.id){
+                        let permissions = new Discord.Permissions(perm.allow);
+                        if (data.getHours() == 0 && data.getHours() == 1 && data.getHours() == 2 && data.getHours() == 3){
+                            if (permissions.has("SEND_MESSAGES") || permissions.has("ADD_REACTIONS") || permissions.has("USE_EXTERNAL_EMOJIS")){
+                                titan_chat.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: false,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: false,
+                                    ADD_REACTIONS: false,
+                                });
+                            }
+                        }else{
+                            if (!permissions.has("SEND_MESSAGES") || !permissions.has("ADD_REACTIONS") || !permissions.has("USE_EXTERNAL_EMOJIS")){
+                                titan_chat.overwritePermissions(spectator, {
+                                    // GENERAL PERMISSIONS
+                                    CREATE_INSTANT_INVITE: false,
+                                    MANAGE_CHANNELS: false,
+                                    MANAGE_ROLES: false,
+                                    MANAGE_WEBHOOKS: false,
+                                    // TEXT PERMISSIONS
+                                    VIEW_CHANNEL: true,
+                                    SEND_MESSAGES: true,
+                                    SEND_TTS_MESSAGES: false,
+                                    MANAGE_MESSAGES: false,
+                                    EMBED_LINKS: true,
+                                    ATTACH_FILES: true,
+                                    READ_MESSAGE_HISTORY: true,
+                                    MENTION_EVERYONE: false,
+                                    USE_EXTERNAL_EMOJIS: true,
+                                    ADD_REACTIONS: true,
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }, 60000);
+}
+
+async function special_discord_update(){
+    setInterval(async () => {
+        let special_server = robo_hamster.guilds.get('543799835652915241');
+        let check_server = user.guilds.get('543354025387491339');
+        if (!special_server || !check_server) return console.log('Сервер спец.администрации не найден!');
+        let admin_role = special_server.roles.find(r => r.name == 'Администратор');
+        let helper_role = special_server.roles.find(r => r.name == 'Хелпер');
+        let checker_role = special_server.roles.find(r => r.name == 'Команда проверки');
+        if (!admin_role || !helper_role) return console.log('Роли хелпера или админа не найдены на спец админском');
+        let all_chat = special_server.channels.find(c => c.name == 'основной');
+        if (!all_chat) return console.log('Чат "основной" не был найден!');
+        let phoenix = user.guilds.get('544446632226324481');
+        let tucson = user.guilds.get('438803520288981004');
+        let scottdale = user.guilds.get('355656045600964609');
+        let chandler = user.guilds.get('555334013255155712');
+        let brainburg = user.guilds.get('282282840840732672');
+        let saintrose = user.guilds.get('347728316557426688');
+        let mesa = user.guilds.get('399241867914379265');
+        let redrock = user.guilds.get('470981734863994881');
+        let yuma = user.guilds.get('528635749206196232');
+
+        let central = user.guilds.get('325607843547840522');
+        let eastern = user.guilds.get('465086262383083520');
+        let north = user.guilds.get('477547500232769536');
+        let vostok = user.guilds.get('577511138032484360');
+
+        let bone_country = user.guilds.get('527799726557364237');
+        if (!phoenix || !tucson || !scottdale || !chandler || !brainburg || !saintrose || !mesa || !redrock || !yuma || !central || !eastern || !north || !vostok || !bone_country) console.log('Один из серверов не найден!');
+
+        special_server.members.forEach(async (member) => {
+            
+            let server_were_admin = [];
+            let server_were_helper = [];
+            let user_checker = false;
+
+            if (check_server.members.get(member.id)){
+                let g_member = check_server.members.get(member.id);
+                if (g_member.roles.some(r => ['Checkers Team'].includes(r.name))){
+                    user_checker = true;
+                }
+            }
+
+            if (phoenix.members.get(member.id)){
+                let g_member = phoenix.members.get(member.id);
+                if (g_member.roles.some(r => ['Администрация 4 уровня', 'Администрация 3 уровня'].includes(r.name))){
+                    server_were_admin.push('Phoenix');
+                }else if (g_member.roles.some(r => ['Администрация 1-2 уровня'].includes(r.name))){
+                    server_were_helper.push('Phoenix');
+                }
+            }
+            
+            if (tucson.members.get(member.id)){
+                let g_member = tucson.members.get(member.id);
+                if (g_member.roles.some(r => ['Администратор 4 уровня', 'Администратор 3 уровня'].includes(r.name))){
+                    server_were_admin.push('Tucson');
+                }else if (g_member.roles.some(r => ['Администратор 2 уровня', 'Администратор 1 уровня'].includes(r.name))){
+                    server_were_helper.push('Tucson');
+                }
+            }
+            
+            if (scottdale.members.get(member.id)){
+                let g_member = scottdale.members.get(member.id);
+                if (g_member.roles.some(r => ['✔ Administrator ✔', '✔Jr.Administrator✔'].includes(r.name))){
+                    server_were_admin.push('Scottdale');
+                }else if (g_member.roles.some(r => ['✔ Helper ✔'].includes(r.name))){
+                    server_were_helper.push('Scottdale');
+                }
+            }
+            
+            if (chandler.members.get(member.id)){
+                let g_member = chandler.members.get(member.id);
+                if (g_member.roles.some(r => ['Администратор 4 уровня', 'Администратор 3 уровня'].includes(r.name))){
+                    server_were_admin.push('Chandler');
+                }else if (g_member.roles.some(r => ['Хелпер'].includes(r.name))){
+                    server_were_helper.push('Chandler');
+                }
+            }
+            
+            if (brainburg.members.get(member.id)){
+                let g_member = brainburg.members.get(member.id);
+                if (g_member.roles.some(r => ['⚃ Администратор 4 ур. ⚃', '⚂ Администратор 3 ур. ⚂'].includes(r.name))){
+                    server_were_admin.push('Brainburg');
+                }else if (g_member.roles.some(r => ['⚁ Администратор 2 ур. ⚁', '⚀ Администратор 1 ур. ⚀'].includes(r.name))){
+                    server_were_helper.push('Brainburg');
+                }
+            }
+            
+            if (saintrose.members.get(member.id)){
+                let g_member = saintrose.members.get(member.id);
+                if (g_member.roles.some(r => ['◉ Ст. Администратор [4 LVL]', '◉ Мл. Администратор [3 LVL]'].includes(r.name))){
+                    server_were_admin.push('Saint Rose');
+                }else if (g_member.roles.some(r => ['◉ Хелпер [1-2 LVL]'].includes(r.name))){
+                    server_were_helper.push('Saint Rose');
+                }
+            }
+            
+            if (mesa.members.get(member.id)){
+                let g_member = mesa.members.get(member.id);
+                if (g_member.roles.some(r => ['✔Administration✔', '✔Jr.Administration✔'].includes(r.name))){
+                    server_were_admin.push('Mesa');
+                }else if (g_member.roles.some(r => ['✔Moderator✔'].includes(r.name))){
+                    server_were_helper.push('Mesa');
+                }
+            }
+            
+            if (redrock.members.get(member.id)){
+                let g_member = redrock.members.get(member.id);
+                if (g_member.roles.some(r => ['IV ⚡️ Администратор', 'III ⚡️ Старший модератор'].includes(r.name))){
+                    server_were_admin.push('Red-Rock');
+                }else if (g_member.roles.some(r => ['II ⚡️ Модератор', 'I ⚡️ Младший модератор'].includes(r.name))){
+                    server_were_helper.push('Red-Rock');
+                }
+            }
+            
+            if (yuma.members.get(member.id)){
+                let g_member = yuma.members.get(member.id);
+                if (g_member.roles.some(r => ['✔ Administrator ✔', '✔Jr.Administrator✔'].includes(r.name))){
+                    server_were_admin.push('Yuma');
+                }else if (g_member.roles.some(r => ['✔ Helper ✔'].includes(r.name))){
+                    server_were_helper.push('Yuma');
+                }
+            }
+
+
+            if (central.members.get(member.id)){
+                let g_member = central.members.get(member.id);
+                if (g_member.roles.some(r => ['★ Администратор ★', '★ Старший Модератор ★'].includes(r.name))){
+                    server_were_admin.push('Центральный Округ');
+                }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Хелпер ★'].includes(r.name))){
+                    server_were_helper.push('Центральный Округ');
+                }
+            }
+
+            if (eastern.members.get(member.id)){
+                let g_member = eastern.members.get(member.id);
+                if (g_member.roles.some(r => ['☆ Администратор ☆', '☆ Старший Модератор ☆'].includes(r.name))){
+                    server_were_admin.push('Южный округ');
+                }else if (g_member.roles.some(r => ['☆ Модератор ☆', '☆  Младший Модератор  ☆'].includes(r.name))){
+                    server_were_helper.push('Южный округ');
+                }
+            }
+
+            if (north.members.get(member.id)){
+                let g_member = north.members.get(member.id);
+                if (g_member.roles.some(r => ['✔ Administrator ✔', '✔ Jr.Administrator ✔'].includes(r.name))){
+                    server_were_admin.push('Северный округ');
+                }else if (g_member.roles.some(r => ['✔ Moderator ✔', '✔ Helper ✔'].includes(r.name))){
+                    server_were_helper.push('Северный округ');
+                }
+            }
+
+            if (vostok.members.get(member.id)){
+                let g_member = vostok.members.get(member.id);
+                if (g_member.roles.some(r => ['★ Администратор ★', '★ Старший Модератор ★'].includes(r.name))){
+                    server_were_admin.push('Восточный округ');
+                }else if (g_member.roles.some(r => ['★ Модератор ★', '★ Младший Модератор ★'].includes(r.name))){
+                    server_were_helper.push('Восточный округ');
+                }
+            }
+
+            if (bone_country.members.get(member.id)){
+                let g_member = bone_country.members.get(member.id);
+                if (g_member.roles.some(r => ['[A] Администрация проекта'].includes(r.name))){
+                    server_were_admin.push('Жизнь в деревне');
+                }
+            }
+
+            if (user_checker == true){
+                if (!member.roles.some(r => checker_role.id == r.id)){
+                    await member.addRole(checker_role);
+                    await all_chat.send(`**${member}, \`вам была выдана роль ${checker_role.name}. Источник: ${check_server.name}\`**`);
+                }
+            }else{
+                if (member.roles.some(r => checker_role.id == r.id)){
+                    await member.removeRole(checker_role);
+                    await all_chat.send(`**${member}, \`вам была снята роль ${checker_role.name}.\`**`);
+                }
+            }
+
+            if (server_were_admin.length > 0){
+                if (!member.roles.some(r => admin_role.id == r.id)){
+                    await member.addRole(admin_role);
+                    await all_chat.send(`**${member}, \`вам была выдана роль ${admin_role.name}. Администратор на: ${server_were_admin.join(', ')}\`**`);
+                    if (member.roles.some(r => helper_role.id == r.id)){
+                        await member.removeRole(helper_role);
+                    }
+                }
+            }else if (server_were_helper.length > 0){
+                if (!member.roles.some(r => helper_role.id == r.id)){
+                    await member.addRole(helper_role);
+                    await all_chat.send(`**${member}, \`вам была выдана роль ${helper_role.name}. Хелпер на: ${server_were_helper.join(', ')}\`**`);
+                    if (member.roles.some(r => admin_role.id == r.id)){
+                        await member.removeRole(admin_role);
+                    }
+                }
+            }
+
+            if (server_were_admin.length == 0){
+                if (member.roles.some(r => admin_role.id == r.id)){
+                    await member.removeRole(admin_role);
+                    await all_chat.send(`**${member}, \`вам была снята роль ${admin_role.name}. Не является администратором на одном из серверов.\`**`);
+                }
+            }
+
+            if (server_were_helper.length == 0){
+                if (member.roles.some(r => helper_role.id == r.id)){
+                    await member.removeRole(helper_role);
+                    await all_chat.send(`**${member}, \`вам была снята роль ${helper_role.name}. Не является хелпером на одном из серверов.\`**`);
+                }
+            }
+        });
+    }, 40000);
+}
+
+async function update_sellers(){
+    setInterval(() => {
+        let server = bot.guilds.get('355656045600964609');
+        if (!server) return
+        let channel = server.channels.find(c => c.name == 'buy-dashboard');
+        if (!channel) return
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`status\` = '1' AND \`amount\` > 0 AND \`server\` = '355656045600964609'`, async (err, result, fields) => {
+            channel.fetchMessages({limit: 1}).then(async messages => {
+                let names = [];
+                let cost = [];
+                let amount = [];
+                result.forEach(res => {
+                    names.push(res.name);
+                    cost.push(res.cost);
+                    amount.push(res.amount);
+                });
+                const table = new Discord.RichEmbed();
+                table.setTitle(`**Ассортимент Discord-сервера**`);
+                table.setDescription(`**В данном канале вы можете приобрести товары у администрации discord-сервера! В качестве цены указана валюта - Discord Point (₯).\nКоманда для покупки товара: /buy [название товара]**`);
+                table.setColor(`#0601ff`);
+                if (names.length > 0) table.addField(`Название товара`, `${names.join('\n')}`, true);
+                if (amount.length > 0) table.addField(`В наличии`, `${amount.join('\n')}`, true);
+                if (cost.length > 0) table.addField(`Цена`, `${cost.join(' ₯\n')} ₯`, true);
+                table.setFooter(`© Сopyright 2019`, server.icon_url);
+                let msg = messages.first();
+                if (!msg){
+                    channel.send(table);
+                }else{
+                    msg.edit(table);
+                }
+            });
+        });
+    }, 20000)
+}
+
+async function nalog_biz(){
+    setInterval(() => {
+        connection.query(`SELECT * FROM \`storage\` WHERE \`server\` = '355656045600964609'`, async (error, storages) => {
+            storages.forEach(storage => {
+                let date = new Date().valueOf();
+                if (storage.nalog_new < date){
+                    if (storage.money < storage.nalog){
+                        if (storage.status == true) {
+                            connection.query(`UPDATE \`storage\` SET status = '0' WHERE \`id\` = '${storage.id}'`);
+                        }
+                    }else{
+                        connection.query(`UPDATE \`storage\` SET money = money - ${storage.nalog} WHERE \`id\` = '${storage.id}'`);
+                        connection.query(`UPDATE \`storage\` SET nalog_new = '${+date + 3600000}' WHERE \`id\` = '${storage.id}'`);
+                    }
+                }
+            });
+        });
+
+        connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`server\` = '355656045600964609'`, async (error, shops) => {
+            shops.forEach(shop => {
+                let date = new Date().valueOf();
+                if (shop.nalog_new < date){
+                    if (shop.money < shop.nalog){
+                        if (shop.status == true) {
+                            connection.query(`UPDATE \`buy_dashboard\` SET status = '0' WHERE \`id\` = '${shop.id}'`);
+                        }
+                    }else{
+                        connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${shop.nalog} WHERE \`id\` = '${shop.id}'`);
+                        connection.query(`UPDATE \`buy_dashboard\` SET nalog_new = '${+date + 3600000}' WHERE \`id\` = '${shop.id}'`);
+                    }
+                }
+            });
+        });
+    }, 27000);
+}
+
+async function update_items(){
+    setInterval(() => {
+        connection.query(`SELECT * FROM \`items\` WHERE \`server\` = '355656045600964609'`, async (error, items) => {
+            if (error) return
+	    if (items.lenght <= 0) return; 
+            items.forEach(item => {
+                let date = new Date().valueOf();
+                if (item.date_end < date){
+                    connection.query(`SELECT * FROM \`storage\` WHERE \`id\` = '${item.storage}'`, async (error, storage) => {
+                        if (error) return console.error(error);
+                        if (storage.length < 1 || storage.length > 1){
+                            connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                        }else{
+                            connection.query(`SELECT * FROM \`buy_dashboard\` WHERE \`id\` = '${item.dashboard}'`, async (error, shop) => {
+                                if (error) return console.error(error);
+                                if (shop.length < 1 || shop.length > 1){
+                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                                }else{
+                                    connection.query(`UPDATE \`buy_dashboard\` SET amount = amount + 1 WHERE \`id\` = '${shop[0].id}'`);
+                                    connection.query(`DELETE FROM \`items\` WHERE \`id\` = '${item.id}'`);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }, 12000);
 }

@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const fs = require("fs");
-const generator = require('../oauth2/generate-password');
-const md5 = require('../my_modules/md5');
+const generator = require('../modules/generate-password');
+const md5 = require('../modules/crypt-modules/md5');
 
 function addDays(date, days) {
     var result = new Date(date);

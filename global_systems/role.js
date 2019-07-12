@@ -195,7 +195,8 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
 
     if (message.content.toLowerCase().split(/ +/).some(word => word.startsWith("роль")) && !message.content.toLowerCase().includes(`сними`) && !message.content.toLowerCase().includes(`снять`)){
         // Проверить невалидный ли ник.
-        connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${message.member.displayName.toLowerCase() || message.member.user.tag.toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
+        let _name = message.member.displayName || message.member.user.tag;
+        connection.query(`SELECT * FROM \`blacklist_names\` WHERE \`name\` = '${_name.toLowerCase()}' AND \`server\` = '${message.guild.id}'`, async (err, names) => {
             if (names.length > 1){
                 message.reply(`\`произошла ошибка! код ошибки: 521\``);
                 return message.delete();
@@ -218,7 +219,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
             // Проверить все доступные тэги
             connection.query(`SELECT * FROM \`requests-for-roles\` WHERE \`server\` = '${message.guild.id}' AND \`user\` = '${message.author.id}'`, async (err, users) => {
                 for (var i in manytags){
-                    if (message.member.displayName.toLowerCase().includes("[" + manytags[i].toLowerCase()) || message.member.displayName.toLowerCase().includes(manytags[i].toLowerCase() + "]") || message.member.displayName.toLowerCase().includes("(" + manytags[i].toLowerCase()) || message.member.displayName.toLowerCase().includes(manytags[i].toLowerCase() + ")") || message.member.displayName.toLowerCase().includes("{" + manytags[i].toLowerCase()) || message.member.displayName.toLowerCase().includes(manytags[i].toLowerCase() + "}")){
+                    if (_name.toLowerCase().includes("[" + manytags[i].toLowerCase()) || _name.toLowerCase().includes(manytags[i].toLowerCase() + "]") || _name.toLowerCase().includes("(" + manytags[i].toLowerCase()) || _name.toLowerCase().includes(manytags[i].toLowerCase() + ")") || _name.toLowerCase().includes("{" + manytags[i].toLowerCase()) || _name.toLowerCase().includes(manytags[i].toLowerCase() + "}")){
                         let rolename = tags[manytags[i].toUpperCase()] // Указать название роли по соответствию с тэгом
                         let role = message.guild.roles.find(r => r.name == rolename); // Найти эту роль на discord сервере.
                         let reqchat = message.guild.channels.find(c => c.name == `requests-for-roles`); // Найти чат на сервере.
@@ -232,13 +233,12 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                         if (message.member.roles.some(r => [rolename].includes(r.name))){
                             return message.react(`👌`) // Если роль есть, поставить окей.
                         }
-                        if (sened.has(message.member.displayName)) return message.react(`🕖`) // Если уже отправлял - поставить часы.
-                        let nickname = message.member.displayName;
+                        if (sened.has(_name)) return message.react(`🕖`) // Если уже отправлял - поставить часы.
                         const embed = new Discord.RichEmbed()
                         .setTitle("`Discord » Проверка на валидность ник нейма.`")
                         .setColor("#483D8B")
                         .addField("Аккаунт", `\`Пользователь:\` <@${message.author.id}>`, true)
-                        .addField("Никнейм", `\`Ник:\` ${nickname}`, true)
+                        .addField("Никнейм", `\`Ник:\` ${_name}`, true)
                         .addField("Роль для выдачи", `\`Роль для выдачи:\` <@&${role.id}>`)
                         .addField("Отправлено с канала", `<#${message.channel.id}>`)
                         .addField("Информация по выдачи", `\`[✔] - выдать роль\`\n` + `\`[❌] - отказать в выдачи роли\`\n` + `\`[D] - удалить сообщение\``)
@@ -265,7 +265,7 @@ exports.run = async (bot, connection, message, tags, rolesgg, canremoverole, man
                             await msgsen.react('🇩')
                             await msgsen.pin();
                         })
-                        sened.add(message.member.displayName); // Пометить данный ник, что он отправлял запрос.
+                        sened.add(_name); // Пометить данный ник, что он отправлял запрос.
                         return message.react(`📨`);
                     }
                 }

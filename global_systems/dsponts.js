@@ -165,7 +165,7 @@ function mysql_load(message, mysql_cooldown){
     return true;
 }
 
-exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send_action, t_mode) => {
+exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, t_mode) => {
     
     if (!message) return
     if (!message.member) return
@@ -202,10 +202,8 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
             if (result.length > 1) return console.error(`Ошибка при выполнении, результатов много, error code: [#351]`);
             if (result.length == 0){
                 connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${args[1]}', '${args[2]}', '${args[3]}')`);
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) добавил пользователю ${args[2]} ${args[3]} dp. (MONEY: ${args[3]})`);
             }else{
                 connection.query(`UPDATE \`profiles\` SET money = money + ${args[3]} WHERE \`user\` = '${args[2]}' AND \`server\` = '${args[1]}'`);
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) добавил пользователю ${args[2]} ${args[3]} dp. (MONEY: ${+result[0].money + +args[3]})`);
             }
             await message.reply(`**добавил пользователю <@${args[2]}> ${args[3]} ₯**`);
             return message.delete();
@@ -250,15 +248,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 if (answer.length != 1){
                     connection.query(`UPDATE \`profiles\` SET money = money - ${+args[2]} WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`);
                     connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${message.guild.id}', '${user.id}', '${+args[2]}')`);
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) перевел ${+args[2]} dp пользователю ${user.displayName || user.user.tag} (${user.id}) (${+result[0].money - +args[2]}-${+args[2]})`);
-                    send_action(message.guild.id, `${user.displayName || user.user.tag} (${user.id}) получил от ${message.member.displayName || message.author.tag} (${message.author.id}) | ${+args[2]} dp (0-${+answer[0].money + +args[2]})`);
                     await message.reply(`**\`вы успешно передали ${args[2]} dp пользователю\` ${user}**`);
                     return message.delete();
                 }else{
                     connection.query(`UPDATE \`profiles\` SET money = money - ${+args[2]} WHERE \`user\` = '${message.author.id}' AND \`server\` = '${message.guild.id}'`);
                     connection.query(`UPDATE \`profiles\` SET money = money + ${+args[2]} WHERE \`user\` = '${user.id}' AND \`server\` = '${message.guild.id}'`);
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) перевел ${+args[2]} dp пользователю ${user.displayName || user.user.tag} (${user.id}) (${+result[0].money - +args[2]}-${+answer[0].money + +args[2]})`);
-                    send_action(message.guild.id, `${user.displayName || message.author.tag} (${user.id}) получил от ${message.member.displayName || message.author.tag} (${message.author.id}) | ${+args[2]} dp (${+answer[0].money}-${+answer[0].money + +args[2]})`);
                     await message.reply(`**\`вы успешно передали ${args[2]} dp пользователю\` ${user}**`);
                     return message.delete();
                 }
@@ -281,11 +275,9 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                     return message.delete();
                 }
                 if (result.length == 0){
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) просмотрел свой баланс (MONEY: 0)`);
                     await message.reply(`**ваш баланс составляет 0 ₯**`);
                     return message.delete();
                 }else{
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) просмотрел свой баланс (MONEY: ${result[0].money})`);
                     await message.reply(`**ваш баланс составляет ${result[0].money} ₯**`);
                     return message.delete();
                 }
@@ -305,11 +297,9 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                     return message.delete();
                 }
                 if (result.length == 0){
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) просмотрел баланс пользователя ${user.displayName || user.user.tag} (${user.id}) (MONEY: 0)`);
                     await message.reply(`**баланс пользователя ${user} составляет 0 ₯**`);
                     return message.delete();
                 }else{
-                    send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) просмотрел баланс пользователя ${user.displayName || user.user.tag} (${user.id}) (MONEY: ${result[0].money})`);
                     await message.reply(`**баланс пользователя ${user} составляет ${result[0].money} ₯**`);
                     return message.delete();
                 }
@@ -389,7 +379,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`storage\` SET status = '${args[1]}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`состояние предприятия было изменено!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил состояние предприятию ${storage[0].name} на ${args[1]}`);
                 return message.delete();
             }else{
                 if (uses(message, '/storage_status', ['предприятие', 'состояние (1/0)'], ['number', 'status'])) return
@@ -405,7 +394,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`storage\` SET status = '${args[2]}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`состояние предприятия было изменено!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил состояние предприятию ${storage[0].name} на ${args[2]}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -441,7 +429,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`storage\` SET description = '${description}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`описание предприятия было успешно изменено!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил описание предприятию ${storage[0].name} на ${description}`);
                 return message.delete();
             }else{
                 if (!isNumeric(args[1])){
@@ -465,7 +452,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`storage\` SET description = '${description}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`описание предприятия было успешно изменено!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил описание предприятию ${storage[0].name} на ${description}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -499,7 +485,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 connection.query(`UPDATE \`storage\` SET money = money - ${need} WHERE \`id\` = '${storage[0].id}'`);
                 connection.query(`UPDATE \`storage\` SET level = level + 1 WHERE \`id\` = '${storage[0].id}'`)
                 await message.reply(`**\`уровень предприятия был увеличен!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) повысил уровень предприятию ${storage[0].name} до ${+storage[0].level + 1}`);
                 return message.delete();
             }else{
                 if (uses(message, '/storage_status', ['предприятие'], ['number'])) return
@@ -521,7 +506,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         connection.query(`UPDATE \`storage\` SET money = money - ${need} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`UPDATE \`storage\` SET level = level + 1 WHERE \`id\` = '${storage[0].id}'`)
                         await message.reply(`**\`уровень предприятия был увеличен!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) повысил уровень предприятию ${storage[0].name} до ${+storage[0].level + 1}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -555,7 +539,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`storage\` SET cost = '${args[1]}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`стоимость продажи товара была изменена!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил стоимость продажи c ${storage[0].cost} на ${args[1]} — предприятию ${storage[0].name}`);
                 return message.delete();
             }else{
                 args[2] = Number((args[2])).toFixed(2);
@@ -576,7 +559,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`storage\` SET cost = '${args[2]}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`стоимость продажи товара была изменена!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил стоимость продажи c ${storage[0].cost} на ${args[2]} — предприятию ${storage[0].name}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -611,7 +593,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         connection.query(`UPDATE \`storage\` SET money = money + ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`UPDATE \`profiles\` SET money = money - ${args[1]} WHERE \`id\` = '${profile[0].id}'`);
                         await message.reply(`**\`вы успешно положили на склад предприятия ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) пополнил баланс на ${args[1]} — предприятию ${storage[0].name} [MONEY ST: было: ${storage[0].money}, стало: ${Number((storage[0].money + +args[1])).toFixed(2)}] [MONEY PR: было: ${profile[0].money}, стало: ${Number((profile[0].money - +args[1])).toFixed(2)}]`);
                         return message.delete();
                     }else{
                         await message.reply(`**\`недостаточно средств!\`**`).then(msg => msg.delete(10000));
@@ -638,7 +619,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 connection.query(`UPDATE \`storage\` SET money = money + ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`UPDATE \`profiles\` SET money = money - ${args[2]} WHERE \`id\` = '${profile[0].id}'`);
                                 await message.reply(`**\`вы успешно положили на склад предприятия ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) пополнил баланс на ${args[1]} — предприятию ${storage[0].name} [MONEY ST: было: ${storage[0].money}, стало: ${Number((storage[0].money + +args[2])).toFixed(2)}] [MONEY PR: было: ${profile[0].money}, стало: ${Number((profile[0].money - +args[2])).toFixed(2)}]`);
                                 return message.delete();
                             }else{
                                 await message.reply(`**\`недостаточно средств!\`**`).then(msg => msg.delete(10000));
@@ -678,13 +658,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         connection.query(`UPDATE \`storage\` SET money = money - ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`UPDATE \`profiles\` SET money = money + ${args[1]} WHERE \`id\` = '${profile[0].id}'`);
                         await message.reply(`**\`вы успешно сняли со склада предприятия ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — предприятия ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[1])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[1])).toFixed(2)})`);
                         return message.delete();
                     }else{
                         connection.query(`UPDATE \`storage\` SET money = money - ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${message.guild.id}', '${message.author.id}', '${args[1]}')`);
                         await message.reply(`**\`вы успешно сняли со склада предприятия ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — предприятия ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[1])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[1])).toFixed(2)})`);
                         return message.delete();
                     }
                 });
@@ -708,13 +686,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 connection.query(`UPDATE \`storage\` SET money = money - ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`UPDATE \`profiles\` SET money = money + ${args[2]} WHERE \`id\` = '${profile[0].id}'`);
                                 await message.reply(`**\`вы успешно сняли со склада предприятия ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — предприятия ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[2]).toFixed(2))}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[2]).toFixed(2))})`);
                                 return message.delete();
                             }else{
                                 connection.query(`UPDATE \`storage\` SET money = money - ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${message.guild.id}', '${message.author.id}', '${args[2]}')`);
                                 await message.reply(`**\`вы успешно сняли со склада предприятия ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — предприятия ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[2])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[2])).toFixed(2)})`);
                                 return message.delete();
                             }
                         });
@@ -818,7 +794,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`buy_dashboard\` SET status = '${args[1]}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`состояние заведения было изменено!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил состояние заведению ${storage[0].name} на ${args[1]}`);
                 return message.delete();
             }else{
                 if (uses(message, '/shop_status', ['заведение', 'состояние (1/0)'], ['number', 'status'])) return
@@ -834,7 +809,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`buy_dashboard\` SET status = '${args[2]}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`состояние заведения было изменено!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил состояние заведению ${storage[0].name} на ${args[2]}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -870,7 +844,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`buy_dashboard\` SET description = '${description}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`описание заведения было успешно изменено!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил заведению предприятию ${storage[0].name} на ${description}`);
                 return message.delete();
             }else{
                 if (!isNumeric(args[1])){
@@ -894,7 +867,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`buy_dashboard\` SET description = '${description}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`описание заведения было успешно изменено!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил описание заведению ${storage[0].name} на ${description}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -924,7 +896,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                 }
                 connection.query(`UPDATE \`buy_dashboard\` SET cost = '${args[1]}' WHERE \`id\` = '${storage[0].id}'`);
                 await message.reply(`**\`стоимость продажи товара была изменена!\`**`).then(msg => msg.delete(10000));
-                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил стоимость продажи c ${storage[0].cost} на ${args[1]} — заведению ${storage[0].name}`);
                 return message.delete();
             }else{
                 args[2] = Number((args[2])).toFixed(2);
@@ -941,7 +912,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         }
                         connection.query(`UPDATE \`buy_dashboard\` SET cost = '${args[2]}' WHERE \`id\` = '${storage[0].id}'`);
                         await message.reply(`**\`стоимость продажи товара была изменена!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) изменил стоимость продажи c ${storage[0].cost} на ${args[2]} — заведению ${storage[0].name}`);
                         return message.delete();
                     }else{
                         return error_mysql(error, message);
@@ -976,7 +946,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         connection.query(`UPDATE \`buy_dashboard\` SET money = money + ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`UPDATE \`profiles\` SET money = money - ${args[1]} WHERE \`id\` = '${profile[0].id}'`);
                         await message.reply(`**\`вы успешно положили на заведение ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) пополнил баланс на ${args[1]} — заведению ${storage[0].name} [MONEY ST: было: ${storage[0].money}, стало: ${Number((storage[0].money + +args[1])).toFixed(2)}] [MONEY PR: было: ${profile[0].money}, стало: ${Number((profile[0].money - +args[1])).toFixed(2)}]`);
                         return message.delete();
                     }else{
                         await message.reply(`**\`недостаточно средств!\`**`).then(msg => msg.delete(10000));
@@ -1003,7 +972,6 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 connection.query(`UPDATE \`buy_dashboard\` SET money = money + ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`UPDATE \`profiles\` SET money = money - ${args[2]} WHERE \`id\` = '${profile[0].id}'`);
                                 await message.reply(`**\`вы успешно положили на заведение ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) пополнил баланс на ${args[1]} — заведению ${storage[0].name} [MONEY ST: было: ${storage[0].money}, стало: ${Number((storage[0].money + +args[2])).toFixed(2)}] [MONEY PR: было: ${profile[0].money}, стало: ${Number((profile[0].money - +args[2])).toFixed(2)}]`);
                                 return message.delete();
                             }else{
                                 await message.reply(`**\`недостаточно средств!\`**`).then(msg => msg.delete(10000));
@@ -1043,13 +1011,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                         connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`UPDATE \`profiles\` SET money = money + ${args[1]} WHERE \`id\` = '${profile[0].id}'`);
                         await message.reply(`**\`вы успешно сняли с заведения ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — заведения ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[1])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[1])).toFixed(2)})`);
                         return message.delete();
                     }else{
                         connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${args[1]} WHERE \`id\` = '${storage[0].id}'`);
                         connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${message.guild.id}', '${message.author.id}', '${args[1]}')`);
                         await message.reply(`**\`вы успешно сняли с заведения ${args[1]} discord points!\`**`).then(msg => msg.delete(10000));
-                        send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — заведения ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[1])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[1])).toFixed(2)})`);
                         return message.delete();
                     }
                 });
@@ -1073,13 +1039,11 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, send
                                 connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`UPDATE \`profiles\` SET money = money + ${args[2]} WHERE \`id\` = '${profile[0].id}'`);
                                 await message.reply(`**\`вы успешно сняли с заведения ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — заведения ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[2]).toFixed(2))}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[2]).toFixed(2))})`);
                                 return message.delete();
                             }else{
                                 connection.query(`UPDATE \`buy_dashboard\` SET money = money - ${args[2]} WHERE \`id\` = '${storage[0].id}'`);
                                 connection.query(`INSERT INTO \`profiles\` (\`server\`, \`user\`, \`money\`) VALUES ('${message.guild.id}', '${message.author.id}', '${args[2]}')`);
                                 await message.reply(`**\`вы успешно сняли со склада заведения ${args[2]} discord points!\`**`).then(msg => msg.delete(10000));
-                                send_action(message.guild.id, `${message.member.displayName || message.author.tag} (${message.author.id}) снял со счета ${args[1]} — заведения ${storage[0].name} (MONEY ST: ${storage[0].money} - ${Number((storage[0].money - +args[2])).toFixed(2)}) (MONEY PR: ${profile[0].money} - ${Number((profile[0].money + +args[2])).toFixed(2)})`);
                                 return message.delete();
                             }
                         });
