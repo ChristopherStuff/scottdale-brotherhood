@@ -2175,7 +2175,7 @@ async function special_discord_update(){
         let all_chat = special_server.channels.find(c => c.name == 'основной');
         if (!all_chat) return console.log('Чат "основной" не был найден!');
         let phoenix = user.guilds.get('544446632226324481');
-        let tucson = user.guilds.get('438803520288981004');
+        let tucson = user.guilds.get('599706379296440320');
         let scottdale = user.guilds.get('355656045600964609');
         let chandler = user.guilds.get('555334013255155712');
         let brainburg = user.guilds.get('282282840840732672');
@@ -2216,9 +2216,9 @@ async function special_discord_update(){
             
             if (tucson.members.get(member.id)){
                 let g_member = tucson.members.get(member.id);
-                if (g_member.roles.some(r => ['Администратор 4 уровня', 'Администратор 3 уровня'].includes(r.name))){
+                if (g_member.roles.some(r => ['★ Администратор 4 уровня ★', '★ Администратор 3 уровня ★'].includes(r.name))){
                     server_were_admin.push('Tucson');
-                }else if (g_member.roles.some(r => ['Администратор 2 уровня', 'Администратор 1 уровня'].includes(r.name))){
+                }else if (g_member.roles.some(r => ['★ Администратор 2 уровня ★', '★ Администратор 2 уровня ★'].includes(r.name))){
                     server_were_helper.push('Tucson');
                 }
             }
