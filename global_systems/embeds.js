@@ -138,7 +138,7 @@ exports.run = async (bot, message, setembed_general, setembed_fields, setembed_a
             });
         }
         if (!message.member.hasPermission("ADMINISTRATOR") && +level_mod < 1) return
-        message.reply(`\`Команды для модерации: /embsetup, /embfield, /embsend - отправить.\``);
+        message.reply(`\`Команды для модерации: /embsetup, /embfield, /embsend - отправить, /embreset - очистить настройки emb\``);
         return message.delete();
     }
 
