@@ -278,7 +278,8 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, t_mo
                     await message.reply(`**ваш баланс составляет 0 ₯**`);
                     return message.delete();
                 }else{
-                    await message.reply(`**ваш баланс составляет ${result[0].money} ₯**`);
+                    let balance = Number((+result[0].money)).toFixed(2);
+                    await message.reply(`**ваш баланс составляет ${balance} ₯**`);
                     return message.delete();
                 }
             });
@@ -300,7 +301,8 @@ exports.run = async (bot, message, ds_cooldown, connection, mysql_cooldown, t_mo
                     await message.reply(`**баланс пользователя ${user} составляет 0 ₯**`);
                     return message.delete();
                 }else{
-                    await message.reply(`**баланс пользователя ${user} составляет ${result[0].money} ₯**`);
+                    let balance = Number((+result[0].money)).toFixed(2);
+                    await message.reply(`**баланс пользователя ${user} составляет ${balance} ₯**`);
                     return message.delete();
                 }
             });
