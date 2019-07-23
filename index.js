@@ -9,6 +9,7 @@ const bot = new Discord.Client();
 const user = new Discord.Client();
 const robo_hamster = new Discord.Client();
 const vk = new _vk({ token: process.env.tokenvk })
+const functions = require('./objects/functions');
 
 const connection = mysql.createConnection({
     host     : process.env.mysql_host,
@@ -17,10 +18,15 @@ const connection = mysql.createConnection({
     database : process.env.mysql_database,
 });
 
+let config = [];
+let users = [];
+
 connection.connect(function(err){
     if (err) return console.log('[MYSQL] Ошибка подключения к базе MySQL');
     console.log('[MYSQL] Вы успешно подключились к базе данных.')
     connection.query("SET SESSION wait_timeout = 604800");
+    functions.loadConfig(connection, config);
+    functions.loadProfiles(connection, users);
 });
 
 let t_mode = 0; // Статус технических работ
@@ -523,7 +529,8 @@ bot.on('message', async message => {
     }*/
 
     if (message.content.startsWith(`/run`)){
-        if (!message.member.hasPermission("ADMINISTRATOR") && message.member.id != "408740341135704065") return
+        if (functions.levelGroupByDiscord(users, message.guild.id, message.author.id, 'Разработчики') == 0) return
+        if (!message.member.hasPermission("ADMINISTRATOR")) return
         const args = message.content.slice(`/run`).split(/ +/);
         let cmdrun = args.slice(1).join(" ");
         if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
