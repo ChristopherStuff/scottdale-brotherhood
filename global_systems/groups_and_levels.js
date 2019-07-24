@@ -259,4 +259,163 @@ exports.run = async (bot, message, server, config, users, groups) => {
             return message.delete();
         });
     }
+
+    if (message.content.startsWith('/level_create')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/level_create').split(/ +/);
+        if (!args[1] || !args[2]){
+            message.reply('использование: /level_create [level_name] [group_name]');
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isGroupsExists(args.slice(2).join(' '))){
+            message.reply(`данная группа не существует.`);
+            return message.delete();
+        }
+        functions.createLevel(server, groups, message.guild.id, args.slice(2).join(' '), args[1]).then(() => {
+            message.reply(`вы успешно создали ранг [${args[1]}] в группе [${args.slice(2).join(' ')}]!`);
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при создании ранга!');
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/level_delete')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/level_delete').split(/ +/);
+        if (!args[1] || !args[2]){
+            message.reply('использование: /level_delete [group_name]');
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isGroupsExists(args.slice(1).join(' '))){
+            message.reply(`данная группа не существует.`);
+            return message.delete();
+        }
+        functions.deleteLevel(server, groups, users, message.guild.id, args.slice(1).join(' ')).then(() => {
+            message.reply(`вы успешно удалили последний ранг в группе [${args.slice(1).join(' ')}]!`);
+            return message.delete();
+        }).catch((err) => {
+            message.reply('произошла ошибка при удалении ранга!\n' + err);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/level_change')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/level_change').split(/ +/);
+        if (!args[1] || !args[2] || !args[3] || !args[4]){
+            message.reply('использование: /level_change [level (число)] [permission] [value] [group_name]');
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isGroupsExists(args.slice(4).join(' '))){
+            message.reply(`данная группа не существует.`);
+            return message.delete();
+        }
+        if (!functions.isHasLevel(groups, message.guild.id, args.slice(4).join(' '), args[1])){
+            message.reply(`данный уровень не существует.`);
+            return message.delete();
+        }
+        functions.changeLevel(server, groups, message.guild.id, args.slice(4).join(' '), args[1], args[2], args[3]).then(() => {
+            message.reply(`вы успешно обновили уровень [${args[1]}], значение [${args[3]}], пункт [${args[2]}], группа [${args.slice(4).join(' ')}]!`);
+            return message.delete();
+        }).catch((err) => {
+            message.reply(err);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/user_group')){
+        const args = message.content.slice('/user_group').split(/ +/);
+        if (!args[1] || !args[2] || !args[3]){
+            message.reply('использование: /user_group [user] [level (число)] [group]');
+            return message.delete();
+        }
+        let user = message.guild.member(message.mentions.users.first());
+        if (!user){
+            message.reply('использование: /user_group [user] [level (число)] [group]');
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isGroupsExists(args.slice(3).join(' '))){
+            message.reply(`данная группа не существует.`);
+            return message.delete();
+        }
+        if (!functions.isHasLevel(groups, message.guild.id, args.slice(3).join(' '), args[2])){
+            message.reply(`данный уровень не существует.`);
+            return message.delete();
+        }
+        let author_level = functions.levelGroup(users, message.guild.id, message.author.id, args.slice(3).join(' '));
+        let user_level = functions.levelGroup(users, message.guild.id, user.id, args.slice(3).join(' '));
+        if (+args[2] == 0){
+            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(user_level)){
+                message.reply(`вы не можете изменить уровень у данного пользователя!`);
+                return message.delete();
+            }
+            functions.removeGroup(server, users, message.guild.id, user.id, args.slice(3).join(' ')).then(() => {
+                message.reply(`пользователь успешно исключен из группы: ${args.slice(3).join(' ')}.`);
+                return message.delete();
+            }).catch(err => {
+                message.reply(err);
+                return message.delete();
+            });
+        }else{
+            if (user_level != 0){
+                if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(user_level)){
+                    message.reply(`вы не можете изменить уровень у данного пользователя!`);
+                    return message.delete();
+                }
+            }
+            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(args[2])){
+                message.reply(`вы не можете назначить данный уровень, так как он не входит в ваши права доступа!`);
+                return message.delete();
+            }
+            functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
+                message.reply(msg);
+                return message.delete();
+            }).catch(err => {
+                message.reply(err);
+                return message.delete();
+            });
+        }
+    }
 }
