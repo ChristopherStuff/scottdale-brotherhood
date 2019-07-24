@@ -387,7 +387,7 @@ exports.run = async (bot, message, server, config, users, groups) => {
         let author_level = functions.levelGroup(users, message.guild.id, message.author.id, args.slice(3).join(' '));
         let user_level = functions.levelGroup(users, message.guild.id, user.id, args.slice(3).join(' '));
         if (+args[2] == 0){
-            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(user_level)){
+            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].some(l => l == user_level)){
                 message.reply(`вы не можете изменить уровень у данного пользователя!`);
                 return message.delete();
             }
@@ -400,12 +400,12 @@ exports.run = async (bot, message, server, config, users, groups) => {
             });
         }else{
             if (user_level != 0){
-                if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(user_level)){
+                if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].some(l => l == user_level)){
                     message.reply(`вы не можете изменить уровень у данного пользователя!`);
                     return message.delete();
                 }
             }
-            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].includes(args[2])){
+            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].some(l => l == args[2])){
                 message.reply(`вы не можете назначить данный уровень, так как он не входит в ваши права доступа!`);
                 return message.delete();
             }
