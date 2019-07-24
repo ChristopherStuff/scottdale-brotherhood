@@ -5,6 +5,10 @@ exports.run = async (bot, message, server, config, users, groups) => {
     const functions = require('../objects/functions');
     
     if (message.content == '/load_configs'){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
         functions.loadConfig(server, config).then(() => {
             functions.loadProfiles(server, users).then(() => {
                 functions.loadGroups(server, groups).then(() => {
