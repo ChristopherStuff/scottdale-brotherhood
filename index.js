@@ -276,6 +276,7 @@ bot.on('message', async message => {
     require('./global_systems/fbi_system').run(bot, message);
     require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, t_mode);
     require('./global_systems/auth').run(bot, message, cooldown, connection, request);
+    require('./global_systems/groups_and_levels').run(bot, message, connection, config, users, groups);
 
     if (message.content.startsWith('/gift')){
         let user = message.guild.member(message.mentions.users.first());

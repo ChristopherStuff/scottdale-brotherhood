@@ -29,6 +29,28 @@ exports.getDateMySQL = () => {
 };
 
 
+/*
+    cmd: /load_configs - load config, users, groups;
+
+    cmd: /server_add - add server to database;
+    cmd: /server_delete - delition server;
+    cmd: /server_status [on/off] - change server status;
+    
+    cmd: /system_create [system_name] - add system to database;
+    cmd: /system_delete [system_name] - delete system;
+    cmd: /system_status [on/off] [system_name] - change system status;
+
+    cmd: /group_create [level_name] [group_name] - create a group;
+    cmd: /group_delete [group_name] - delete a group;
+
+    cmd: /level_create [level_name] [group_name] - create level;
+    cmd: /level_delete [group_name] - delete level;
+    cmd: /level_change [level] [permission] [value] [group_name] - change stats;
+
+    cmd: /user_group [user] [level] [group] - add user to group;
+    дополнительно:                          - level 0 delete user;
+*/
+
 
 exports.loadConfig = (server, config) => {
     return new Promise((resolve, reject) => {
