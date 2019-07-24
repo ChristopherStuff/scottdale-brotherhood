@@ -376,7 +376,7 @@ exports.run = async (bot, message, server, config, users, groups) => {
             message.reply(`сервер не включен.`);
             return message.delete();
         }
-        if (!functions.isGroupsExists(args.slice(3).join(' '))){
+        if (!functions.isGroupsExists(groups, message.guild.id, args.slice(3).join(' '))){
             message.reply(`данная группа не существует.`);
             return message.delete();
         }
