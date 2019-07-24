@@ -1532,7 +1532,7 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост лидера | <@${newMember.id}>`)
         }
         else if(role.name == "Muted") {
-            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | получил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id}`))
+            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | получил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id})`)
         }
     }
     else{
@@ -1571,7 +1571,7 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста лидера | <@${newMember.id}>`)
         }
         else if(role.name == "Muted") {
-            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | утратил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id}`))
+            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | утратил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id})`)
         }
     }
 });
