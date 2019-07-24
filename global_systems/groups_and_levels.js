@@ -95,4 +95,106 @@ exports.run = async (bot, message, server, config, users, groups) => {
             return message.delete();
         });
     }
+
+    if (message.content.startsWith('/system_create')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/system_create').split(/ +/);
+        if (!args[1]){
+            message.reply(`использование: /system_create [name]`);
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (functions.isHasSystem(config, message.guild.id, args.slice(1).join(' '))){
+            message.reply(`данная система уже существует на сервере.`);
+            return message.delete();
+        }
+        functions.createSystem(server, config, message.guild.id, args.slice(1).join(' ')).then(() => {
+            message.reply(`система ${args.slice(1).join(' ')} была успешно установлена на сервере.`);
+            return message.delete();
+        }).catch(() => {
+            message.reply(`ошибка при выполнении команды.`);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/system_delete')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/system_delete').split(/ +/);
+        if (!args[1]){
+            message.reply(`использование: /system_delete [name]`);
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isHasSystem(config, message.guild.id, args.slice(1).join(' '))){
+            message.reply(`данная система не существует на сервере.`);
+            return message.delete();
+        }
+        functions.deleteSystem(server, config, message.guild.id, args.slice(1).join(' ')).then(() => {
+            message.reply(`система ${args.slice(1).join(' ')} была успешно удалена с сервера.`);
+            return message.delete();
+        }).catch(() => {
+            message.reply(`ошибка при выполнении команды.`);
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/system_status')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/system_status').split(/ +/);
+        if (!args[1] || !args[2]){
+            message.reply(`использование: /system_status [on/off] [system_name]`);
+            return message.delete();
+        }else if (args[1] != 'on' && args[1] != 'off'){
+            message.reply(`использование: /system_status [on/off] [system_name]`);
+            return message.delete();
+        }
+        if (args[1] == 'on') args[1] = true;
+        else args[1] = false;
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isHasSystem(config, message.guild.id, args.slice(2).join(' '))){
+            message.reply(`данная система не существует на сервере.`);
+            return message.delete();
+        }
+        if (functions.isEnableSystem(config, message.guild.id, args.slice(2).join(' ')) == args[1]){
+            message.reply(`статус системы ${functions.isEnableSystem(config, message.guild.id, args.slice(2).join(' '))} не может быть изменен на ${args[1]}`);
+            return message.delete();
+        }
+        functions.changeStatusSystem(server, config, message.guild.id, args.slice(2).join(' '), args[1]).then(() => {
+            message.reply('статус системы успешно изменен!');
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при смене статуса системе!');
+            return message.delete();
+        });
+    }
 }
