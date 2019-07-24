@@ -508,9 +508,9 @@ exports.isGroupsExists = (groups, serverid, name) => {
 exports.createGroup = async (server, groups, serverid, name, level_name) => {
     return new Promise((resolve, reject) => {
         if (!server || !groups || !serverid || !name || !level_name) return reject(`Не указаны одни из параметров функции: server, groups, serverid, name, level_name`);
-        server.query(`INSERT INTO \`groups\` (\`server\`, \`name\`, \`levels\`) VALUES ('${serverid}', '${name}', '${JSON.stringify([{"level":1,"name":level_name,"manage_group":true,"manage_levels":[1]}])}')`, (error) => {
+        server.query(`INSERT INTO \`groups\` (\`server\`, \`name\`, \`levels\`) VALUES ('${serverid}', '${name}', '${JSON.stringify([{"level":1,"name":`${level_name}`,"manage_group":true,"manage_levels":[1]}])}')`, (error) => {
             if (error){
-                reject(`Ошибка MYSQL запроса!\`\`\`\nINSERT INTO \`groups\` (\`server\`, \`name\`, \`levels\`) VALUES ('${serverid}', '${name}', '${JSON.stringify(`[{"level":1,"name":"${level_name}","manage_group":true,"manage_levels":[1]}]`)}')\n\`\`\``);
+                reject(`Ошибка MYSQL запроса!\`\`\`\nINSERT INTO \`groups\` (\`server\`, \`name\`, \`levels\`) VALUES ('${serverid}', '${name}', '${JSON.stringify([{"level":1,"name":`${level_name}`,"manage_group":true,"manage_levels":[1]}])}')\n\`\`\``);
                 console.log(`[MYSQL] Произошла ошибка при добавлении группы.`);
                 return console.error(error);
             }
