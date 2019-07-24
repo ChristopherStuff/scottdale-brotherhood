@@ -20,6 +20,7 @@ const connection = mysql.createConnection({
 
 let config = [];
 let users = [];
+let groups = [];
 
 connection.connect(function(err){
     if (err) return console.log('[MYSQL] Ошибка подключения к базе MySQL');
@@ -27,6 +28,7 @@ connection.connect(function(err){
     connection.query("SET SESSION wait_timeout = 604800");
     functions.loadConfig(connection, config);
     functions.loadProfiles(connection, users);
+    functions.loadGroups(connection, groups)
 });
 
 let t_mode = 0; // Статус технических работ
