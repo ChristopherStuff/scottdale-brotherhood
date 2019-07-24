@@ -411,13 +411,28 @@ exports.run = async (bot, message, server, config, users, groups) => {
                     return message.delete();
                 }
             }
-            functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
-                message.reply(msg);
-                return message.delete();
-            }).catch(err => {
-                message.reply(err);
-                return message.delete();
-            });
+            if (!functions.isHasProfile(users, message.guild.id, user.id)){
+                functions.createProfile(server, users, message.guild.id, user.id).then(() => {
+                    functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
+                        message.reply(msg);
+                        return message.delete();
+                    }).catch(err => {
+                        message.reply(err);
+                        return message.delete();
+                    });
+                }).catch((err) => {
+                    message.reply(err);
+                    return message.delete();
+                })
+            }else{
+                functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
+                    message.reply(msg);
+                    return message.delete();
+                }).catch(err => {
+                    message.reply(err);
+                    return message.delete();
+                });
+            }
         }
     }
 }
