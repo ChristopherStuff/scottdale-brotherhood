@@ -27,4 +27,72 @@ exports.run = async (bot, message, server, config, users, groups) => {
             return message.delete();
         });
     }
+
+    if (message.content == '/server_add'){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`сервер уже есть в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        functions.createServer(server, config, message.guild.id).then(() => {
+            message.reply('сервер был успешно создан в базе данных.');
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при создании сервера.');
+            return message.delete();
+        });
+    }
+
+    if (message.content == '/server_delete'){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        functions.deleteServer(server, config, message.guild.id).then(() => {
+            message.reply('сервер был успешно удален с базы данных.');
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при удалении сервера.');
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/server_status')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/server_status').split(/ +/);
+        if (!args[1]){
+            message.reply(`использование: /server_status [on/off]`);
+            return message.delete();
+        }else if (args[1] != 'on' && args[1] != 'off'){
+            message.reply(`использование: /server_status [on/off]`);
+            return message.delete();
+        }
+        if (args[1] == 'on') args[1] = true;
+        else args[1] = false;
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (functions.isEnableServer(config, message.guild.id) == args[1]){
+            message.reply(`у сервера уже есть данный статус.`);
+            return message.delete();
+        }
+        functions.changeStatusServer(server, config, message.guild.id, args[1]).then(() => {
+            message.reply('статус сервера успешно изменен!');
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при смене статуса серверу!');
+            return message.delete();
+        });
+    }
 }
