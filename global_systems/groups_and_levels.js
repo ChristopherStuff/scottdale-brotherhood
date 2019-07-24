@@ -405,9 +405,11 @@ exports.run = async (bot, message, server, config, users, groups) => {
                     return message.delete();
                 }
             }
-            if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].some(l => l == args[2])){
-                message.reply(`вы не можете назначить данный уровень, так как он не входит в ваши права доступа!`);
-                return message.delete();
+            if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+                if (!functions.getLevelPermissions(groups, message.guild.id, args.slice(3).join(' '), author_level)[2].some(l => l == args[2])){
+                    message.reply(`вы не можете назначить данный уровень, так как он не входит в ваши права доступа!`);
+                    return message.delete();
+                }
             }
             functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
                 message.reply(msg);
