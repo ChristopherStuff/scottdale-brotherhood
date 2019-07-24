@@ -1505,6 +1505,8 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
         })
         let role = newMember.guild.roles.get(newRoleID);
         let date = date_now();
+        const entry = await newMember.guild.fetchAuditLogs({type: 'MEMBER_ROLE_UPDATE', before: new Date()}).then(audit => audit.entries.first());
+        let member = await newMember.guild.members.get(entry.executor.id);
         if(role.name == "✔ Helper ✔") {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на 1 лвл адм | <@${newMember.id}>`)
         }
@@ -1529,6 +1531,9 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
         else if(role.name == "✵Leader✵") {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Назначен на пост лидера | <@${newMember.id}>`)
         }
+        else if(role.name == "Muted") {
+            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | получил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id}`))
+        }
     }
     else{
         let newRolesID = [];
@@ -1538,6 +1543,8 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
             if (!newRolesID.some(elemet => elemet == role.id)) oldRoleID = role.id;
         })
         let role = newMember.guild.roles.get(oldRoleID);
+        const entry = await newMember.guild.fetchAuditLogs({type: 'MEMBER_ROLE_UPDATE', before: new Date()}).then(audit => audit.entries.first());
+        let member = await newMember.guild.members.get(entry.executor.id);
         let date = date_now();
         if(role.name == "✔ Helper ✔") {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Возможно снят с 1 лвла админки [Проверять!] | <@${newMember.id}>`)
@@ -1562,6 +1569,9 @@ bot.on('guildMemberUpdate', async (oldMember, newMember) => {
         }
         else if(role.name == "✵Leader✵") {
             vk.sendMessage(2000000013, `${date} | ${newMember.displayName} | Снят с поста лидера | <@${newMember.id}>`)
+        }
+        else if(role.name == "Muted") {
+            vk.sendMessage(2000000013, `*id152326572 (*)\n${date} | ${newMember.displayName} | утратил роль мута | <@${newMember.id}>\nВыдал - ${member.displayName} (ID - ${member.id}`))
         }
     }
 });
