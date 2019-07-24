@@ -531,7 +531,6 @@ bot.on('message', async message => {
     }*/
 
     if (message.content.startsWith(`/run`)){
-        if (functions.levelGroupByDiscord(users, message.guild.id, message.author.id, 'Разработчики') == 0) return
         if (!message.member.hasPermission("ADMINISTRATOR")) return
         const args = message.content.slice(`/run`).split(/ +/);
         let cmdrun = args.slice(1).join(" ");
