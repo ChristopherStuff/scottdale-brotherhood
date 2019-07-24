@@ -393,10 +393,10 @@ exports.run = async (bot, message, server, config, users, groups) => {
             }
             functions.removeGroup(server, users, message.guild.id, user.id, args.slice(3).join(' ')).then(() => {
                 message.reply(`пользователь успешно исключен из группы: ${args.slice(3).join(' ')}.`);
-                return message.delete();
+                message.delete();
             }).catch(err => {
                 message.reply(err);
-                return message.delete();
+                message.delete();
             });
         }else{
             if (user_level != 0){
@@ -415,22 +415,22 @@ exports.run = async (bot, message, server, config, users, groups) => {
                 functions.createProfile(server, users, message.guild.id, user.id).then(() => {
                     functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msgs) => {
                         message.reply('азазазазазазаз' + msgs);
-                        return message.delete();
+                        message.delete();
                     }).catch(err => {
                         message.reply('азаазазза' + err);
-                        return message.delete();
+                        message.delete();
                     });
                 }).catch((err) => {
                     message.reply('троолрорлп' + err);
-                    return message.delete();
+                    message.delete();
                 })
             }else{
                 functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
                     message.reply(msg);
-                    return message.delete();
+                    message.delete();
                 }).catch(err => {
                     message.reply(err);
-                    return message.delete();
+                    message.delete();
                 });
             }
         }
