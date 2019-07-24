@@ -382,7 +382,7 @@ exports.run = async (bot, message) => {
         let user = message.guild.member(message.mentions.users.first());
         const args = message.content.slice('/faminvite').split(/ +/)
 
-        if (!user){
+        if (!user || user.user.bot){
             message.channel.send(`\`[ERROR]\` <@${message.author.id}> \`укажите пользователя! /faminvite [user]\``).then(msg => msg.delete(7000));
             return message.delete();
         }
