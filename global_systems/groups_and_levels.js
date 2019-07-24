@@ -380,7 +380,7 @@ exports.run = async (bot, message, server, config, users, groups) => {
             message.reply(`данная группа не существует.`);
             return message.delete();
         }
-        if (!functions.isHasLevel(groups, message.guild.id, args.slice(3).join(' '), args[2])){
+        if (!functions.isHasLevel(groups, message.guild.id, args.slice(3).join(' '), args[2]) && +args[2] != 0){
             message.reply(`данный уровень не существует.`);
             return message.delete();
         }
@@ -414,14 +414,14 @@ exports.run = async (bot, message, server, config, users, groups) => {
             if (!functions.isHasProfile(users, message.guild.id, user.id)){
                 functions.createProfile(server, users, message.guild.id, user.id).then(() => {
                     functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
-                        message.reply(msg);
+                        message.reply('азазазазазазаз' + msg);
                         return message.delete();
                     }).catch(err => {
-                        message.reply(err);
+                        message.reply('азаазазза' + err);
                         return message.delete();
                     });
                 }).catch((err) => {
-                    message.reply(err);
+                    message.reply('троолрорлп' + err);
                     return message.delete();
                 })
             }else{
