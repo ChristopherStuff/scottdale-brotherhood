@@ -578,14 +578,14 @@ exports.isHasLevel = (groups, serverid, name, level) => {
 } // Существует ли такой уровень
 
 exports.getLevelPermissions = (groups, serverid, name, level) => {
-    if (!groups || !serverid || !name || !level) return [];
+    if (!groups || !serverid || !name || !level) return [false, false, []];
     let group = groups.find(value => value.server == serverid && value.name == name);
-    if (!group) return [];
+    if (!group) return [false, false, []];
     let levels = JSON.parse(group.levels);
-    if (typeof (levels) != "object") return [];
-    if (!Array.isArray(levels)) return [];
+    if (typeof (levels) != "object") return [false, false, []];
+    if (!Array.isArray(levels)) return [false, false, []];
     let _level = levels.find(lvl => lvl.level == level);
-    if (!_level) return [];
+    if (!_level) return [false, false, []];
     return [_level.name, _level.manage_group, _level.manage_levels];
 } // Права данного уровня
 
