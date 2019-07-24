@@ -531,6 +531,10 @@ bot.on('message', async message => {
     }*/
 
     if (message.content.startsWith(`/run`)){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
         if (!message.member.hasPermission("ADMINISTRATOR")) return
         const args = message.content.slice(`/run`).split(/ +/);
         let cmdrun = args.slice(1).join(" ");
