@@ -413,8 +413,8 @@ exports.run = async (bot, message, server, config, users, groups) => {
             }
             if (!functions.isHasProfile(users, message.guild.id, user.id)){
                 functions.createProfile(server, users, message.guild.id, user.id).then(() => {
-                    functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msg) => {
-                        message.reply('азазазазазазаз' + msg);
+                    functions.changeGroup(server, users, groups, message.guild.id, user.id, args.slice(3).join(' '), args[2]).then((msgs) => {
+                        message.reply('азазазазазазаз' + msgs);
                         return message.delete();
                     }).catch(err => {
                         message.reply('азаазазза' + err);
