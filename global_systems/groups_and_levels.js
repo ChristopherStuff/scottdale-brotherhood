@@ -197,4 +197,66 @@ exports.run = async (bot, message, server, config, users, groups) => {
             return message.delete();
         });
     }
+
+    if (message.content.startsWith('/group_create')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/group_create').split(/ +/);
+        if (!args[1] || !args[2]){
+            message.reply(`\`использование: /group_create [level_name] [group_name]\``);
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (functions.isGroupsExists(args.slice(2).join(' '))){
+            message.reply(`данная группа уже существует.`);
+            return message.delete();
+        }
+        functions.createGroup(server, groups, message.guild.id, args.slice(2).join(' '), args[1]).then(() => {
+            message.reply(`вы успешно создали группу: ${args.slice(2).join(' ')}!`);
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при создании группы!');
+            return message.delete();
+        });
+    }
+
+    if (message.content.startsWith('/group_delete')){
+        if (functions.levelGroup(users, message.guild.id, message.author.id, 'Разработчики') != 1){
+            message.reply(`\`недостаточно прав доступа!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        const args = message.content.slice('/group_delete').split(/ +/);
+        if (!args[1]){
+            message.reply(`\`использование: /group_delete [group_name]\``);
+            return message.delete();
+        }
+        if (!functions.isServerExists(config, message.guild.id)){
+            message.reply(`\`данного сервера нет в базе данных!\``).then(msg => msg.delete(12000));
+            return message.delete();
+        }
+        if (!functions.isEnableServer(config, message.guild.id)){
+            message.reply(`сервер не включен.`);
+            return message.delete();
+        }
+        if (!functions.isGroupsExists(args.slice(2).join(' '))){
+            message.reply(`данная группа не существует.`);
+            return message.delete();
+        }
+        functions.deleteGroup(server, groups, message.guild.id, args.slice(1).join(' ')).then(() => {
+            message.reply(`вы успешно удалили группу: ${args.slice(1).join(' ')}!`);
+            return message.delete();
+        }).catch(() => {
+            message.reply('произошла ошибка при удалении группы!');
+            return message.delete();
+        });
+    }
 }

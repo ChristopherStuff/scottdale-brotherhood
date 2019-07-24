@@ -728,3 +728,63 @@ exports.changeLevel = async (server, groups, serverid, group_name, level, permis
         });
     });
 } // Изменение уровня
+
+
+// запись звука
+//  fun recordVoiceChannel(channel: VoiceChannel, defaultChannel: TextChannel?, onError: (InsufficientPermissionException) -> Unit = {}) {
+
+//     /** Begin assertions **/
+//     require(defaultChannel != null && channel.guild.getTextChannelById(defaultChannel.id).canTalk()) {
+//         val msg = "Attempted to record, but bot cannot write to any channel."
+//         logger.warn(msg)
+//         msg
+//       }
+  
+//       // Bot won't connect to AFK channels
+//       require(channel != channel.guild.afkChannel) {
+//         val msg = ":no_entry_sign: _I'm not allowed to record AFK channels._"
+//         sendMessage(defaultChannel, msg)
+//         logger.warn(msg)
+//         msg
+//       }
+  
+//       /** End assertions **/
+  
+//       val audioManager = channel.guild.audioManager
+  
+//       if (audioManager?.isConnected == true) {
+//         logger.debug { "vc:${channel.name} - Already connected to ${audioManager.connectedChannel.name}" }
+//       } else {
+  
+//         try {
+//           audioManager?.openAudioConnection(channel)
+//           logger.info { "vc:${channel.name} - Connected to voice channel" }
+//         } catch (e: InsufficientPermissionException) {
+//           logger.warn { "vc:${channel.name} - Need permission: ${e.permission}" }
+//           onError(e)
+//           return
+//         }
+  
+//         val volume = transaction {
+//           Guild.findById(channel.guild.idLong)
+//             ?.settings
+//             ?.volume
+//             ?.toDouble()
+//             ?: 1.0
+//         }
+  
+//         val recorder = CombinedAudioRecorderHandler(volume, channel, defaultChannel)
+//         val audioSendHandler = SilenceAudioSendHandler()
+  
+//         // Only send 5 seconds of audio at the beginning of the recording see: 
+//         Timer().schedule(5 * 1000) {
+//           audioSendHandler.canProvide = false
+//         }
+  
+//         audioManager?.setReceivingHandler(recorder)
+//         audioManager?.sendingHandler = audioSendHandler
+  
+//         recordingStatus(channel.guild.selfMember, true)
+//         sendMessage(defaultChannel, ":red_circle: **Audio is being recorded on <#${channel.id}>**")
+//       }
+//     }
