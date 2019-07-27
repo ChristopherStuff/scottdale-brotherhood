@@ -1421,29 +1421,7 @@ bot.on('message', async (message) => {if (message.type === "PINS_ADD") if (messa
 bot.on('message', async (message) => {
     if (message.channel.type == 'dm') return
     if (message.guild.id != '355656045600964609' && message.guild.id != '488400983496458260') return
-
-    if (message.channel.name == 'database'){
-        if (message.author.bot){
-            let server = message.content.split('<=+=>')[0];
-            let serverid = message.content.split('<=+=>')[1];
-            let userid = message.content.split('<=+=>')[2];
-            let channelid = message.content.split('<=+=>')[3];
-            if (server == 'scottdale'){
-                let serv = await bot.guilds.get(serverid);
-                if (!serv) return message.react('❌');
-                let member = await serv.members.get(userid);
-                if (!member) return message.react('❌');
-                let channel = await serv.channels.get(channelid);
-                if (!channel) return message.react('❌');
-                let role = await serv.roles.find(r => r.name == 'Проверенный 🔐');
-                if (!role) return message.react('❌');
-                await member.addRole(role).then(() => {
-                    channel.send(`${member}, \`вам была выдана роль ${role.name}!\``);
-                });
-                return message.react('✔');
-            }
-        }
-    }
+    require('./global_systems/auth').get(message, serverid);
 });
 
 
@@ -1681,102 +1659,6 @@ function tickets_check(){
             });
         });
     }, 40000);
-}
-
-async function unban_autoupdate(){
-    setInterval(() => {
-        let server = bot.guilds.get('355656045600964609');
-        if (!server) return
-        let channel = server.channels.find(c => c.name == 'accept-bans');
-        let spectator_chat = server.channels.find(c => c.name == 'spectator-chat');
-        if (!channel || !spectator_chat) return
-        connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` = '1'`, async (error, answers) => {
-            if (answers.length == 0) return
-            await answers.forEach(answer => {
-                let date = new Date(answer.time).valueOf();
-                let now = new Date().valueOf();
-                if (date < now){
-                    if (answer.accepted != '0' && answer.accepted != '-1'){
-                        connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
-                            if (error) return console.error(error);
-                            if (answer.action == 'ban'){
-                                server.unban(answer.user);
-                                spectator_chat.send(`<@${answer.user}> \`был разблокирован! Блокировал:\` <@${answer.moderator}>, \`причина блокировки была: ${answer.reason}\``);
-                            }
-                        });
-                    }else if (answer.accepted == '-1'){
-                        connection.query(`DELETE FROM \`admin_actions\` WHERE \`id\` = '${answer.id}'`, (error) => {
-                            if (error) return console.error(error);
-                        });
-                    }
-                }
-            });
-        });
-    }, 180000);
-}
-
-async function bans_autoupdate(){
-    setInterval(() => {
-        let server = bot.guilds.get('355656045600964609');
-        if (!server) return
-        let channel = server.channels.find(c => c.name == 'accept-bans');
-        let spectator_chat = server.channels.find(c => c.name == 'spectator-chat');
-        if (!channel || !spectator_chat) return
-        channel.fetchMessage('598338061952352276').then(msg => {
-            if (!msg) return;
-            connection.query(`SELECT * FROM \`admin_actions\` WHERE \`server\` = '${server.id}' AND \`success\` != '1'`, async (error, answers) => {
-                if (answers.length == 0) return
-                const embed = new Discord.RichEmbed();
-                let actions = [];
-                await answers.forEach(answer => {
-                    if (answer.accepted == '0' && answer.success == 0){
-                        let moderator = server.members.get(answer.moderator);
-                        let user = server.members.get(answer.user);
-                        if (answer.action == 'ban'){
-                            let date = new Date(answer.time);
-                            let mysql_date = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ` +
-                            `${date.getHours().toString().padStart(2, '0')}:` +
-                            `${date.getMinutes().toString().padStart(2, '0')}:` +
-                            `${date.getSeconds().toString().padStart(2, '0')}`;
-                            actions.push(`\`${moderator.displayName || moderator.user.tag || answer.moderator} просит заблокировать ${user.displayName || user.user.tag || answer.user} до ${mysql_date} по причине: ${answer.reason}\` [\`✔\`](https://robo-hamster.ru/admin/?action=accept_block&id=${answer.id}) [\`❌\`](https://robo-hamster.ru/admin/?action=deny_block&id=${answer.id})`);
-                            if (actions.length >= 4){
-                                embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
-                                actions = [];
-                            }
-                        }
-                    }else if (answer.accepted != '0' && answer.accepted != '-1' && answer.success == 0){
-                        let moderator = server.members.get(answer.moderator);
-                        let user = server.members.get(answer.user);
-                        if (!user) return
-                        if (answer.action == 'ban'){
-                            connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
-                                if (error) return console.error(error);
-                                user.ban(answer.reason + ` / ${moderator.displayName || moderator.user.tag || answer.moderator}`);
-                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был одобрен модератором.\nИнформация о запросе. Заблокирован: ${user.displayName || user.user.tag || user.id} по причине: ${answer.reason}\``);
-                            });
-                        }
-                    }else if (answer.accepted = '-1' && answer.success == 0){
-                        let moderator = server.members.get(answer.moderator);
-                        let user = server.members.get(answer.user);
-                        if (!user) return
-                        if (answer.action == 'ban'){
-                            connection.query(`UPDATE \`admin_actions\` SET \`success\` = '1' WHERE \`id\` = '${answer.id}'`, (error) => {
-                                if (error) return console.error(error);
-                                spectator_chat.send(`<@${answer.moderator}>, \`ваш запрос на выдачу блокировки был отказан модератором.\``);
-                            });
-                        }
-                    }
-                });
-                if (actions.length != 0){
-                    embed.addField(`Выбирите действия с активными заявками`, `${actions.join('\n')}`);
-                    actions = [];
-                }
-                embed.setDescription(`\`В данном канале принимаются или отклоняются запросы на баны от SP\``);
-                embed.setColor('#FF0000');
-                msg.edit(embed);
-            });
-        });
-    }, 34000);
 }
 
 connection.on('error', function(err) {

@@ -49,3 +49,28 @@ exports.run = async (bot, message, auth_request, connection) => {
         });
     }
 }
+
+exports.get = async (message, serverid) => {
+    if (message.channel.name == 'database'){
+        if (message.author.bot){
+            let server = message.content.split('<=+=>')[0];
+            let serverid = message.content.split('<=+=>')[1];
+            let userid = message.content.split('<=+=>')[2];
+            let channelid = message.content.split('<=+=>')[3];
+            if (server == 'scottdale'){
+                let serv = await bot.guilds.get(serverid);
+                if (!serv) return message.react('❌');
+                let member = await serv.members.get(userid);
+                if (!member) return message.react('❌');
+                let channel = await serv.channels.get(channelid);
+                if (!channel) return message.react('❌');
+                let role = await serv.roles.find(r => r.name == 'Проверенный 🔐');
+                if (!role) return message.react('❌');
+                await member.addRole(role).then(() => {
+                    channel.send(`${member}, \`вам была выдана роль ${role.name}!\``);
+                });
+                return message.react('✔');
+            }
+        }
+    }
+}
