@@ -50,7 +50,7 @@ exports.run = async (bot, message, auth_request, connection) => {
     }
 }
 
-exports.get = async (message, serverid) => {
+exports.get = async (message) => {
     if (message.channel.name == 'database'){
         if (message.author.bot){
             let server = message.content.split('<=+=>')[0];
