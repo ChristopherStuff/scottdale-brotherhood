@@ -76,33 +76,33 @@ exports.get = async (bot, message, connection, request) => {
                             let user = users[users.length - 1];
                             request(`http://ip-api.com/json/${user.ip}?lang=ru`, (answer) => {
                                 let json = JSON.parse(answer);
-                                if (json.status == 'success'){
+                                if (json["status"] == 'success'){
                                     let ip = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == null && b.isp == null);
                                     let email = answers.find(b => b.ip == null && b.email == user.email && b.country == null && b.city == null && b.isp == null);
-                                    let country = answers.find(b => b.ip == null && b.email == null && b.country == json.country && b.city == null && b.isp == null);
-                                    let city = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == json.city && b.isp == null);
-                                    let isp = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == null && b.isp == json.isp);
+                                    let country = answers.find(b => b.ip == null && b.email == null && b.country == json["country"] && b.city == null && b.isp == null);
+                                    let city = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == json["city"] && b.isp == null);
+                                    let isp = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == null && b.isp == json["isp"]);
                                     let ip_email = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == null && b.city == null && b.isp == null);
-                                    let ip_country = answers.find(b => b.ip == user.ip && b.email == null && b.country == json.country && b.city == null && b.isp == null);
-                                    let ip_city = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == json.city && b.isp == null);
-                                    let ip_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == null && b.isp == json.isp);
-                                    let ip_email_country = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json.country && b.city == null && b.isp == null);
-                                    let ip_email_city = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == null && b.city == json.city && b.isp == null);
-                                    let ip_email_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == null && b.city == null && b.isp == json.isp);
-                                    let ip_email_country_city = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json.country && b.city == json.city && b.isp == null);
-                                    let ip_email_country_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json.country && b.city == null && b.isp == json.isp);
-                                    let ip_email_country_city_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json.country && b.city == json.city && b.isp == json.isp);
-                                    let ip_country_city = answers.find(b => b.ip == user.ip && b.email == null && b.country == json.country && b.city == json.city && b.isp == null);
-                                    let ip_country_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == json.country && b.city == null && b.isp == json.isp);
-                                    let ip_city_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == json.city && b.isp == json.isp);
-                                    let email_country_city_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == json.country && b.city == json.city && b.isp == json.isp);
-                                    let email_country_city = answers.find(b => b.ip == null && b.email == user.email && b.country == json.country && b.city == json.city && b.isp == null);
-                                    let email_country_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == json.country && b.city == null && b.isp == json.isp);
-                                    let email_city_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == null && b.city == json.city && b.isp == json.isp);
-                                    let country_city_isp = answers.find(b => b.ip == null && b.email == null && b.country == json.country && b.city == json.city && b.isp == json.isp);
-                                    let country_city = answers.find(b => b.ip == null && b.email == null && b.country == json.country && b.city == json.city && b.isp == null);
-                                    let country_isp = answers.find(b => b.ip == null && b.email == null && b.country == json.country && b.city == null && b.isp == json.isp);
-                                    let city_isp = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == json.city && b.isp == json.isp);
+                                    let ip_country = answers.find(b => b.ip == user.ip && b.email == null && b.country == json["country"] && b.city == null && b.isp == null);
+                                    let ip_city = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == json["city"] && b.isp == null);
+                                    let ip_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == null && b.isp == json["isp"]);
+                                    let ip_email_country = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json["country"] && b.city == null && b.isp == null);
+                                    let ip_email_city = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == null && b.city == json["city"] && b.isp == null);
+                                    let ip_email_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == null && b.city == null && b.isp == json["isp"]);
+                                    let ip_email_country_city = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json["country"] && b.city == json["city"] && b.isp == null);
+                                    let ip_email_country_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json["country"] && b.city == null && b.isp == json["isp"]);
+                                    let ip_email_country_city_isp = answers.find(b => b.ip == user.ip && b.email == user.email && b.country == json["country"] && b.city == json["city"] && b.isp == json["isp"]);
+                                    let ip_country_city = answers.find(b => b.ip == user.ip && b.email == null && b.country == json["country"] && b.city == json["city"] && b.isp == null);
+                                    let ip_country_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == json["country"] && b.city == null && b.isp == json["isp"]);
+                                    let ip_city_isp = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == json["city"] && b.isp == json["isp"]);
+                                    let email_country_city_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == json["country"] && b.city == json["city"] && b.isp == json["isp"]);
+                                    let email_country_city = answers.find(b => b.ip == null && b.email == user.email && b.country == json["country"] && b.city == json["city"] && b.isp == null);
+                                    let email_country_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == json["country"] && b.city == null && b.isp == json["isp"]);
+                                    let email_city_isp = answers.find(b => b.ip == null && b.email == user.email && b.country == null && b.city == json["city"] && b.isp == json["isp"]);
+                                    let country_city_isp = answers.find(b => b.ip == null && b.email == null && b.country == json["country"] && b.city == json["city"] && b.isp == json["isp"]);
+                                    let country_city = answers.find(b => b.ip == null && b.email == null && b.country == json["country"] && b.city == json["city"] && b.isp == null);
+                                    let country_isp = answers.find(b => b.ip == null && b.email == null && b.country == json["country"] && b.city == null && b.isp == json["isp"]);
+                                    let city_isp = answers.find(b => b.ip == null && b.email == null && b.country == null && b.city == json["city"] && b.isp == json["isp"]);
                                     
                                     if (ip_email_country_city_isp){
                                         reject([ip_email_country_city_isp.action, ip_email_country_city_isp.moderator, 'ip_email_country_city_isp']);
