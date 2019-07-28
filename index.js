@@ -257,14 +257,7 @@ robo_hamster.on('message', async message => {
 bot.on('message', async message => {
     if (message.channel.type == "dm") return
     if (message.guild.id != serverid && message.guild.id != "493459379878625320") return
-    if (message.type === "PINS_ADD") if (message.channel.name == "requests-for-roles") message.delete();
-    if (message.content == "/ping") return message.reply("`я онлайн, последняя загрузка была: " + started_at + "`") && console.log(`Бот ответил ${message.member.displayName}, что я онлайн.`);
     if (message.author.id == bot.user.id) return
-    if (message.content.startsWith("-+ban")) lasttestid = message.author.id;
-    let re = /(\d+(\.\d)*)/i;
-    const authorrisbot = new Discord.RichEmbed()
-    .setAuthor(`© 2018 Risbot Company™`, `https://pp.userapi.com/c849132/v849132806/b35ca/2RD_7K2ysns.jpg?ava=1`, "https://vk.com/risbot")
-
     // Системы
     require('./global_systems/embeds').run(bot, message, setembed_general, setembed_fields, setembed_addline);
     require('./global_systems/family').run(bot, message);
@@ -272,9 +265,21 @@ bot.on('message', async message => {
     require('./global_systems/support_new').run(bot, message, support_cooldown, connection, st_cd, support_settings);
     require('./global_systems/warn').run(bot, message, warn_cooldown);
     require('./global_systems/fbi_system').run(bot, message);
-    require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, t_mode);
     require('./global_systems/auth').run(bot, message, auth_request, connection);
     require('./global_systems/groups_and_levels').run(bot, message, connection, config, users, groups);
+    require('./global_systems/dsponts').run(bot, message, ds_cooldown, connection, mysql_cooldown, t_mode); // всегда внизу
+});
+
+bot.on('message', async message => {
+    if (message.channel.type == "dm") return
+    if (message.guild.id != serverid && message.guild.id != "493459379878625320") return
+    if (message.type === "PINS_ADD") if (message.channel.name == "requests-for-roles") message.delete();
+    if (message.content == "/ping") return message.reply("`я онлайн, последняя загрузка была: " + started_at + "`") && console.log(`Бот ответил ${message.member.displayName}, что я онлайн.`);
+    if (message.author.id == bot.user.id) return
+    if (message.content.startsWith("-+ban")) lasttestid = message.author.id;
+    let re = /(\d+(\.\d)*)/i;
+    const authorrisbot = new Discord.RichEmbed()
+    .setAuthor(`© 2018 Risbot Company™`, `https://pp.userapi.com/c849132/v849132806/b35ca/2RD_7K2ysns.jpg?ava=1`, "https://vk.com/risbot")
 
     if (message.content.startsWith('/gift')){
         let user = message.guild.member(message.mentions.users.first());
