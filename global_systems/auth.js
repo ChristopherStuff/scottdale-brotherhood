@@ -74,8 +74,8 @@ exports.get = async (bot, message, connection, request) => {
                         if (error) return message.react('❌');
                         let promise = new Promise(async (resolve, reject) => {
                             let user = users[users.length - 1];
-                            request(`http://ip-api.com/json/${user.ip}?lang=ru`, (answer) => {
-                                let json = JSON.parse(answer);
+                            request(`http://ip-api.com/json/${user.ip}?lang=ru`, async (error, response, body) => {
+                                let json = JSON.parse(body);
                                 if (json["status"] == 'success'){
                                     let ip = answers.find(b => b.ip == user.ip && b.email == null && b.country == null && b.city == null && b.isp == null);
                                     let email = answers.find(b => b.ip == null && b.email == user.email && b.country == null && b.city == null && b.isp == null);
