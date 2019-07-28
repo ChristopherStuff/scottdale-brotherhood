@@ -99,8 +99,6 @@ bot.on('ready', async () => {
     tickets_check(); // Проверка тикетов
     remove_verify(); // Снятие верефикации у тех, кто не авторизован
     check_gifts(); // Проверка подарков
-    bans_autoupdate(); // Проверка банов (система наказаний)
-    unban_autoupdate(); // Проверка разблокировок
     started_at = now_date(); // Когда был запущен бот
 });
 
