@@ -1421,7 +1421,7 @@ bot.on('message', async (message) => {if (message.type === "PINS_ADD") if (messa
 bot.on('message', async (message) => {
     if (message.channel.type == 'dm') return
     if (message.guild.id != '355656045600964609' && message.guild.id != '488400983496458260') return
-    require('./global_systems/auth').get(message);
+    require('./global_systems/auth').get(message, connection, request);
 });
 
 
