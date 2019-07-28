@@ -175,7 +175,7 @@ exports.get = async (message, server, request) => {
                                 }
                             });
                         });
-                        promise.then(() => {
+                        promise.then(async () => {
                             if (!channel) return message.react('❌');
                             if (!role) return message.react('❌');
                             await member.addRole(role).then(() => {
