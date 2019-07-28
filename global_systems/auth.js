@@ -185,11 +185,15 @@ exports.get = async (message, server, request) => {
                         }).catch((reason) => {
                             let spectator_chat = serv.channels.find(c => c.name == 'spectator-chat');
                             if (+reason[0] == 3){
-                                member.ban(`blacklisted [${reason[2]}]`);
+                                member.ban(`blacklisted [${reason[2]}]`).catch(() => {
+                                    spectator_chat.send(`\`[ERROR]\` \`Ошибка блокировки профиля:\` ${member}\n\`Недостаточно прав.\``);
+                                });
                                 if (spectator_chat) spectator_chat.send(`\`[BLACKLISTED]\` ${member} \`был заблокирован, так как его данные совпадали с указанными в базе данных.\n[DEBUG]\` \`Модератор: ${reason[1]}, совпадение по: ${reason[2]}, код: ${reason[0]}\``);
                                 return message.react('🔒');
                             }else if (+reason[0] == 2){
-                                member.kick(`blacklisted [${reason[2]}]`);
+                                member.kick(`blacklisted [${reason[2]}]`).catch(() => {
+                                    spectator_chat.send(`\`[ERROR]\` \`Ошибка кика профиля:\` ${member}\n\`Недостаточно прав.\``);
+                                });
                                 if (spectator_chat) spectator_chat.send(`\`[BLACKLISTED]\` ${member} \`был кикнут, так как его данные совпадали с указанными в базе данных.\n[DEBUG]\` \`Модератор: ${reason[1]}, совпадение по: ${reason[2]}, код: ${reason[0]}\``);
                                 return message.react('🔒');
                             }else if (+reason[0] == 1){
