@@ -1424,7 +1424,7 @@ bot.on('message', async (message) => {if (message.type === "PINS_ADD") if (messa
 bot.on('message', async (message) => {
     if (message.channel.type == 'dm') return
     if (message.guild.id != '355656045600964609' && message.guild.id != '488400983496458260') return
-    require('./global_systems/auth').get(message, connection, request);
+    require('./global_systems/auth').get(bot, message, connection, request);
 });
 
 
@@ -1610,6 +1610,7 @@ function tickets_check(){
                     });
                 }else if (ticket.parentID == close_tickets.id){
                     let db_ticket = answer.find(_ticket => _ticket.ticket == ticket.name.split('ticket-')[1]);
+                    if (!db_ticket) return ticket.delete();
                     ticket.fetchMessages({limit: 1}).then(async messages => {
                         let message = messages.first();
                         let back_time = new Date().valueOf() - support_settings["time_deleted"];

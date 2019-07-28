@@ -50,7 +50,7 @@ exports.run = async (bot, message, auth_request, connection) => {
     }
 }
 
-exports.get = async (message, server, request) => {
+exports.get = async (bot, message, connection, request) => {
 
     // {"ip": false, "email": false, "country": false, "city": false, "isp": false, "need_all": false}
     // [0 = warn message] [1 = not give role] [2 = kick] [3 = ban]
@@ -67,10 +67,10 @@ exports.get = async (message, server, request) => {
                 if (!member) return message.react('❌');
                 let channel = serv.channels.get(channelid);
                 let role = serv.roles.find(r => r.name == 'Проверенный 🔐');
-                serv.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '${serverid}' AND \`userid\` = '${userid}'`, (error, users) => {
+                connection.query(`SELECT * FROM \`arizona_logs\` WHERE \`serverid\` = '${serverid}' AND \`userid\` = '${userid}'`, (error, users) => {
                     if (error) return message.react('❌');
                     if (users.length == 0) return message.react('❌');
-                    serv.query(`SELECT * FROM \`blacklist_website\``, (error, answers) => {
+                    connection.query(`SELECT * FROM \`blacklist_website\``, (error, answers) => {
                         if (error) return message.react('❌');
                         let promise = new Promise(async (resolve, reject) => {
                             let user = users[users.length - 1];
