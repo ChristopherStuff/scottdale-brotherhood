@@ -9,7 +9,7 @@ const bot = new Discord.Client();
 const user = new Discord.Client();
 const robo_hamster = new Discord.Client();
 let settings = process.env;
-if (fs.exists('./settings.json')) settings = require('./settings.json');
+if (fs.existsSync('./settings.json')) settings = require('./settings.json');
 const vk = new _vk({ token: settings.tokenvk })
 const functions = require('./objects/functions');
 
