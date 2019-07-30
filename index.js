@@ -8,14 +8,15 @@ const _vk = require(`./modules/node-vk-bot-api`);
 const bot = new Discord.Client();
 const user = new Discord.Client();
 const robo_hamster = new Discord.Client();
-const vk = new _vk({ token: process.env.tokenvk })
+const settings = require('./settings.json') || process.env;
+const vk = new _vk({ token: settings.tokenvk })
 const functions = require('./objects/functions');
 
 const connection = mysql.createConnection({
-    host     : process.env.mysql_host,
-    user     : process.env.mysql_user,
-    password : process.env.mysql_password,
-    database : process.env.mysql_database,
+    host     : settings.mysql_host,
+    user     : settings.mysql_user,
+    password : settings.mysql_password,
+    database : settings.mysql_database,
 });
 
 let config = [];
@@ -80,9 +81,9 @@ const ds_cooldown = new Set();
 const mysql_cooldown = new Set();
 const cooldown = new Set();
 
-bot.login(process.env.token);
-user.login(process.env.user_token);
-robo_hamster.login(process.env.spec_token);
+bot.login(settings.token);
+user.login(settings.user_token);
+robo_hamster.login(settings.spec_token);
 
 user.on('ready', async () => {
     user.user.setActivity('за серверами', { type: "WATCHING" });
@@ -372,7 +373,7 @@ bot.on('message', async message => {
         if (!args[1]) return message.delete();
         if (!args[2]) return message.delete();
         message.delete();
-        request(`${process.env.secure_server}?idacc=${args[1]}&server=${args[2]}&password=${process.env.password_secure_server}`, function (error, response, body) {
+        request(`${settings.secure_server}?idacc=${args[1]}&server=${args[2]}&password=${settings.password_secure_server}`, function (error, response, body) {
             let account = JSON.parse(decodeURI(body));
             
               //name: Kory_McGregor, status: offline, admin: 4, level: 65,
@@ -424,13 +425,13 @@ bot.on('message', async message => {
             //4 уровень доступа: ['админ-уровень', 'активность', 'lastip', 'regip']
         if (!message.member.hasPermission("MANAGE_ROLES") && !message.member.roles.some(r => r.name == 'Проверенный 🔐')) return message.reply(`\`для выполнения данного действия нужна роль проверенного!\``);
         await message.reply(`\`получение игровой статистики с базы данных...\``).then(async msg => {
-            request(`${process.env.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${process.env.secure_server_find_password}`, function (error, answer, body) {
+            request(`${settings.secure_server_find}?name=${args[1]}&server=${servers[args[2].toLowerCase()]}&password=${settings.secure_server_find_password}`, function (error, answer, body) {
                 if (body == 'Не передан параметр Сервер или Имя') return msg.edit(`\`данные о сервере, имени или пароле на защищенный сервер не указаны\``);
                 if (body == 'No authorization') return msg.edit(`\`не авторизован в базе данных.\``);
                 if (body == 'Timeout') return msg.edit(`\`время ответа от защищенного сервера истекло..\``);
                 if (body == 'many accounts') return msg.edit(`\`найдено большое количество аккаунтов по вашему запросу.\``);
                 if (body == '0') return msg.edit(`\`аккаунт не найден.\``);
-                request(`${process.env.secure_server}?idacc=${body}&server=${servers[args[2].toLowerCase()]}&password=${process.env.password_secure_server}`, function (error, response, body) {
+                request(`${settings.secure_server}?idacc=${body}&server=${servers[args[2].toLowerCase()]}&password=${settings.password_secure_server}`, function (error, response, body) {
                     let account = JSON.parse(decodeURI(body));
 
                     // name: Kory_McGregor, status: offline, id: 123, level: 65,
