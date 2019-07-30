@@ -8,7 +8,8 @@ const _vk = require(`./modules/node-vk-bot-api`);
 const bot = new Discord.Client();
 const user = new Discord.Client();
 const robo_hamster = new Discord.Client();
-const settings = require('./settings.json') || process.env;
+let settings = process.env;
+if (fs.exists('./settings.json')) settings = require('./settings.json');
 const vk = new _vk({ token: settings.tokenvk })
 const functions = require('./objects/functions');
 
